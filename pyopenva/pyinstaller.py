@@ -8,8 +8,10 @@ if platform == "linux":
         "--noconfirm",
         "--onefile",
         "--windowed",
-        "--name 'pyopenva'",
-        "icon='src/main/icons/openva-logo.png'"
+        "--name",
+        "pyopenva",
+        "icon",
+        "src/main/icons/openva-logo.png"
         ])
 elif platform == "darwin":
     PyInstaller.__main__.run([
@@ -32,6 +34,8 @@ elif platform in ["cygwin", "win32"]:
         "--noconfirm",
         "--onefile",
         "--windowed",
-        "--name 'pyopenva'",
-        "icon='src/main/icons/openva-logo.png'"
+        "--name",
+        "pyopenva",
+        "icon",
+        "src/main/icons/openva-logo.ico"
     ])
