@@ -10,7 +10,7 @@ if platform == "linux":
         "--windowed",
         "--name",
         "pyopenva",
-        "icon",
+        "--icon",
         "src/main/icons/openva-logo.png"
         ])
 elif platform == "darwin":
@@ -36,6 +36,6 @@ elif platform in ["cygwin", "win32"]:
         "--windowed",
         "--name",
         "pyopenva",
-        "icon",
+        "--icon",
         "src/main/icons/openva-logo.ico"
     ])
