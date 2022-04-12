@@ -8,8 +8,12 @@ This module creates the window for loading data and setting algorithm options.
 
 from insilico import InSilicoDialog
 from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QGroupBox,
-                             QLabel, QPushButton, QComboBox)
+                             QLabel, QPushButton, QComboBox, QFileDialog)
 
+import csv
+
+from edit_window import EditData
+from load import LoadData
 
 class CommandCenter(QWidget):
 
@@ -50,6 +54,62 @@ class CommandCenter(QWidget):
         data_panel_v_box.addWidget(self.btn_user_mode)
         self.data_panel = QGroupBox("Data")
         self.data_panel.setLayout(data_panel_v_box)
+        self.btn_load_data.clicked.connect(self.load_data)
+        self.btn_edit_data.clicked.connect(self.create_edit_window)
+
+    def load_data(self):
+        """Set up window for loading csv data."""
+        
+        self.load_window = LoadData()
+        
+    def create_edit_window(self):
+        """Set up window for editing provided csv data."""
+        
+        self.edit_window = EditData(self.load_window.data)
+        self.edit_window.table.resizeColumnsToContents()
+        self.btn_save = QPushButton("Save Data", self.edit_window)
+        self.btn_cancel = QPushButton("Cancel", self.edit_window)
+    
+        edit_panel_v_box = QVBoxLayout()
+        edit_panel_v_box.addWidget(self.btn_save)
+        edit_panel_v_box.addWidget(self.btn_cancel)
+        edit_panel_v_box.addWidget(self.edit_window)
+        self.edit_panel = QGroupBox("Edit")
+        self.edit_panel.setLayout(edit_panel_v_box)
+        self.edit_panel.setWindowTitle("openVA GUI: Edit Data")
+        self.edit_panel.setGeometry(400, 400, 700, 600)
+        self.edit_panel.show()
+        
+        self.btn_save.clicked.connect(self.save_data)
+        self.btn_cancel.clicked.connect(self.cancel_data)
+       
+    def save_data(self):
+        """Set up window for saving data: replacing the provided csv file or saving the edited file to a new csv file."""
+
+        updated_data = self.edit_window.model.data
+        file_name = QFileDialog.getSaveFileName(self,"Save As", "","csv Files (*.csv)")
+        fname = file_name[0]
+        with open(fname, 'w', newline = '') as output_file:
+            csvwriter = csv.writer(output_file) 
+            for row in updated_data:
+                csvwriter.writerow(row)
+        self.edit_panel.close()
+    
+    def cancel_data(self):
+        """Cancels any edit changes made to the data model."""
+                
+        header = []
+        rows = []
+        data = []
+        with open(self.load_window.fname, 'r', newline = '') as file:
+            csvreader = csv.reader(file)
+            header.append(next(csvreader))
+            for row in csvreader:
+                rows.append(row)
+            data += header + rows
+        self.load_window.data = data
+        self.edit_window = EditData(self.load_window.data)
+        self.edit_panel.close()
 
     def create_algorithm_panel(self):
         """Set up (right) panel for choosing VA algorithms."""
