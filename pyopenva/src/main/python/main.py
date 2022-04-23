@@ -31,13 +31,15 @@ class WindowManager:
             self.results_to_command_center)
 
         self.results.btn_go_to_mode.clicked.connect(
-        self.results_to_mode)
+            self.results_to_mode)
 
         self.mode.show()
 
     def show_efficient(self):
         pass
 
+    # TODO -- when one window changes location, need to change the location
+    #         of other windows to same location
     def show_command_center(self):
         self.mode.hide()
         self.command_center.show()

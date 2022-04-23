@@ -7,8 +7,10 @@ This module creates the window for loading data and setting algorithm options.
 """
 
 from insilico import InSilicoDialog
+from interva import InterVADialog
 from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QGroupBox,
                              QLabel, QPushButton, QComboBox)
+from numpy.random import default_rng
 
 
 class CommandCenter(QWidget):
@@ -18,6 +20,7 @@ class CommandCenter(QWidget):
         self.raw_data = None
         self.raw_data_loaded = False
         self.insilico_dialog = None
+        self.interva_dialog = None
 
         self.setGeometry(400, 400, 700, 600)
         self.setWindowTitle("openVA GUI: Command Center")
@@ -27,6 +30,16 @@ class CommandCenter(QWidget):
         self.data_algorithm_h_box.addWidget(self.data_panel)
         self.data_algorithm_h_box.addWidget(self.algorithm_panel)
         self.setLayout(self.data_algorithm_h_box)
+
+        # initialize InSilico parameters
+        self.n_iterations = 3000
+        self.jump_scale = 0.1
+        self.auto_extend = True
+        self.seed = 653
+
+        # initialize InterVA parameters
+        self.hiv = "low"
+        self.malaria = "low"
 
     def create_data_panel(self):
         """Set up data panel for loading, editing, and checking the data."""
@@ -71,8 +84,11 @@ class CommandCenter(QWidget):
         self.algorithm_panel = QGroupBox("Algorithms")
         self.algorithm_panel.setLayout(algorithm_panel_v_box)
         self.btn_insilico_options.clicked.connect(self.run_insilico_dialog)
-        #self.btn_interva_options.clicked.connect(self.run_interva_dialog)
-        #self.btn_smartva_options.clicked.connect(self.run_smartva_dialog)
+        self.btn_interva_options.clicked.connect(self.run_interva_dialog)
+        self.btn_insilico_run.clicked.connect(self.print_insilico)
+        self.btn_interva_run.clicked.connect(self.print_interva)
+        # self.btn_interva_options.clicked.connect(self.run_interva_dialog)
+        # self.btn_smartva_options.clicked.connect(self.run_smartva_dialog)
 
     def create_insilico_box(self):
         """Set up box of widgets for InSilicoVA."""
@@ -120,5 +136,46 @@ class CommandCenter(QWidget):
         self.smartva_box.addWidget(label_smartva_progress)
 
     def run_insilico_dialog(self):
-        self.insilico_dialog = InSilicoDialog()
+        self.insilico_dialog = InSilicoDialog(self,
+                                              self.seed,
+                                              self.auto_extend,
+                                              self.jump_scale,
+                                              self.n_iterations)
         self.insilico_dialog.exec()
+
+    def update_insilico_n_iterations(self, updated_n_iterations):
+        self.n_iterations = updated_n_iterations
+
+    def update_insilico_jump_scale(self, updated_jump_scale):
+        self.jump_scale = updated_jump_scale
+
+    def update_insilico_auto_extend(self, updated_auto_extend):
+            self.auto_extend = updated_auto_extend
+
+    def update_insilico_seed(self, updated_seed):
+        self.seed = updated_seed
+
+    def run_insilico(self):
+        rng = default_rng(self.seed)
+        # pass rng to the insilico function to make results reproducible
+        pass
+
+    def run_interva_dialog(self):
+        self.interva_dialog = InterVADialog(self, self.hiv, self.malaria)
+        self.interva_dialog.exec()
+
+    def update_interva_hiv(self, updated_hiv):
+        self.hiv = updated_hiv
+
+    def update_interva_malaria(self, updated_malaria):
+        self.malaria = updated_malaria
+
+    def print_insilico(self):
+        print(self.n_iterations)
+        print(self.auto_extend)
+        print(self.jump_scale)
+        print(self.seed)
+
+    def print_interva(self):
+        print(self.hiv)
+        print(self.malaria)
