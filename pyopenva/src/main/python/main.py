@@ -38,27 +38,38 @@ class WindowManager:
     def show_efficient(self):
         pass
 
-    # TODO -- when one window changes location, need to change the location
-    #         of other windows to same location
     def show_command_center(self):
+        self.sync_windows(self.mode, self.command_center)
         self.mode.hide()
         self.command_center.show()
 
     def show_mode(self):
+        self.sync_windows(self.command_center, self.mode)
         self.command_center.hide()
         self.mode.show()
 
     def show_results(self):
+        self.sync_windows(self.command_center, self.results)
         self.command_center.hide()
         self.results.show()
 
     def results_to_command_center(self):
+        self.sync_windows(self.results, self.command_center)
         self.results.hide()
         self.command_center.show()
 
     def results_to_mode(self):
+        self.sync_windows(self.results, self.mode)
         self.results.hide()
         self.mode.show()
+
+    @staticmethod
+    def sync_windows(hide, show):
+        new_x = hide.pos().x()
+        new_y = hide.pos().y()
+        new_width = hide.size().width()
+        new_height = hide.size().height()
+        show.setGeometry(new_x, new_y, new_width, new_height)
 
 
 if __name__ == '__main__':

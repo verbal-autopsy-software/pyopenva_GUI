@@ -29,7 +29,7 @@ class InterVADialog(QDialog):
         self.combo_malaria = QComboBox()
         self.combo_malaria.addItems(option_set)
         self.combo_malaria.setCurrentIndex(option_set.index(self.malaria))
-        self.combo_hiv.currentTextChanged.connect(self.set_malaria)
+        self.combo_malaria.currentTextChanged.connect(self.set_malaria)
 
         self.btn_box = QDialogButtonBox(QDialogButtonBox.Cancel |
                                         QDialogButtonBox.Ok)

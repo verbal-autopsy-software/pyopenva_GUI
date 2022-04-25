@@ -8,6 +8,7 @@ This module creates the window for loading data and setting algorithm options.
 
 from insilico import InSilicoDialog
 from interva import InterVADialog
+from smartva import SmartVADialog
 from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QGroupBox,
                              QLabel, QPushButton, QComboBox)
 from numpy.random import default_rng
@@ -40,6 +41,13 @@ class CommandCenter(QWidget):
         # initialize InterVA parameters
         self.hiv = "low"
         self.malaria = "low"
+
+        # initialize SmartVA parameters
+        self.smartva_country = "Unknown"
+        self.smartva_hiv = "False"
+        self.smartva_malaria = "False"
+        self.smartva_hce = "True"
+        self.smartva_freetext = "True"
 
     def create_data_panel(self):
         """Set up data panel for loading, editing, and checking the data."""
@@ -85,8 +93,10 @@ class CommandCenter(QWidget):
         self.algorithm_panel.setLayout(algorithm_panel_v_box)
         self.btn_insilico_options.clicked.connect(self.run_insilico_dialog)
         self.btn_interva_options.clicked.connect(self.run_interva_dialog)
+        self.btn_smartva_options.clicked.connect(self.run_smartva_dialog)
         self.btn_insilico_run.clicked.connect(self.print_insilico)
         self.btn_interva_run.clicked.connect(self.print_interva)
+        self.btn_smartva_run.clicked.connect(self.print_smartva)
         # self.btn_interva_options.clicked.connect(self.run_interva_dialog)
         # self.btn_smartva_options.clicked.connect(self.run_smartva_dialog)
 
@@ -170,6 +180,30 @@ class CommandCenter(QWidget):
     def update_interva_malaria(self, updated_malaria):
         self.malaria = updated_malaria
 
+    def run_smartva_dialog(self):
+        self.smartva_dialog = SmartVADialog(self,
+                                            self.smartva_country,
+                                            self.smartva_hiv,
+                                            self.smartva_malaria,
+                                            self.smartva_hce,
+                                            self.smartva_freetext)
+        self.smartva_dialog.exec()
+
+    def update_smartva_country(self, updated_country):
+        self.smartva_country = updated_country
+
+    def update_smartva_hiv(self, updated_hiv):
+        self.smartva_hiv = updated_hiv
+
+    def update_smartva_malaria(self, updated_malaria):
+        self.smartva_malaria = updated_malaria
+
+    def update_smartva_hce(self, updated_hce):
+        self.smartva_hce = updated_hce
+
+    def update_smartva_freetext(self, updated_freetext):
+        self.smartva_freetext = updated_freetext
+
     def print_insilico(self):
         print(self.n_iterations)
         print(self.auto_extend)
@@ -179,3 +213,10 @@ class CommandCenter(QWidget):
     def print_interva(self):
         print(self.hiv)
         print(self.malaria)
+
+    def print_smartva(self):
+        print(self.smartva_country)
+        print(self.smartva_hiv)
+        print(self.smartva_malaria)
+        print(self.smartva_hce)
+        print(self.smartva_freetext)
