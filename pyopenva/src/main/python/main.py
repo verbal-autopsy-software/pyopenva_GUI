@@ -7,6 +7,7 @@ This module creates user interface for the app.
 """
 from PyQt5.QtWidgets import QApplication
 import sys
+from efficient import Efficient
 from mode import Mode
 from command_center import CommandCenter
 from results import Results
@@ -16,9 +17,13 @@ class WindowManager:
 
     def __init__(self):
         super().__init__()
+        self.efficient = Efficient()
         self.mode = Mode()
         self.command_center = CommandCenter()
         self.results = Results()
+
+        self.efficient.btn_go_to_mode.clicked.connect(
+            self.efficient_to_mode)
 
         self.mode.btn_efficient.clicked.connect(self.show_efficient)
         self.mode.btn_advanced.clicked.connect(self.show_command_center)
@@ -35,8 +40,16 @@ class WindowManager:
 
         self.mode.show()
 
+    #TODO: Set up advanced mode with QStackedLayout
+    def efficient_to_mode(self):
+        self.sync_windows(self.efficient, self.mode)
+        self.efficient.hide()
+        self.mode.show()
+
     def show_efficient(self):
-        pass
+        self.sync_windows(self.mode, self.efficient)
+        self.mode.hide()
+        self.efficient.show()
 
     def show_command_center(self):
         self.sync_windows(self.mode, self.command_center)
@@ -63,6 +76,8 @@ class WindowManager:
         self.results.hide()
         self.mode.show()
 
+    #TODO: figure out why window keeps moving up when changing to different
+    # window
     @staticmethod
     def sync_windows(hide, show):
         new_x = hide.pos().x()
