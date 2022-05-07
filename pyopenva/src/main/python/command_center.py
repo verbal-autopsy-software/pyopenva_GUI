@@ -8,7 +8,7 @@ This module creates the window for loading data and setting algorithm options.
 
 from insilico import InSilicoDialog
 from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QGroupBox,
-                             QLabel, QPushButton, QComboBox, QFileDialog)
+                             QLabel, QPushButton, QComboBox, QFileDialog, QMessageBox)
 
 import csv
 
@@ -63,31 +63,37 @@ class CommandCenter(QWidget):
         self.load_window = LoadData()
         
     def create_edit_window(self):
-        """Set up window for editing provided csv data."""
+        """Set up window for editing provided csv data or show error if data is N/A."""
         
-        self.edit_window = EditData(self.load_window.data)
-        self.edit_window.table.resizeColumnsToContents()
-        self.btn_save = QPushButton("Save Data", self.edit_window)
-        self.btn_cancel = QPushButton("Cancel", self.edit_window)
-    
-        edit_panel_v_box = QVBoxLayout()
-        edit_panel_v_box.addWidget(self.btn_save)
-        edit_panel_v_box.addWidget(self.btn_cancel)
-        edit_panel_v_box.addWidget(self.edit_window)
-        self.edit_panel = QGroupBox("Edit")
-        self.edit_panel.setLayout(edit_panel_v_box)
-        self.edit_panel.setWindowTitle("openVA GUI: Edit Data")
-        self.edit_panel.setGeometry(400, 400, 700, 600)
-        self.edit_panel.show()
-        
-        self.btn_save.clicked.connect(self.save_data)
-        self.btn_cancel.clicked.connect(self.cancel_data)
+        try:
+            self.edit_window = EditData(self.load_window.data)
+            self.edit_window.table.resizeColumnsToContents()
+            self.btn_save = QPushButton("Save Data", self.edit_window)
+            self.btn_cancel = QPushButton("Cancel", self.edit_window)
+            edit_panel_v_box = QVBoxLayout()
+            edit_panel_v_box.addWidget(self.btn_save)
+            edit_panel_v_box.addWidget(self.btn_cancel)
+            edit_panel_v_box.addWidget(self.edit_window)
+            self.edit_panel = QGroupBox("Edit")
+            self.edit_panel.setLayout(edit_panel_v_box)
+            self.edit_panel.setWindowTitle("openVA GUI: Edit Data")
+            self.edit_panel.setGeometry(400, 400, 700, 600)
+            self.edit_panel.show()
+            self.btn_save.clicked.connect(self.save_data)
+            self.btn_cancel.clicked.connect(self.cancel_data)
+            
+        except:
+            load_first_msg = QMessageBox()
+            load_first_msg.setWindowTitle("Error finding data")
+            load_first_msg.setText("Please load a valid data file first.")
+            x = load_first_msg.exec_()
        
     def save_data(self):
         """Set up window for saving data: replacing the provided csv file or saving the edited file to a new csv file."""
 
         updated_data = self.edit_window.model.data
-        file_name = QFileDialog.getSaveFileName(self,"Save As", "","csv Files (*.csv)")
+        file_name = QFileDialog.getSaveFileName(self,"Save As", self.load_window.fname + "_edited","csv Files (*.csv)")
+        self.load_window.fname = file_name[0]
         fname = file_name[0]
         with open(fname, 'w', newline = '') as output_file:
             csvwriter = csv.writer(output_file) 

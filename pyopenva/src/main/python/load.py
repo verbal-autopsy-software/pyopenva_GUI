@@ -17,13 +17,14 @@ class LoadData(QWidget):
         
         file_name = QFileDialog.getOpenFileName(self,"Open csv file", "","csv Files (*.csv)")
         self.fname = file_name[0]
-        header = []
-        rows = []
-        data = []
-        with open(self.fname, 'r', newline = '') as file:
-            csvreader = csv.reader(file)
-            header.append(next(csvreader))
-            for row in csvreader:
-                rows.append(row)
-            data += header + rows
-        self.data = data
+        if file_name is not None and file_name[0] != '':
+            header = []
+            rows = []
+            data = []
+            with open(self.fname, 'r', newline = '') as file:
+                csvreader = csv.reader(file)
+                header.append(next(csvreader))
+                for row in csvreader:
+                    rows.append(row)
+                data += header + rows
+            self.data = data
