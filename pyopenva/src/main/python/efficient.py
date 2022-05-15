@@ -6,10 +6,22 @@ pyopenva.efficient
 This module creates a stacked layout to walk through the analysis step-by-step.
 """
 
+from algorithms import InterVA5
 from data import COUNTRIES
 from pandas import read_csv
-from PyQt5.QtWidgets import (QComboBox, QFileDialog, QHBoxLayout, QLabel, QPushButton,
+from PyQt5.QtWidgets import (QComboBox, QDialog, QFileDialog, QHBoxLayout, QLabel, QPushButton,
                              QStackedLayout, QVBoxLayout, QWidget)
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
+from matplotlib.figure import Figure
+from matplotlib import style
+
+
+class MplCanvas(FigureCanvasQTAgg):
+
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(111)
+        super(MplCanvas, self).__init__(fig)
 
 
 class Efficient(QWidget):
@@ -27,6 +39,7 @@ class Efficient(QWidget):
         self.chosen_algorithm = "insilicova"
         self.insilicova_page = QWidget()
         self.insilicova_ui()
+        self.interva_results = None
         self.interva_page = QWidget()
         self.interva_hiv = "low"
         self.interva_malaria = "low"
@@ -39,6 +52,11 @@ class Efficient(QWidget):
         self.smartva_freetext = "True"
         self.smartva_ui()
         self.results_page = QWidget()
+        self.btn_show_plot = None
+        self.results_figure = None
+        # self.results_canvas = FigureCanvasQTAgg(self.results_figure)
+        # self.results_toolbar = NavigationToolbar2QT(self.results_canvas, self)
+        self.btn_download_plot = None
         self.results_ui()
         self.stacked_layout = QStackedLayout()
         self.stacked_layout.addWidget(self.data_page)
@@ -154,6 +172,7 @@ class Efficient(QWidget):
         self.interva_combo_malaria.currentTextChanged.connect(
             self.set_interva_malaria)
         self.btn_interva_run = QPushButton("Run InterVA")
+        self.btn_interva_run.pressed.connect(self.run_interva)
         self.btn_go_to_select_algorithm_page = QPushButton("Back")
         self.btn_go_to_select_algorithm_page.pressed.connect(
             self.show_select_algorithm_page)
@@ -248,12 +267,19 @@ class Efficient(QWidget):
         vbox_table.addWidget(label_csmf_table)
         vbox_table.addWidget(self.btn_download_table)
 
+        # vbox_csmf = QVBoxLayout()
+        # vbox_csmf.addWidget(self.results_toolbar)
+        # vbox_csmf.addWidget(self.results_canvas)
+        # vbox_csmf.addWidget(self.results_toolbar)
+
         vbox_plot = QVBoxLayout()
-        label_plot = QLabel("CSMF Plot")
-        label_csmf_plot = QLabel("CSMF plot goes here")
+        self.btn_show_plot = QPushButton("Show CSMF plot")
+        self.btn_show_plot.pressed.connect(self.run_plot_dialog)
+        # label_csmf_plot = QLabel("CSMF plot goes here")
         self.btn_download_plot = QPushButton("Download Plot")
-        vbox_plot.addWidget(label_plot)
-        vbox_plot.addWidget(label_csmf_plot)
+        vbox_plot.addWidget(self.btn_show_plot)
+        # vbox_plot.addWidget(label_csmf_plot)
+        # vbox_plot.addLayout(vbox_csmf)
         vbox_plot.addWidget(self.btn_download_plot)
 
         hbox = QHBoxLayout()
@@ -336,3 +362,56 @@ class Efficient(QWidget):
     def show_results_page(self):
         self.stacked_layout.setCurrentIndex(5)
         self.setWindowTitle("Efficient Mode: Results")
+
+    def run_interva(self):
+        self.interva_results = InterVA5(self.data)
+        self.interva_results.assign_causes()
+        #self.results_plot = MplCanvas(self)
+        #self.results_plot.axes = self.interva_results.plot(top_causes=10)
+
+    # def show_plot(self, top=5):
+    #     self.results_figure, ax = plt.subplots()
+    #     self.results_canvas = FigureCanvasQTAgg(self.results_figure)
+    #     self.results_toolbar = NavigationToolbar2QT(self.results_canvas, self)
+    #     if self.chosen_algorithm == "interva":
+    #         interva_fig, interva_ax = self.interva_results.plot(top_causes=top, ax=ax)
+    #         self.canvas.draw()
+
+    def run_plot_dialog(self):
+        self.plot_dialog = PlotDialog(self.interva_results,
+                                      self,
+                                      top=10)
+        self.plot_dialog.exec()
+
+
+class PlotDialog(QDialog):
+
+    def __init__(self, results, parent=None, top=5):
+        super(PlotDialog, self).__init__(parent=parent)
+        self.setWindowTitle("Cause-Specific Mortality Fraction")
+        self.results = results
+        self.n_top_cause = top
+        style.use("ggplot")
+        self.figure = Figure(figsize=(7, 5), dpi=100, constrained_layout=True)
+        self.ax = self.figure.add_subplot(111)
+        self.canvas = FigureCanvasQTAgg(self.figure)
+        self.toolbar = NavigationToolbar2QT(self.canvas, self)
+
+        vbox_csmf = QVBoxLayout()
+        vbox_csmf.addWidget(self.toolbar)
+        vbox_csmf.addWidget(self.canvas)
+        self.setLayout(vbox_csmf)
+
+        self.results.plot(top_causes=self.n_top_cause, ax=self.ax)
+        self.canvas.draw()
+
+        # self.btn_box = QDialogButtonBox(QDialogButtonBox.Cancel |
+        #                                 QDialogButtonBox.Ok)
+        # self.btn_box.accepted.connect(self.accept)
+        # self.btn_box.accepted.connect(
+        #     lambda:
+        #     self.parent().update_interva_hiv(self.hiv))
+        # self.btn_box.accepted.connect(
+        #     lambda:
+        #     self.parent().update_interva_malaria(self.malaria))
+        # self.btn_box.rejected.connect(self.reject)
