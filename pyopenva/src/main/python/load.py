@@ -27,4 +27,5 @@ class LoadData(QWidget):
                 for row in csvreader:
                     rows.append(row)
                 data += header + rows
+            self.header = header
             self.data = data
