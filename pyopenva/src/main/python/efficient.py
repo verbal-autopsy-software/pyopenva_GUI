@@ -9,9 +9,12 @@ This module creates a stacked layout to walk through the analysis step-by-step.
 from algorithms import InterVA5
 from data import COUNTRIES
 from pandas import read_csv
-from PyQt5.QtWidgets import (QComboBox, QDialog, QFileDialog, QHBoxLayout, QLabel, QPushButton,
-                             QStackedLayout, QVBoxLayout, QWidget)
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
+from PyQt5.QtCore import QAbstractTableModel, Qt
+from PyQt5.QtWidgets import (QComboBox, QDialog, QFileDialog, QHBoxLayout,
+                             QLabel, QPushButton, QStackedLayout, QTableView,
+                             QVBoxLayout, QWidget)
+from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg,
+                                                NavigationToolbar2QT)
 from matplotlib.figure import Figure
 from matplotlib import style
 
@@ -53,10 +56,11 @@ class Efficient(QWidget):
         self.smartva_ui()
         self.results_page = QWidget()
         self.btn_show_plot = None
+        self.btn_show_table = None
         self.results_figure = None
-        # self.results_canvas = FigureCanvasQTAgg(self.results_figure)
-        # self.results_toolbar = NavigationToolbar2QT(self.results_canvas, self)
         self.btn_download_plot = None
+        self.btn_download_table = None
+        self.btn_download_individual_results = None
         self.results_ui()
         self.stacked_layout = QStackedLayout()
         self.stacked_layout.addWidget(self.data_page)
@@ -260,26 +264,17 @@ class Efficient(QWidget):
         layout = QVBoxLayout()
 
         vbox_table = QVBoxLayout()
-        label_table = QLabel("Top Causes in CSMF")
-        label_csmf_table = QLabel("CSMF table goes here")
+        self.btn_show_table = QPushButton("Show CSMF table")
+        self.btn_show_table.pressed.connect(self.run_table_dialog)
         self.btn_download_table = QPushButton("Download Table")
-        vbox_table.addWidget(label_table)
-        vbox_table.addWidget(label_csmf_table)
+        vbox_table.addWidget(self.btn_show_table)
         vbox_table.addWidget(self.btn_download_table)
-
-        # vbox_csmf = QVBoxLayout()
-        # vbox_csmf.addWidget(self.results_toolbar)
-        # vbox_csmf.addWidget(self.results_canvas)
-        # vbox_csmf.addWidget(self.results_toolbar)
 
         vbox_plot = QVBoxLayout()
         self.btn_show_plot = QPushButton("Show CSMF plot")
         self.btn_show_plot.pressed.connect(self.run_plot_dialog)
-        # label_csmf_plot = QLabel("CSMF plot goes here")
         self.btn_download_plot = QPushButton("Download Plot")
         vbox_plot.addWidget(self.btn_show_plot)
-        # vbox_plot.addWidget(label_csmf_plot)
-        # vbox_plot.addLayout(vbox_csmf)
         vbox_plot.addWidget(self.btn_download_plot)
 
         hbox = QHBoxLayout()
@@ -287,12 +282,12 @@ class Efficient(QWidget):
         hbox.addLayout(vbox_plot)
 
         layout.addLayout(hbox)
-        self.btn_download_inividual_results = QPushButton(
+        self.btn_download_individual_results = QPushButton(
             "Download Individual Cause Assignments")
         self.btn_go_to_algorithm_page = QPushButton("Back")
         self.btn_go_to_algorithm_page.pressed.connect(
             self.show_algorithm_page)
-        layout.addWidget(self.btn_download_inividual_results)
+        layout.addWidget(self.btn_download_individual_results)
         layout.addStretch(1)
         layout.addWidget(self.btn_go_to_algorithm_page)
         self.results_page.setLayout(layout)
@@ -366,22 +361,18 @@ class Efficient(QWidget):
     def run_interva(self):
         self.interva_results = InterVA5(self.data)
         self.interva_results.assign_causes()
-        #self.results_plot = MplCanvas(self)
-        #self.results_plot.axes = self.interva_results.plot(top_causes=10)
-
-    # def show_plot(self, top=5):
-    #     self.results_figure, ax = plt.subplots()
-    #     self.results_canvas = FigureCanvasQTAgg(self.results_figure)
-    #     self.results_toolbar = NavigationToolbar2QT(self.results_canvas, self)
-    #     if self.chosen_algorithm == "interva":
-    #         interva_fig, interva_ax = self.interva_results.plot(top_causes=top, ax=ax)
-    #         self.canvas.draw()
 
     def run_plot_dialog(self):
         self.plot_dialog = PlotDialog(self.interva_results,
                                       self,
                                       top=10)
         self.plot_dialog.exec()
+
+    def run_table_dialog(self):
+        self.table_dialog = TableDialog(self.interva_results,
+                                        self,
+                                        top=10)
+        self.table_dialog.exec()
 
 
 class PlotDialog(QDialog):
@@ -415,3 +406,50 @@ class PlotDialog(QDialog):
         #     lambda:
         #     self.parent().update_interva_malaria(self.malaria))
         # self.btn_box.rejected.connect(self.reject)
+
+
+class TableDialog(QDialog):
+
+    def __init__(self, results, parent=None, top=5):
+        super(TableDialog, self).__init__(parent=parent)
+        self.setWindowTitle("Cause-Specific Mortality Fraction")
+        self.results = results
+        self.n_top_cause = top
+
+        self.table = QTableView()
+        self.table.setShowGrid(False)
+        csmf_df = results.csmf.reset_index()[0:top]
+        csmf_df.rename(columns={"index": "Cause", "cause": "CSMF"},
+                       inplace=True)
+        self.model = TableModel(csmf_df)
+        self.table.setModel(self.model)
+
+        vbox_csmf = QVBoxLayout()
+        vbox_csmf.addWidget(self.table)
+        self.setLayout(vbox_csmf)
+
+
+class TableModel(QAbstractTableModel):
+
+    def __init__(self, data):
+        super(TableModel, self).__init__()
+        self._data = data
+
+    def data(self, index, role):
+        if role == Qt.DisplayRole:
+            value = self._data.iloc[index.row(), index.column()]
+            return str(value)
+
+    def rowCount(self, index):
+        return self._data.shape[0]
+
+    def columnCount(self, index):
+        return self._data.shape[1]
+
+    def headerData(self, section, orientation, role):
+        # section is the index of the column/row.
+        if role == Qt.DisplayRole:
+            if orientation == Qt.Horizontal:
+                return str(self._data.columns[section])
+            # if orientation == Qt.Vertical:
+            #     return str(self._data.index[section])
