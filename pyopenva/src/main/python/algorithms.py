@@ -12,6 +12,7 @@ from time import sleep
 from pandas import concat, DataFrame
 from matplotlib.pyplot import gca, get_cmap
 from numpy import linspace
+from PyQt5.QtWidgets import QApplication
 
 # import os
 # os.getcwd()
@@ -23,9 +24,9 @@ from numpy import linspace
 class InterVA5:
 
     # TODO: add subsetting (e.g., neonates)
-    def __init__(self, va_input):
+    def __init__(self, va_input, app_instance):
         self.va_input = va_input
-        #self.progress_bar = progress_bar
+        self.app_instance = app_instance
         self.causes = DataFrame({"cause": [], "code": []})
         cod_dict = {key: value for key, value in CAUSETEXTV5.items() if
                     "a_" not in key and "c_" not in key}
@@ -44,9 +45,15 @@ class InterVA5:
                                  weights=csmf_weights)[0]
             next_row = DataFrame(next_cause, index=[next_id])
             self.causes = concat([self.causes, next_row])
+            progress = int(100 * i/n_deaths)
+            self.app_instance.interva_progress_bar.setValue(progress)
+            QApplication.processEvents()
+
         self.csmf = self.causes["cause"].value_counts(normalize=True,
                                                       sort=True,
                                                       ascending=False)
+        self.app_instance.interva_progress_bar.setValue(100)
+        QApplication.processEvents()
 
     def plot(self, top_causes=5, ax=None):
         csmf_top_n = self.csmf[0:top_causes]

@@ -10,8 +10,8 @@ from algorithms import InterVA5
 from data import COUNTRIES
 from pandas import read_csv
 from PyQt5.QtCore import QAbstractTableModel, Qt
-from PyQt5.QtWidgets import (QComboBox, QDialog, QFileDialog, QHBoxLayout,
-                             QLabel, QPushButton, QStackedLayout, QTableView,
+from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QFileDialog, QHBoxLayout,
+                             QLabel, QProgressBar, QPushButton, QStackedLayout, QTableView,
                              QVBoxLayout, QWidget)
 from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg,
                                                 NavigationToolbar2QT)
@@ -46,6 +46,7 @@ class Efficient(QWidget):
         self.interva_page = QWidget()
         self.interva_hiv = "low"
         self.interva_malaria = "low"
+        self.interva_progress_bar = QProgressBar()
         self.interva_ui()
         self.smartva_page = QWidget()
         self.smartva_country = "Unknown"
@@ -189,6 +190,7 @@ class Efficient(QWidget):
         layout.addWidget(label_malaria)
         layout.addWidget(self.interva_combo_malaria)
         layout.addWidget(self.btn_interva_run)
+        layout.addWidget(self.interva_progress_bar)
         layout.addStretch(1)
         h_box = QHBoxLayout()
         h_box.addWidget(self.btn_go_to_select_algorithm_page)
@@ -359,7 +361,7 @@ class Efficient(QWidget):
         self.setWindowTitle("Efficient Mode: Results")
 
     def run_interva(self):
-        self.interva_results = InterVA5(self.data)
+        self.interva_results = InterVA5(self.data, self)
         self.interva_results.assign_causes()
 
     def run_plot_dialog(self):
@@ -372,6 +374,8 @@ class Efficient(QWidget):
         self.table_dialog = TableDialog(self.interva_results,
                                         self,
                                         top=10)
+        self.table_dialog.resize(self.table_dialog.table.width(),
+                                 self.table_dialog.table.height())
         self.table_dialog.exec()
 
 
@@ -423,9 +427,17 @@ class TableDialog(QDialog):
                        inplace=True)
         self.model = TableModel(csmf_df)
         self.table.setModel(self.model)
+        column_width = self.table.sizeHintForColumn(0) + 100
+        #self.table.resizeColumnToContents(0)
+        self.table.setColumnWidth(0, column_width)
+
+        clipboard = QApplication.clipboard()
+        self.btn_copy = QPushButton("Copy table to clipboard")
+        self.btn_copy.pressed.connect(lambda: clipboard.setText(csmf_df.to_csv(index=False)))
 
         vbox_csmf = QVBoxLayout()
         vbox_csmf.addWidget(self.table)
+        vbox_csmf.addWidget(self.btn_copy)
         self.setLayout(vbox_csmf)
 
 
