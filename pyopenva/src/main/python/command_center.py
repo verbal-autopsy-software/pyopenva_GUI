@@ -9,8 +9,8 @@ This module creates the window for loading data and setting algorithm options.
 from insilico import InSilicoDialog
 from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QGroupBox,
                              QLabel, QPushButton, QComboBox, QFileDialog, 
-                             QMessageBox, QLineEdit)
-from PyQt5.QtCore import Qt
+                             QMessageBox, QLineEdit, QInputDialog)
+from PyQt5.QtCore import Qt, QDate, QTime
 
 import csv
 
@@ -199,21 +199,30 @@ class CommandCenter(QWidget):
             self.search_results_counter.setText(str(self.search_index + 1) + "/" + str(len(self.search_results)))
         
     def save_data(self):
-        """Set up window for saving data: replacing the provided csv file or saving the edited file to a new csv file."""
+        """Set up window for saving data and prompts for user's name."""
 
-        updated_data = self.edit_window.model.data
-        file_name = QFileDialog.getSaveFileName(self,"Save As", self.load_window.fname + "_edited","csv Files (*.csv)")
-        fname = file_name[0]
-        if file_name is not None and fname != "":
-            self.load_window.fname = fname
-            with open(fname, 'w', newline = '') as output_file:
-                csvwriter = csv.writer(output_file) 
-                for row in updated_data:
-                    csvwriter.writerow(row)
+        name = ""
+        text, ok = QInputDialog.getText(self.edit_panel, 'Name Input', 'Enter your name for save file name purposes:')
+        while(ok and len(text) == 0):
+            load_first_msg = QMessageBox().information(self.edit_panel, "Length of text error", "Please type in your name, which must be more than 0 characters long.", QMessageBox.Ok)
+            text, ok = QInputDialog.getText(self.edit_panel, 'Name Input', 'Enter your name for save file name purposes:')
+        if ok and len(text) > 0:
+            name += str(text).replace(" ", "-")
+            date = QDate.currentDate().toString(Qt.ISODate)
+            time = QTime.currentTime().toString('hh.mm.ss.zzz')
+            # save file format: file-name_edited-by_name_date_time.csv
+            file_name = QFileDialog.getSaveFileName(self,"Save As", self.load_window.fname[:-4] + "_edited-by_" + name + "_" + date + "_" + time,"csv Files (*.csv)")
+            fname = file_name[0]
+            if file_name is not None and fname != "":
+                self.load_window.fname = fname
+                with open(fname, 'w', newline = '') as output_file:
+                    csvwriter = csv.writer(output_file) 
+                    for row in self.edit_window.model.data:
+                        csvwriter.writerow(row)
+                    self.edit_panel.close()
+            else:
                 self.edit_panel.close()
-        else:
-            self.edit_panel.close()
-            self.edit_panel.show()
+                self.edit_panel.show()
     
     def cancel_data(self):
         """Set up window for canceling edits made to the data model."""
