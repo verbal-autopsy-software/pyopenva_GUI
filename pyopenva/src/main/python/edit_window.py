@@ -6,8 +6,9 @@ pyopenva.edit_window
 This module creates the window for editing data.
 """
 
+from pickle import TRUE
 from PyQt5.QtWidgets import (QTableView, QMainWindow)
-from PyQt5.QtCore import QAbstractTableModel, Qt
+from PyQt5.QtCore import QAbstractTableModel, Qt, QSortFilterProxyModel
 
 class TableModel(QAbstractTableModel):
     
@@ -32,6 +33,10 @@ class TableModel(QAbstractTableModel):
     
     def flags(self, index):
         return Qt.ItemIsSelectable|Qt.ItemIsEnabled|Qt.ItemIsEditable
+    
+    def column_name(self, column, role):
+        if role == Qt.DisplayRole:
+            return self.data[0][column]
 
 
 class EditData(QMainWindow):
@@ -41,6 +46,9 @@ class EditData(QMainWindow):
         
         self.table = QTableView() 
         self.model = TableModel(data)
-        self.table.setModel(self.model)
+        self.sort_model = QSortFilterProxyModel()
+        self.sort_model.setSourceModel(self.model)
+        # self.table.setModel(self.model)
+        self.table.setModel(self.sort_model)
         self.setCentralWidget(self.table)
     
