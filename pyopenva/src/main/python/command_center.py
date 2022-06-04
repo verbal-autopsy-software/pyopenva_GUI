@@ -9,12 +9,13 @@ This module creates the window for loading data and setting algorithm options.
 from insilico import InSilicoDialog
 from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QGroupBox,
                              QLabel, QPushButton, QComboBox, QFileDialog, 
-                             QMessageBox, QLineEdit, QInputDialog)
+                             QMessageBox, QLineEdit, QInputDialog, 
+                             QTableView, QCheckBox)
 from PyQt5.QtCore import Qt, QDate, QTime
 
 import csv
 
-from edit_window import EditData
+from edit_window import EditData, EditableHeaderView
 from load import LoadData
 
 class CommandCenter(QWidget):
@@ -71,11 +72,20 @@ class CommandCenter(QWidget):
         """Set up window for editing provided csv data or show error if data is N/A."""
         
         self.edit_window = EditData(self.load_window.data)
+        self.editable_header = self.edit_window.table.horizontalHeader()
+        self.editable_header = EditableHeaderView(Qt.Horizontal, self.edit_window)
+        self.edit_window.table.setHorizontalHeader(self.editable_header)
+        self.edit_window.table.setEditTriggers(QTableView.NoEditTriggers)
+        self.edit_window.table.setRowHidden(0, True)
         self.edit_window.table.resizeColumnsToContents()
         
         edit_panel_h_box_1 = QHBoxLayout()
+        self.checkbox_col_editing = QCheckBox("Editable Header Fields (Column Names)")
+        self.checkbox_row_data_editing = QCheckBox("Editable Row Data")
         self.btn_save = QPushButton("Save Data")
         self.btn_cancel = QPushButton("Cancel")
+        edit_panel_h_box_1.addWidget(self.checkbox_col_editing)
+        edit_panel_h_box_1.addWidget(self.checkbox_row_data_editing)
         edit_panel_h_box_1.addWidget(self.btn_save)
         edit_panel_h_box_1.addWidget(self.btn_cancel)
         
@@ -143,6 +153,8 @@ class CommandCenter(QWidget):
         self.edit_panel.setGeometry(400, 400, 700, 600)
         self.edit_panel.show()
         
+        self.checkbox_col_editing.stateChanged.connect(lambda:self.editing_state(self.checkbox_col_editing))
+        self.checkbox_row_data_editing.stateChanged.connect(lambda:self.editing_state(self.checkbox_row_data_editing))
         self.btn_save.clicked.connect(self.save_data)
         self.btn_cancel.clicked.connect(self.cancel_data)
         
@@ -161,6 +173,22 @@ class CommandCenter(QWidget):
         self.edit_window.table.selectionModel().currentChanged.connect(self.change_column)
 
         # load_first_msg = QMessageBox().information(self, "Error finding data", "Please load a valid data file.", QMessageBox.Ok)
+
+    def editing_state(self, checkbox):
+        """Updates editing state of the data table."""
+    
+        if checkbox.text() == "Editable Header Fields (Column Names)":
+            if checkbox.isChecked() == True:
+                self.editable_header.sectionDoubleClicked.connect(self.editable_header.edit_header)
+                self.editable_header.line.editingFinished.connect(self.editable_header.done_editing)
+            else:
+                self.editable_header.sectionDoubleClicked.disconnect(self.editable_header.edit_header)
+                self.editable_header.line.editingFinished.disconnect(self.editable_header.done_editing)
+        if checkbox.text() == "Editable Row Data":
+            if checkbox.isChecked() == True:
+                self.edit_window.table.setEditTriggers(QTableView.AllEditTriggers)
+            else:
+                self.edit_window.table.setEditTriggers(QTableView.NoEditTriggers)
 
     def save_data(self):
         """Set up window for saving data and prompts for user's name."""
