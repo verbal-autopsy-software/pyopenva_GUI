@@ -6,9 +6,8 @@ pyopenva.edit_window
 This module creates the window for editing data.
 """
 
-from pickle import TRUE
 from PyQt5.QtWidgets import (QTableView, QMainWindow)
-from PyQt5.QtCore import QAbstractTableModel, Qt, QSortFilterProxyModel
+from PyQt5.QtCore import (QAbstractTableModel, Qt, QSortFilterProxyModel)
 
 class TableModel(QAbstractTableModel):
     
@@ -17,8 +16,10 @@ class TableModel(QAbstractTableModel):
         self.data = data
     
     def data(self, index, role):
-        if role == Qt.DisplayRole:
-            return self.data[index.row()][index.column()]
+        if index.isValid():
+            if role == Qt.DisplayRole or role == Qt.EditRole:
+                value = self.data[index.row()][index.column()]
+                return str(value)
 
     def setData(self, index, value, role):
         if role == Qt.EditRole:
@@ -34,7 +35,7 @@ class TableModel(QAbstractTableModel):
     def flags(self, index):
         return Qt.ItemIsSelectable|Qt.ItemIsEnabled|Qt.ItemIsEditable
     
-    def column_name(self, column, role):
+    def column_name(self, column, role = Qt.DisplayRole):
         if role == Qt.DisplayRole:
             return self.data[0][column]
 
@@ -44,11 +45,10 @@ class EditData(QMainWindow):
     def __init__(self, data):
         super().__init__()
         
-        self.table = QTableView() 
+        self.table = QTableView()
         self.model = TableModel(data)
         self.sort_model = QSortFilterProxyModel()
         self.sort_model.setSourceModel(self.model)
         # self.table.setModel(self.model)
         self.table.setModel(self.sort_model)
         self.setCentralWidget(self.table)
-    
