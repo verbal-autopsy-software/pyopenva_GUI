@@ -6,18 +6,19 @@ pyopenva.command_center
 This module creates the window for loading data and setting algorithm options.
 """
 
-from insilico import InSilicoDialog
-from interva import InterVADialog
-from smartva import SmartVADialog
-from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QGroupBox,
-                             QLabel, QPushButton, QComboBox, QFileDialog, 
-                             QMessageBox, QLineEdit, QInputDialog)
-from PyQt5.QtCore import Qt, QDate, QTime
-
 import csv
 
+from PyQt5.QtCore import Qt, QDate, QTime
+from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QGroupBox,
+                             QLabel, QPushButton, QComboBox, QFileDialog,
+                             QMessageBox, QLineEdit, QInputDialog)
+
 from edit_window import EditData
+from insilico import InSilicoDialog
+from interva import InterVADialog
 from load import LoadData
+from smartva import SmartVADialog
+
 
 class CommandCenter(QWidget):
 
@@ -64,12 +65,14 @@ class CommandCenter(QWidget):
         self.btn_data_format.addItems(("WHO 2016 (v151)",
                                        "WHO 2012",
                                        "PHMRC"))
+        self.btn_pycrossva = QPushButton("Run pyCrossVA")
         self.btn_data_check = QPushButton("Data Check")
         self.btn_edit_data = QPushButton("Edit Check")
         self.btn_user_mode = QPushButton("Go Back to User Mode Selection")
         data_panel_v_box.addWidget(self.btn_load_data)
         data_panel_v_box.addWidget(label_data_format)
         data_panel_v_box.addWidget(self.btn_data_format)
+        data_panel_v_box.addWidget(self.btn_pycrossva)
         data_panel_v_box.addWidget(self.btn_data_check)
         data_panel_v_box.addWidget(self.btn_edit_data)
         data_panel_v_box.addStretch(2)
@@ -78,12 +81,34 @@ class CommandCenter(QWidget):
         self.data_panel.setLayout(data_panel_v_box)
         self.btn_load_data.clicked.connect(self.load_data)
         self.btn_edit_data.clicked.connect(self.create_edit_window)
+        self.btn_pycrossva.clicked.connect(self.pycrossva_window)
 
     def load_data(self):
         """Set up window for loading csv data."""
         
         self.load_window = LoadData()
-        
+        #run pycrossVA
+
+    def pycrossva_window(self):
+
+        self.w = QWidget()
+        self.b = QPushButton(self.w)
+        self.b.setText("Run pyCrossVA")
+
+        self.b.move(100, 50)
+        self.b.clicked.connect(self.showdialog)
+        self.w.setWindowTitle("pyCrossVA Results")
+        self.w.show()
+
+    def showdialog(self):
+        self.msg = QMessageBox()
+        self.msg.setIcon(QMessageBox.Information)
+
+        self.msg.setText("Results for pyCrossVA")
+        self.msg.setWindowTitle("pyCrossVA Results")
+        self.msg.setDetailedText("PRINT RESULTS HERE")
+        self.msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+
     def create_edit_window(self):
         """Set up window for editing provided csv data or show error if data is N/A."""
         
