@@ -89,16 +89,16 @@ class CommandCenter(QWidget):
         """Set up window for loading csv data."""
         
         self.load_window = LoadData()
-        #run pycrossVA
 
     def run_pycrossva(self):
         results = transform(("2016WHOv151", "InterVA5"), self.load_window.data)
         logging.info(results)
-        self.pycrossva_messages = (MESSAGE)
+        self.pycrossva_messages = (results)
 
     def show_pycrossva(self):
         self.msg = QMessageBox()
         self.msg.setIcon(QMessageBox.Information)
+        self.run_pycrossva()
 
         self.msg.setText("Results for pyCrossVA")
         self.msg.setWindowTitle("pyCrossVA Results")
