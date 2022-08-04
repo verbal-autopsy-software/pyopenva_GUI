@@ -7,6 +7,7 @@ This module creates the window for loading data and setting algorithm options.
 """
 
 import csv
+import logging
 
 from PyQt5.QtCore import Qt, QDate, QTime
 from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QGroupBox,
@@ -18,6 +19,7 @@ from insilico import InSilicoDialog
 from interva import InterVADialog
 from load import LoadData
 from smartva import SmartVADialog
+from pycrossva.transform import transform
 
 
 class CommandCenter(QWidget):
@@ -81,7 +83,7 @@ class CommandCenter(QWidget):
         self.data_panel.setLayout(data_panel_v_box)
         self.btn_load_data.clicked.connect(self.load_data)
         self.btn_edit_data.clicked.connect(self.create_edit_window)
-        self.btn_pycrossva.clicked.connect(self.pycrossva_window)
+        self.btn_pycrossva.clicked.connect(self.show_pycrossva)
 
     def load_data(self):
         """Set up window for loading csv data."""
@@ -89,25 +91,20 @@ class CommandCenter(QWidget):
         self.load_window = LoadData()
         #run pycrossVA
 
-    def pycrossva_window(self):
+    def run_pycrossva(self):
+        results = transform(("2016WHOv151", "InterVA5"), self.load_window.data)
+        logging.info(results)
+        self.pycrossva_messages = (MESSAGE)
 
-        self.w = QWidget()
-        self.b = QPushButton(self.w)
-        self.b.setText("Run pyCrossVA")
-
-        self.b.move(100, 50)
-        self.b.clicked.connect(self.showdialog)
-        self.w.setWindowTitle("pyCrossVA Results")
-        self.w.show()
-
-    def showdialog(self):
+    def show_pycrossva(self):
         self.msg = QMessageBox()
         self.msg.setIcon(QMessageBox.Information)
 
         self.msg.setText("Results for pyCrossVA")
         self.msg.setWindowTitle("pyCrossVA Results")
-        self.msg.setDetailedText("PRINT RESULTS HERE")
+        self.msg.setDetailedText(self.pycrossva_messages)
         self.msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        self.msg.show()
 
     def create_edit_window(self):
         """Set up window for editing provided csv data or show error if data is N/A."""
