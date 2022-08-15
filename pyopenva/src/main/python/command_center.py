@@ -7,8 +7,11 @@ This module creates the window for loading data and setting algorithm options.
 """
 
 import csv
+import sys
+from contextlib import contextmanager
+from io import StringIO
 import logging
-
+from pandas import DataFrame
 from PyQt5.QtCore import Qt, QDate, QTime
 from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QGroupBox,
                              QLabel, QPushButton, QComboBox, QFileDialog,
@@ -28,6 +31,7 @@ class CommandCenter(QWidget):
         super().__init__()
         self.raw_data = None
         self.raw_data_loaded = False
+        self.pycrossva_data = None
         self.insilico_dialog = None
         self.interva_dialog = None
 
@@ -90,10 +94,23 @@ class CommandCenter(QWidget):
         
         self.load_window = LoadData()
 
+    @contextmanager
+    def _capture_stdout(self, output):
+        stdout = sys.stdout
+        sys.stdout = output
+        try:
+            yield
+        finally:
+            sys.stdout = stdout
+
     def run_pycrossva(self):
-        results = transform(("2016WHOv151", "InterVA5"), self.load_window.data)
-        logging.info(results)
-        self.pycrossva_messages = (results)
+        df = DataFrame(self.load_window.data[1:],
+                       columns=self.load_window.data[0])
+        pycrossva_stdout = StringIO()
+        with self._capture_stdout(pycrossva_stdout):
+            self.pycrossva_data = transform(("2016WHOv151", "InterVA5"), df)
+        logging.info(pycrossva_stdout.getvalue())
+        self.pycrossva_messages = pycrossva_stdout.getvalue()
 
     def show_pycrossva(self):
         self.msg = QMessageBox()
