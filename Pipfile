@@ -8,6 +8,7 @@ pyqt5 = "*"
 pandas = "*"
 pyinstaller = "*"
 pycrossva = "*"
+matplotlib = "*"
 
 [dev-packages]
 

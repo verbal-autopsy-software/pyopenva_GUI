@@ -29,6 +29,9 @@ class Results(QWidget):
         self.results_v_box.addWidget(self.btn_go_to_command_center)
         self.setLayout(self.results_v_box)
 
+    #TODO: add slider for number of causes to include in the results
+    #TODO: add option for comparison plot?
+    #TODO: add option to group causes into aggregated categories?
     def create_insilico_panel(self):
         insilico_h_box = QHBoxLayout()
         self.btn_insilico_report = QPushButton("Report")

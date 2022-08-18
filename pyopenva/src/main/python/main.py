@@ -7,6 +7,7 @@ This module creates user interface for the app.
 """
 from PyQt5.QtWidgets import QApplication
 import sys
+from efficient import Efficient
 from mode import Mode
 from command_center import CommandCenter
 from results import Results
@@ -16,9 +17,13 @@ class WindowManager:
 
     def __init__(self):
         super().__init__()
+        self.efficient = Efficient()
         self.mode = Mode()
         self.command_center = CommandCenter()
         self.results = Results()
+
+        self.efficient.btn_go_to_mode.clicked.connect(
+            self.efficient_to_mode)
 
         self.mode.btn_efficient.clicked.connect(self.show_efficient)
         self.mode.btn_advanced.clicked.connect(self.show_command_center)
@@ -31,32 +36,55 @@ class WindowManager:
             self.results_to_command_center)
 
         self.results.btn_go_to_mode.clicked.connect(
-        self.results_to_mode)
+            self.results_to_mode)
 
         self.mode.show()
 
+    #TODO: Set up advanced mode with QStackedLayout
+    def efficient_to_mode(self):
+        self.sync_windows(self.efficient, self.mode)
+        self.efficient.hide()
+        self.mode.show()
+
     def show_efficient(self):
-        pass
+        self.sync_windows(self.mode, self.efficient)
+        self.mode.hide()
+        self.efficient.show()
 
     def show_command_center(self):
+        self.sync_windows(self.mode, self.command_center)
         self.mode.hide()
         self.command_center.show()
 
     def show_mode(self):
+        self.sync_windows(self.command_center, self.mode)
         self.command_center.hide()
         self.mode.show()
 
     def show_results(self):
+        self.sync_windows(self.command_center, self.results)
         self.command_center.hide()
         self.results.show()
 
     def results_to_command_center(self):
+        self.sync_windows(self.results, self.command_center)
         self.results.hide()
         self.command_center.show()
 
     def results_to_mode(self):
+        self.sync_windows(self.results, self.mode)
         self.results.hide()
         self.mode.show()
+
+    #TODO: figure out why window keeps moving up when changing to different
+    # window
+    @staticmethod
+    def sync_windows(hide, show):
+        new_x = hide.pos().x()
+        new_y = hide.pos().y()
+        new_width = hide.size().width()
+        new_height = hide.size().height()
+        show.setGeometry(new_x, new_y, new_width, new_height)
 
 
 if __name__ == '__main__':
