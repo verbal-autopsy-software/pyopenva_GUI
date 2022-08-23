@@ -17,7 +17,7 @@ class WindowManager(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("openVA GUI")
+        self.setWindowTitle("openVA GUI: Select Mode")
         self.efficient = Efficient()
         self.mode = Mode()
         self.command_center = CommandCenter()

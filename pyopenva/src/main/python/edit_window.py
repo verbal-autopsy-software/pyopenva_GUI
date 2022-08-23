@@ -42,27 +42,21 @@ class TableModel(QAbstractTableModel):
     
     def flags(self, index):
         return Qt.ItemIsSelectable|Qt.ItemIsEnabled|Qt.ItemIsEditable
-    
 
     def column_name(self, column, role):
         if role == Qt.DisplayRole:
             return self.data[0][column]
-
-
 
     def headerData(self, section, orientation, role = Qt.DisplayRole):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return self.data[0][section]
 
 
-
 class EditData(QMainWindow):
 
     def __init__(self, data):
         super().__init__()
-        
-
-        self.table = QTableView() 
+        self.table = QTableView()
         self.model = TableModel(data)
         self.sort_model = QSortFilterProxyModel()
         self.sort_model.setSourceModel(self.model)
@@ -70,10 +64,12 @@ class EditData(QMainWindow):
         self.table.setModel(self.sort_model)
         self.setCentralWidget(self.table)
 
+
 class EditableHeaderView(QHeaderView):
      
-    def __init__(self,orientation,parent=None):
-        super(EditableHeaderView, self).__init__(orientation,parent)
+    def __init__(self,orientation, parent=None):
+        super(EditableHeaderView, self).__init__(orientation,
+                                                 parent)
         self.setSectionsMovable(True)
         self.setSectionsClickable(True)
         self.line = QLineEdit(parent=self.viewport())
@@ -82,7 +78,7 @@ class EditableHeaderView(QHeaderView):
         self.line.blockSignals(True)
         self.sectionedit = 0
  
-    def edit_header(self,section):
+    def edit_header(self, section):
         edit_geometry = self.line.geometry()
         edit_geometry.setWidth(self.sectionSize(section))
         edit_geometry.moveLeft(self.sectionViewportPosition(section))

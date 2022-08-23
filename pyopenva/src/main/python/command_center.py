@@ -12,6 +12,7 @@ from contextlib import contextmanager
 from io import StringIO
 import logging
 from pandas import DataFrame
+from numpy.random import default_rng
 from PyQt5.QtCore import Qt, QDate, QTime
 from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QGroupBox,
                              QLabel, QPushButton, QComboBox, QFileDialog,
@@ -32,9 +33,11 @@ class CommandCenter(QWidget):
         super().__init__()
         self.raw_data = None
         self.raw_data_loaded = False
+        self.label_data = None
         self.pycrossva_data = None
         self.insilico_dialog = None
         self.interva_dialog = None
+        self.load_window = None
 
         self.setGeometry(400, 400, 700, 600)
         self.setWindowTitle("openVA GUI: Command Center")
@@ -67,38 +70,45 @@ class CommandCenter(QWidget):
 
         data_panel_v_box = QVBoxLayout()
         self.btn_load_data = QPushButton("Load Data (.csv)")
+        self.label_data = QLabel("(no data loaded)")
+        self.label_data.setAlignment(Qt.AlignCenter)
         label_data_format = QLabel("Data Format:")
         self.btn_data_format = QComboBox()
         self.btn_data_format.addItems(("WHO 2016 (v151)",
                                        "WHO 2012",
                                        "PHMRC"))
         self.btn_pycrossva = QPushButton("Run pyCrossVA")
-        self.btn_data_check = QPushButton("Data Check")
+        #self.btn_data_check = QPushButton("Data Check")
         self.btn_edit_data = QPushButton("Edit Check")
         self.btn_edit_data.setEnabled(False)
         self.btn_user_mode = QPushButton("Go Back to User Mode Selection")
         data_panel_v_box.addWidget(self.btn_load_data)
+        data_panel_v_box.addWidget(self.label_data)
         data_panel_v_box.addWidget(label_data_format)
         data_panel_v_box.addWidget(self.btn_data_format)
         data_panel_v_box.addWidget(self.btn_pycrossva)
-        data_panel_v_box.addWidget(self.btn_data_check)
+        #data_panel_v_box.addWidget(self.btn_data_check)
         data_panel_v_box.addWidget(self.btn_edit_data)
         data_panel_v_box.addStretch(2)
         data_panel_v_box.addWidget(self.btn_user_mode)
         self.data_panel = QGroupBox("Data")
         self.data_panel.setLayout(data_panel_v_box)
         self.btn_load_data.clicked.connect(self.load_data)
+        self.btn_load_data.clicked.connect(self.update_data)
         self.btn_edit_data.clicked.connect(self.create_edit_window)
         self.btn_pycrossva.clicked.connect(self.show_pycrossva)
-
 
     def load_data(self):
         """Set up window for loading csv data."""
         
         self.load_window = LoadData()
-        if self.load_window.fname != '':
+        if self.load_window.fname != "":
             self.btn_edit_data.setEnabled(True)
+            n_records = len(self.load_window.data) - 1
+            self.label_data.setText(f"({n_records} records loaded)")
 
+    def update_data(self):
+        """Update status of data."""
 
     @contextmanager
     def _capture_stdout(self, output):
@@ -119,29 +129,40 @@ class CommandCenter(QWidget):
         self.pycrossva_messages = pycrossva_stdout.getvalue()
 
     def show_pycrossva(self):
-        self.msg = QMessageBox()
-        self.msg.setIcon(QMessageBox.Information)
-        self.run_pycrossva()
-
-        self.msg.setText("Results for pyCrossVA")
-        self.msg.setWindowTitle("pyCrossVA Results")
-        self.msg.setDetailedText(self.pycrossva_messages)
-        self.msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-        self.msg.show()
+        if self.load_window is None:
+            alert = QMessageBox()
+            alert.setText("Please load data before running pyCrossVA.")
+            alert.exec()
+        else:
+            self.msg = QMessageBox()
+            self.msg.setIcon(QMessageBox.Information)
+            self.run_pycrossva()
+            if self.pycrossva_messages == "":
+                self.msg.setText(
+                    "pyCrossVA Results: \n \n data are ready to go \U0001f600")
+            else:
+                self.msg.setText("Results for pyCrossVA")
+            self.msg.setWindowTitle("pyCrossVA Results")
+            self.msg.setDetailedText(self.pycrossva_messages)
+            self.msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            self.msg.show()
         
     def create_edit_window(self):
-        """Set up window for editing provided csv data or show error if data is N/A."""
+        """Set up window for editing provided csv data or show error if
+        data is N/A."""
         
         self.edit_window = EditData(self.load_window.data)
         self.editable_header = self.edit_window.table.horizontalHeader()
-        self.editable_header = EditableHeaderView(Qt.Horizontal, self.edit_window)
+        self.editable_header = EditableHeaderView(Qt.Horizontal,
+                                                  self.edit_window)
         self.edit_window.table.setHorizontalHeader(self.editable_header)
         self.edit_window.table.setEditTriggers(QTableView.NoEditTriggers)
         self.edit_window.table.setRowHidden(0, True)
         self.edit_window.table.resizeColumnsToContents()
         
         edit_panel_h_box_1 = QHBoxLayout()
-        self.checkbox_col_editing = QCheckBox("Editable Header Fields (Column Names)")
+        self.checkbox_col_editing = QCheckBox(
+            "Editable Header Fields (Column Names)")
         self.checkbox_row_data_editing = QCheckBox("Editable Row Data")
         self.btn_save = QPushButton("Save Data")
         self.btn_cancel = QPushButton("Cancel")
@@ -156,13 +177,15 @@ class CommandCenter(QWidget):
         edit_panel_h_box_2 = QHBoxLayout()
         self.col_search_bar = QLineEdit()
         self.col_search_bar.setPlaceholderText("Search for Column Name")
-        self.col_search_results_counter = QLabel(str(self.col_search_results_counter + 1) + "/" + str(len(self.col_search_results)))
+        self.col_search_results_counter = QLabel(
+            str(self.col_search_results_counter + 1) + "/" +
+            str(len(self.col_search_results)))
         edit_panel_h_box_2.addWidget(self.col_search_bar)
         edit_panel_h_box_2.addWidget(self.col_search_results_counter)
         edit_panel_h_box_3 = QHBoxLayout()
-        self.btn_previous_col =  QPushButton("Previous")
-        self.btn_next_col =  QPushButton("Next")
-        self.btn_close_col_find =  QPushButton("Clear Column Selection")
+        self.btn_previous_col = QPushButton("Previous")
+        self.btn_next_col = QPushButton("Next")
+        self.btn_close_col_find = QPushButton("Clear Column Selection")
         edit_panel_h_box_3.addWidget(self.btn_previous_col)
         edit_panel_h_box_3.addWidget(self.btn_next_col)
         edit_panel_h_box_3.addWidget(self.btn_close_col_find)
@@ -176,14 +199,17 @@ class CommandCenter(QWidget):
         self.row_search_index = -1
         edit_panel_h_box_5 = QHBoxLayout()
         self.row_search_bar = QLineEdit()
-        self.row_search_bar.setPlaceholderText("Select a Column to Search by Row")
-        self.row_search_results_counter = QLabel(str(self.row_search_results_counter + 1) + "/" + str(len(self.row_search_results)))
+        self.row_search_bar.setPlaceholderText(
+            "Select a Column to Search by Row")
+        self.row_search_results_counter = QLabel(
+            str(self.row_search_results_counter + 1) + "/" +
+            str(len(self.row_search_results)))
         edit_panel_h_box_5.addWidget(self.row_search_bar)
         edit_panel_h_box_5.addWidget(self.row_search_results_counter)
         edit_panel_h_box_6 = QHBoxLayout()
-        self.btn_previous_row =  QPushButton("Previous")
-        self.btn_next_row =  QPushButton("Next")
-        self.btn_close_row_find =  QPushButton("Clear Row Selection")
+        self.btn_previous_row = QPushButton("Previous")
+        self.btn_next_row = QPushButton("Next")
+        self.btn_close_row_find = QPushButton("Clear Row Selection")
         edit_panel_h_box_6.addWidget(self.btn_previous_row)
         edit_panel_h_box_6.addWidget(self.btn_next_row)
         edit_panel_h_box_6.addWidget(self.btn_close_row_find)
@@ -194,7 +220,9 @@ class CommandCenter(QWidget):
         edit_panel_h_box_8 = QHBoxLayout()
         self.sort_column = QLabel("No column selected to sort in ")
         self.sort_by = QComboBox()
-        self.sort_by.addItems(("Original Order", "Ascending Order", "Descending Order"))
+        self.sort_by.addItems(("Original Order",
+                               "Ascending Order",
+                               "Descending Order"))
         self.btn_sort = QPushButton("Sort")
         edit_panel_h_box_8.addWidget(self.sort_column)
         edit_panel_h_box_8.addWidget(self.sort_by)
@@ -214,8 +242,10 @@ class CommandCenter(QWidget):
         self.edit_panel.setGeometry(400, 400, 700, 600)
         self.edit_panel.show()
         
-        self.checkbox_col_editing.stateChanged.connect(lambda:self.editing_state(self.checkbox_col_editing))
-        self.checkbox_row_data_editing.stateChanged.connect(lambda:self.editing_state(self.checkbox_row_data_editing))
+        self.checkbox_col_editing.stateChanged.connect(
+            lambda: self.editing_state(self.checkbox_col_editing))
+        self.checkbox_row_data_editing.stateChanged.connect(
+            lambda: self.editing_state(self.checkbox_row_data_editing))
         self.btn_save.clicked.connect(self.save_data)
         self.btn_cancel.clicked.connect(self.cancel_data)
         
@@ -231,7 +261,8 @@ class CommandCenter(QWidget):
         
         self.edit_window.table.clicked.connect(self.change_column)
         self.btn_sort.clicked.connect(self.sort_by_column)
-        self.edit_window.table.selectionModel().currentChanged.connect(self.change_column)
+        self.edit_window.table.selectionModel().currentChanged.connect(
+            self.change_column)
 
         # load_first_msg = QMessageBox().information(self, "Error finding data", "Please load a valid data file.", QMessageBox.Ok)
 
@@ -239,39 +270,57 @@ class CommandCenter(QWidget):
         """Updates editing state of the data table."""
     
         if checkbox.text() == "Editable Header Fields (Column Names)":
-            if checkbox.isChecked() == True:
-                self.editable_header.sectionDoubleClicked.connect(self.editable_header.edit_header)
-                self.editable_header.line.editingFinished.connect(self.editable_header.done_editing)
+            if checkbox.isChecked() is True:
+                self.editable_header.sectionDoubleClicked.connect(
+                    self.editable_header.edit_header)
+                self.editable_header.line.editingFinished.connect(
+                    self.editable_header.done_editing)
             else:
-                self.editable_header.sectionDoubleClicked.disconnect(self.editable_header.edit_header)
-                self.editable_header.line.editingFinished.disconnect(self.editable_header.done_editing)
+                self.editable_header.sectionDoubleClicked.disconnect(
+                    self.editable_header.edit_header)
+                self.editable_header.line.editingFinished.disconnect(
+                    self.editable_header.done_editing)
         if checkbox.text() == "Editable Row Data":
-            if checkbox.isChecked() == True:
-                self.edit_window.table.setEditTriggers(QTableView.AllEditTriggers)
+            if checkbox.isChecked() is True:
+                self.edit_window.table.setEditTriggers(
+                    QTableView.AllEditTriggers)
             else:
-                self.edit_window.table.setEditTriggers(QTableView.NoEditTriggers)
-
+                self.edit_window.table.setEditTriggers(
+                    QTableView.NoEditTriggers)
 
     def save_data(self):
         """Set up window for saving data and prompts for user's name."""
 
         name = ""
-        text, ok = QInputDialog.getText(self.edit_panel, 'Name Input', 'Enter your name for save file name purposes:')
-        while(ok and len(text) == 0):
-            load_first_msg = QMessageBox().information(self.edit_panel, "Length of text error", "Please type in your name, which must be more than 0 characters long.", QMessageBox.Ok)
-            text, ok = QInputDialog.getText(self.edit_panel, 'Name Input', 'Enter your name for save file name purposes:')
+        text, ok = QInputDialog.getText(self.edit_panel,
+                                        "Name Input",
+                                        "Enter your name for save file name purposes:")
+        while ok and len(text) == 0:
+            load_first_msg = QMessageBox().information(
+                self.edit_panel,
+                "Length of text error",
+                "Please type in your name, which must be more than 0 characters long.",
+                QMessageBox.Ok)
+            text, ok = QInputDialog.getText(
+                self.edit_panel,
+                "Name Input",
+                "Enter your name for save file name purposes:")
         if ok and len(text) > 0:
-        
             name += str(text).replace(" ", "-")
             date = QDate.currentDate().toString(Qt.ISODate)
-            time = QTime.currentTime().toString('hh.mm.ss.zzz')
+            time = QTime.currentTime().toString("hh.mm.ss.zzz")
             # save file format: file-name_edited-by_name_date_time.csv
-            file_name = QFileDialog.getSaveFileName(self,"Save As", self.load_window.fname[:-4] + "_edited-by_" + name + "_" + date + "_" + time,"csv Files (*.csv)")
+            file_name = QFileDialog.getSaveFileName(
+                self,
+                "Save As",
+                self.load_window.fname[:-4] + "_edited-by_" + name + "_" +
+                date + "_" + time,
+                "csv Files (*.csv)")
 
             fname = file_name[0]
             if file_name is not None and fname != "":
                 self.load_window.fname = fname
-                with open(fname, 'w', newline = '') as output_file:
+                with open(fname, "w", newline = '') as output_file:
                     csvwriter = csv.writer(output_file) 
                     for row in self.edit_window.model.data:
                         csvwriter.writerow(row)
@@ -283,7 +332,10 @@ class CommandCenter(QWidget):
     def cancel_data(self):
         """Set up window for canceling edits made to the data model."""
               
-        confirm_cancel = QMessageBox(QMessageBox.Question, "Confirm Cancel", "Are you sure you want to remove your changes?")
+        confirm_cancel = QMessageBox(
+            QMessageBox.Question,
+            "Confirm Cancel",
+            "Are you sure you want to remove your changes?")
         confirm_cancel.addButton(QMessageBox.Yes)
         confirm_cancel.addButton(QMessageBox.No)
         reply = confirm_cancel.exec()
@@ -291,7 +343,7 @@ class CommandCenter(QWidget):
             header = []
             rows = []
             data = []
-            with open(self.load_window.fname, 'r', newline = '') as file:
+            with open(self.load_window.fname, "r", newline="") as file:
                 csvreader = csv.reader(file)
                 header.append(next(csvreader))
                 for row in csvreader:
@@ -311,12 +363,17 @@ class CommandCenter(QWidget):
             self.edit_window.table.clearSelection()
         else:
             header = self.load_window.header[0]
-            self.col_search_results = [x for x in range(len(header)) if col_search_bar_text in (header[x]).lower()]
+            self.col_search_results = [
+                x for x in range(len(header)) if
+                col_search_bar_text in (header[x]).lower()]
             self.col_search_index = 0
             if len(self.col_search_results) > self.col_search_index:
                 self.cond_col = self.col_search_results[self.col_search_index]
-                self.edit_window.table.selectColumn(self.col_search_results[self.col_search_index])
-                self.col_search_results_counter.setText(str(self.col_search_index + 1) + "/" + str(len(self.col_search_results)))
+                self.edit_window.table.selectColumn(
+                    self.col_search_results[self.col_search_index])
+                self.col_search_results_counter.setText(
+                    str(self.col_search_index + 1) + "/" +
+                    str(len(self.col_search_results)))
             else:
                 self.col_search_results_counter.setText("0/0")
                 self.edit_window.table.clearSelection()
@@ -325,14 +382,20 @@ class CommandCenter(QWidget):
         """Goes to the previous column that matches the text search."""
         
         self.col_search_index -= 1
-        if len(self.col_search_bar.text()) != 0 and len(self.col_search_results) > self.col_search_index and self.col_search_index >= 0:
+        if len(self.col_search_bar.text()) != 0 and \
+                len(self.col_search_results) > self.col_search_index and \
+                self.col_search_index >= 0:
             self.row_search_bar.setText("")
             col_index = self.col_search_results[self.col_search_index]
             self.cond_col = col_index
             self.edit_window.table.selectColumn(col_index)
-            self.col_search_results_counter.setText(str(self.col_search_index + 1) + "/" + str(len(self.col_search_results)))
-            col_name = self.edit_window.model.column_name(col_index, Qt.DisplayRole)
-            self.row_search_bar.setPlaceholderText("Search for row content in the column \"" + col_name +"\" column")
+            self.col_search_results_counter.setText(
+                str(self.col_search_index + 1) + "/" +
+                str(len(self.col_search_results)))
+            col_name = self.edit_window.model.column_name(col_index,
+                                                          Qt.DisplayRole)
+            self.row_search_bar.setPlaceholderText(
+                "Search for row content in the column \"" + col_name + "\" column")
         else:
             self.col_search_index += 1
             no_result_msg = QMessageBox()
@@ -344,14 +407,19 @@ class CommandCenter(QWidget):
         """Goes to the next column that matches the text search."""
         
         self.col_search_index += 1
-        if len(self.col_search_bar.text()) != 0 and len(self.col_search_results) > self.col_search_index:
+        if len(self.col_search_bar.text()) != 0 and \
+                len(self.col_search_results) > self.col_search_index:
             self.row_search_bar.setText("")
             col_index = self.col_search_results[self.col_search_index]
             self.cond_col = col_index
             self.edit_window.table.selectColumn(col_index)
-            self.col_search_results_counter.setText(str(self.col_search_index + 1) + "/" + str(len(self.col_search_results)))
-            col_name = self.edit_window.model.column_name(col_index, Qt.DisplayRole)
-            self.row_search_bar.setPlaceholderText("Search for row content in \"" + col_name +"\" column")
+            self.col_search_results_counter.setText(
+                str(self.col_search_index + 1) + "/" +
+                str(len(self.col_search_results)))
+            col_name = self.edit_window.model.column_name(col_index,
+                                                          Qt.DisplayRole)
+            self.row_search_bar.setPlaceholderText(
+                "Search for row content in \"" + col_name +"\" column")
         else:
             self.col_search_index -= 1
             no_result_msg = QMessageBox()
@@ -367,10 +435,12 @@ class CommandCenter(QWidget):
             self.row_search_bar.setText("")
         self.col_search_results_counter.setText("0/0")
         self.edit_window.table.clearSelection()
-        self.row_search_bar.setPlaceholderText("Select a Column to Search by Row")
+        self.row_search_bar.setPlaceholderText(
+            "Select a Column to Search by Row")
 
     def row_find(self):
-        """Finds a specific row based off a text search and is conditional on column search."""
+        """Finds a specific row based off a text search and is conditional on
+        column search."""
         
         row_search_bar_text = self.row_search_bar.text().lower()        
         if len(row_search_bar_text) == 0:
@@ -384,11 +454,17 @@ class CommandCenter(QWidget):
             else: # placeholder[:6] == "Select"
                 self.cond_col = 0
             
-            self.row_search_results = [x for x in range(1, len(self.load_window.data)) if row_search_bar_text in (self.load_window.data[x][self.cond_col]).lower()]
+            self.row_search_results = [
+                x for x in range(1, len(self.load_window.data)) if
+                row_search_bar_text in
+                (self.load_window.data[x][self.cond_col]).lower()]
             self.row_search_index = 0
             if len(self.row_search_results) > self.row_search_index:
-                self.edit_window.table.selectRow(self.row_search_results[self.row_search_index])
-                self.row_search_results_counter.setText(str(self.row_search_index + 1) + "/" + str(len(self.row_search_results)))
+                self.edit_window.table.selectRow(
+                    self.row_search_results[self.row_search_index])
+                self.row_search_results_counter.setText(
+                    str(self.row_search_index + 1) + "/" +
+                    str(len(self.row_search_results)))
             else:
                 self.row_search_results_counter.setText("0/0")
                 self.edit_window.table.clearSelection()
@@ -398,8 +474,11 @@ class CommandCenter(QWidget):
         
         self.row_search_index -= 1
         if len(self.row_search_bar.text()) != 0 and self.row_search_index >= 0:
-            self.edit_window.table.selectRow(self.row_search_results[self.row_search_index])
-            self.row_search_results_counter.setText(str(self.row_search_index + 1) + "/" + str(len(self.row_search_results)))
+            self.edit_window.table.selectRow(self.row_search_results[
+                                                 self.row_search_index])
+            self.row_search_results_counter.setText(
+                str(self.row_search_index + 1) + "/" +
+                str(len(self.row_search_results)))
         else:
             self.row_search_index += 1
             no_result_msg = QMessageBox()
@@ -411,9 +490,13 @@ class CommandCenter(QWidget):
         """Goes to the next column that matches the text search."""
         
         self.row_search_index += 1
-        if len(self.row_search_bar.text()) != 0 and len(self.row_search_results) > self.row_search_index:
-            self.edit_window.table.selectRow(self.row_search_results[self.row_search_index])
-            self.row_search_results_counter.setText(str(self.row_search_index + 1) + "/" + str(len(self.row_search_results)))
+        if len(self.row_search_bar.text()) != 0 and \
+                len(self.row_search_results) > self.row_search_index:
+            self.edit_window.table.selectRow(
+                self.row_search_results[self.row_search_index])
+            self.row_search_results_counter.setText(
+                str(self.row_search_index + 1) + "/" +
+                str(len(self.row_search_results)))
         else:
             self.row_search_index -= 1
             no_result_msg = QMessageBox()
@@ -431,15 +514,18 @@ class CommandCenter(QWidget):
         self.edit_window.table.clearSelection()
             
     def change_column(self):
-        """Updates placeholder text for row search and the displayed column name for sorting."""
+        """Updates placeholder text for row search and the displayed column
+        name for sorting."""
         
         curr_index_col = self.edit_window.table.currentIndex().column()
         if len(self.col_search_bar.text()) != 0 and len(self.col_search_results) != 0:
             curr_index_col = self.col_search_results[self.col_search_index]
-        col_name = self.edit_window.model.column_name(curr_index_col, role=Qt.DisplayRole)
+        col_name = self.edit_window.model.column_name(curr_index_col,
+                                                      role=Qt.DisplayRole)
         self.sort_column.setText("Sort the \"" + col_name + "\" column in ")
         if len(self.row_search_bar.text()) == 0:
-            self.row_search_bar.setPlaceholderText("Search for row content in \"" + col_name +"\" column")
+            self.row_search_bar.setPlaceholderText(
+                "Search for row content in \"" + col_name +"\" column")
 
     def sort_by_column(self):
         """Sorts by column of the selected cell by the selected sort order."""
