@@ -25,6 +25,7 @@ from load import LoadData
 from smartva import SmartVADialog
 from pycrossva.transform import transform
 
+
 class CommandCenter(QWidget):
 
     def __init__(self):

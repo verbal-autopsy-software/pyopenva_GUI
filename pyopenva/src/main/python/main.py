@@ -5,7 +5,7 @@ pyopenva.main
 ~~~~~~~~~~~~~~
 This module creates user interface for the app.
 """
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QStackedLayout
 import sys
 from efficient import Efficient
 from mode import Mode
@@ -13,17 +13,18 @@ from command_center import CommandCenter
 from results import Results
 
 
-class WindowManager:
+class WindowManager(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("openVA GUI")
         self.efficient = Efficient()
         self.mode = Mode()
         self.command_center = CommandCenter()
         self.results = Results()
 
         self.efficient.btn_go_to_mode.clicked.connect(
-            self.efficient_to_mode)
+            self.show_mode)
 
         self.mode.btn_efficient.clicked.connect(self.show_efficient)
         self.mode.btn_advanced.clicked.connect(self.show_command_center)
@@ -33,61 +34,36 @@ class WindowManager:
             self.show_results)
 
         self.results.btn_go_to_command_center.clicked.connect(
-            self.results_to_command_center)
+            self.show_command_center)
 
         self.results.btn_go_to_mode.clicked.connect(
-            self.results_to_mode)
+            self.show_mode)
 
-        self.mode.show()
-
-    #TODO: Set up advanced mode with QStackedLayout
-    def efficient_to_mode(self):
-        self.sync_windows(self.efficient, self.mode)
-        self.efficient.hide()
-        self.mode.show()
+        self.stacked_layout = QStackedLayout()
+        self.stacked_layout.addWidget(self.mode)
+        self.stacked_layout.addWidget(self.command_center)
+        self.stacked_layout.addWidget(self.results)
+        self.stacked_layout.addWidget(self.efficient)
+        self.stacked_layout.setCurrentIndex(0)
+        widget = QWidget()
+        widget.setLayout(self.stacked_layout)
+        self.setCentralWidget(widget)
 
     def show_efficient(self):
-        self.sync_windows(self.mode, self.efficient)
-        self.mode.hide()
-        self.efficient.show()
+        self.stacked_layout.setCurrentIndex(3)
 
     def show_command_center(self):
-        self.sync_windows(self.mode, self.command_center)
-        self.mode.hide()
-        self.command_center.show()
+        self.stacked_layout.setCurrentIndex(1)
 
     def show_mode(self):
-        self.sync_windows(self.command_center, self.mode)
-        self.command_center.hide()
-        self.mode.show()
+        self.stacked_layout.setCurrentIndex(0)
 
     def show_results(self):
-        self.sync_windows(self.command_center, self.results)
-        self.command_center.hide()
-        self.results.show()
-
-    def results_to_command_center(self):
-        self.sync_windows(self.results, self.command_center)
-        self.results.hide()
-        self.command_center.show()
-
-    def results_to_mode(self):
-        self.sync_windows(self.results, self.mode)
-        self.results.hide()
-        self.mode.show()
-
-    #TODO: figure out why window keeps moving up when changing to different
-    # window
-    @staticmethod
-    def sync_windows(hide, show):
-        new_x = hide.pos().x()
-        new_y = hide.pos().y()
-        new_width = hide.size().width()
-        new_height = hide.size().height()
-        show.setGeometry(new_x, new_y, new_width, new_height)
+        self.stacked_layout.setCurrentIndex(2)
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     gui = WindowManager()
+    gui.show()
     sys.exit(app.exec_())

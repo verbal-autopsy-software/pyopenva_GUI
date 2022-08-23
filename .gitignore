@@ -1,0 +1,6 @@
+pyopenva/idea*
+pyopenva/build
+pyopenva/dist
+pyopenva/pyopenVA.spec
+pyopenva/venv
+pyopenva/src/main/python/__pycache__

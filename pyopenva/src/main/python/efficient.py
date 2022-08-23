@@ -10,9 +10,9 @@ from algorithms import InterVA5
 from data import COUNTRIES
 from pandas import read_csv
 from PyQt5.QtCore import QAbstractTableModel, Qt
-from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QFileDialog, QHBoxLayout,
-                             QLabel, QProgressBar, QPushButton, QStackedLayout, QTableView,
-                             QVBoxLayout, QWidget)
+from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QFileDialog,
+                             QHBoxLayout, QLabel, QProgressBar, QPushButton,
+                             QStackedLayout, QTableView, QVBoxLayout, QWidget)
 from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg,
                                                 NavigationToolbar2QT)
 from matplotlib.figure import Figure

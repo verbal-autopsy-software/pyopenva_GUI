@@ -15,7 +15,7 @@ class Mode(QWidget):
         super().__init__()
         self.setGeometry(400, 400, 500, 400)
 
-        self.setWindowTitle("openVA GUI")
+        #self.setWindowTitle("openVA GUI")
         openva_pixmap = QPixmap("../icons/openva-logo.png")
         self.label_logo = QLabel()
         self.label_logo.setPixmap(
