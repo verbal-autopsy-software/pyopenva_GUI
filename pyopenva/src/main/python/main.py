@@ -17,7 +17,7 @@ class WindowManager(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setGeometry(350, 350, 800, 600)
+        self.setGeometry(200, 200, 800, 600)
         self.setWindowTitle("Select Mode")
         self.efficient = Efficient()
         self.mode = Mode()
@@ -35,9 +35,6 @@ class WindowManager(QMainWindow):
         self.setCentralWidget(widget)
 
         # window management
-        self.efficient.btn_go_to_mode.clicked.connect(
-            self.show_mode)
-
         self.mode.btn_efficient.clicked.connect(self.show_efficient)
         self.mode.btn_advanced.clicked.connect(self.show_command_center)
 
@@ -50,6 +47,42 @@ class WindowManager(QMainWindow):
 
         self.results.btn_go_to_mode.clicked.connect(
             self.show_mode)
+
+        # TODO: make this more efficient (it works, but probably a lot of
+        #       redundancies!
+        self.efficient.btn_go_to_mode.clicked.connect(
+            self.show_mode)
+
+        self.efficient.btn_go_to_data_page.clicked.connect(
+            self.show_efficient_data_page)
+
+        self.efficient.btn_algorithm.clicked.connect(
+            self.show_efficient_select_algorithm_page)
+
+        self.efficient.btn_insilicova.clicked.connect(
+            self.show_efficient_insilicova_page)
+
+        self.efficient.btn_interva.clicked.connect(
+            self.show_efficient_interva_page)
+
+        self.efficient.btn_smartva.clicked.connect(
+            self.show_efficient_smartva_page)
+
+        self.efficient.btn_insilicova_to_select_algorithm.clicked.connect(
+            self.show_efficient_select_algorithm_from_algorithm)
+
+        self.efficient.btn_interva_to_select_algorithm.clicked.connect(
+            self.show_efficient_select_algorithm_from_algorithm)
+
+        self.efficient.btn_smartva_to_select_algorithm.clicked.connect(
+            self.show_efficient_select_algorithm_from_algorithm)
+
+        self.efficient.btn_go_to_results_page.clicked.connect(
+            self.show_efficient_results_page)
+
+        self.efficient.btn_results_to_algorithm.clicked.connect(
+            self.show_efficient_algorithm
+        )
 
         # update results
         self.command_center.btn_interva_run.clicked.connect(
@@ -66,7 +99,7 @@ class WindowManager(QMainWindow):
 
     def show_efficient(self):
         self.stacked_layout.setCurrentIndex(3)
-        self.setWindowTitle("Efficient Mode")
+        self.setWindowTitle("Efficient Mode: load and prepare data")
 
     def show_command_center(self):
         self.stacked_layout.setCurrentIndex(1)
@@ -79,6 +112,42 @@ class WindowManager(QMainWindow):
     def show_results(self):
         self.stacked_layout.setCurrentIndex(2)
         self.setWindowTitle("Results")
+
+    def show_efficient_data_page(self):
+        self.efficient.show_data_page()
+        self.setWindowTitle("Efficient Mode: load and prepare data")
+
+    def show_efficient_select_algorithm_page(self):
+        self.efficient.show_select_algorithm_page()
+        self.setWindowTitle("Efficient Mode: select algorithm")
+
+    def show_efficient_select_algorithm_from_algorithm(self):
+        self.efficient.show_select_algorithm_page()
+        self.setWindowTitle("Efficient Mode: select algorithm")
+
+    def show_efficient_algorithm(self):
+        if self.efficient.chosen_algorithm == "insilicova":
+            self.show_efficient_insilicova_page()
+        elif self.efficient.chosen_algorithm == "interva":
+            self.show_efficient_interva_page()
+        else:
+            self.show_efficient_smartva_page()
+
+    def show_efficient_insilicova_page(self):
+        self.efficient.show_insilicova_page()
+        self.setWindowTitle("Efficient Mode: InSilicoVA")
+
+    def show_efficient_interva_page(self):
+        self.efficient.show_interva_page()
+        self.setWindowTitle("Efficient Mode: InterVA")
+
+    def show_efficient_smartva_page(self):
+        self.efficient.show_smartva_page()
+        self.setWindowTitle("Efficient Mode: SmartVA")
+
+    def show_efficient_results_page(self):
+        self.efficient.show_results_page()
+        self.setWindowTitle("Efficient Mode: results")
 
     def update_interva_results(self, new_results):
         self.results.update_interva(new_results)

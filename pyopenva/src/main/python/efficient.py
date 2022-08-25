@@ -11,15 +11,9 @@ from interva.interva5 import InterVA5
 from data import COUNTRIES
 from pandas import read_csv
 from pycrossva.transform import transform
-from PyQt5.QtCore import QAbstractTableModel, Qt
-from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QFileDialog,
-                             QHBoxLayout, QMessageBox, QLabel, QProgressBar,
-                             QPushButton, QStackedLayout, QTableView,
-                             QVBoxLayout, QWidget)
-from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg,
-                                                NavigationToolbar2QT)
-from matplotlib.figure import Figure
-from matplotlib import style
+from PyQt5.QtWidgets import (QComboBox, QFileDialog, QHBoxLayout, QMessageBox,
+                             QLabel, QProgressBar, QPushButton, QSpinBox,
+                             QStackedLayout, QVBoxLayout, QWidget)
 from output import PlotDialog, TableDialog, save_plot
 
 
@@ -28,7 +22,6 @@ class Efficient(QWidget):
     def __init__(self):
         super().__init__()
         #self.setGeometry(400, 400, 500, 400)
-        self.setWindowTitle("Efficient Mode: Data")
         self.data_page = QWidget()
         self.data = None
         self.data_loaded = False
@@ -53,6 +46,7 @@ class Efficient(QWidget):
         self.smartva_hce = "True"
         self.smartva_freetext = "True"
         self.smartva_ui()
+        self.n_top_causes = 5
         self.results_page = QWidget()
         self.btn_show_plot = None
         self.btn_show_table = None
@@ -98,7 +92,7 @@ class Efficient(QWidget):
         self.btn_algorithm = QPushButton("Next")
         h_box.addWidget(self.btn_go_to_mode)
         h_box.addWidget(self.btn_algorithm)
-        self.btn_algorithm.pressed.connect(self.show_select_algorithm_page)
+        # self.btn_algorithm.pressed.connect(self.show_select_algorithm_page)
 
         layout.addWidget(self.btn_load_data)
         layout.addWidget(self.label_data)
@@ -116,19 +110,19 @@ class Efficient(QWidget):
         layout = QVBoxLayout()
         label_select_algorithm = QLabel("Select which algorithm to use:")
         self.btn_insilicova = QPushButton("InSilicoVA")
-        self.btn_insilicova.pressed.connect(self.show_insilicova_page)
+        # self.btn_insilicova.pressed.connect(self.show_insilicova_page)
         self.btn_insilicova.pressed.connect(
             lambda: self.set_chosen_algorithm("insilicova"))
         self.btn_interva = QPushButton("InterVA")
-        self.btn_interva.pressed.connect(self.show_interva_page)
+        # self.btn_interva.pressed.connect(self.show_interva_page)
         self.btn_interva.pressed.connect(
             lambda: self.set_chosen_algorithm("interva"))
         self.btn_smartva = QPushButton("SmartVA")
-        self.btn_smartva.pressed.connect(self.show_smartva_page)
+        # self.btn_smartva.pressed.connect(self.show_smartva_page)
         self.btn_smartva.pressed.connect(
             lambda: self.set_chosen_algorithm("smartva"))
         self.btn_go_to_data_page = QPushButton("Back")
-        self.btn_go_to_data_page.pressed.connect(self.show_data_page)
+        # self.btn_go_to_data_page.pressed.connect(self.show_data_page)
         layout.addWidget(label_select_algorithm)
         layout.addWidget(self.btn_insilicova)
         layout.addStretch(1)
@@ -147,9 +141,10 @@ class Efficient(QWidget):
         label_seed = QLabel("Set Seed")
         self.btn_insilicova_run = QPushButton("Run InSilicoVA")
 
-        self.btn_go_to_select_algorithm_page = QPushButton("Back")
-        self.btn_go_to_select_algorithm_page.pressed.connect(
-            self.show_select_algorithm_page)
+        self.btn_insilicova_to_select_algorithm = QPushButton("Back")
+        # self.btn_go_to_select_algorithm_page = QPushButton("Back")
+        # self.btn_go_to_select_algorithm_page.pressed.connect(
+        #     self.show_select_algorithm_page)
         self.btn_go_to_results_page = QPushButton("Show Results")
         self.btn_go_to_results_page.pressed.connect(
             self.show_results_page)
@@ -160,7 +155,7 @@ class Efficient(QWidget):
         layout.addWidget(self.btn_insilicova_run)
         layout.addStretch(1)
         h_box = QHBoxLayout()
-        h_box.addWidget(self.btn_go_to_select_algorithm_page)
+        h_box.addWidget(self.btn_insilicova_to_select_algorithm)
         h_box.addWidget(self.btn_go_to_results_page)
         layout.addLayout(h_box)
         self.insilicova_page.setLayout(layout)
@@ -184,9 +179,9 @@ class Efficient(QWidget):
             self.set_interva_malaria)
         self.btn_interva_run = QPushButton("Run InterVA")
         self.btn_interva_run.clicked.connect(self.run_interva)
-        self.btn_go_to_select_algorithm_page = QPushButton("Back")
-        self.btn_go_to_select_algorithm_page.clicked.connect(
-            self.show_select_algorithm_page)
+        self.btn_interva_to_select_algorithm = QPushButton("Back")
+        # self.btn_go_to_select_algorithm_page.clicked.connect(
+        #     self.show_select_algorithm_page)
         self.btn_go_to_results_page = QPushButton("Show Results")
         self.btn_go_to_results_page.clicked.connect(
             self.show_results_page)
@@ -200,7 +195,7 @@ class Efficient(QWidget):
         layout.addWidget(self.label_interva_progress)
         layout.addStretch(1)
         h_box = QHBoxLayout()
-        h_box.addWidget(self.btn_go_to_select_algorithm_page)
+        h_box.addWidget(self.btn_interva_to_select_algorithm)
         h_box.addWidget(self.btn_go_to_results_page)
         layout.addLayout(h_box)
         self.interva_page.setLayout(layout)
@@ -244,9 +239,9 @@ class Efficient(QWidget):
         self.smartva_combo_freetext.currentTextChanged.connect(
             self.set_smartva_freetext)
         self.btn_smartva_run = QPushButton("Run SmartVA")
-        self.btn_go_to_select_algorithm_page = QPushButton("Back")
-        self.btn_go_to_select_algorithm_page.pressed.connect(
-            self.show_select_algorithm_page)
+        self.btn_smartva_to_select_algorithm = QPushButton("Back")
+        # self.btn_go_to_select_algorithm_page.pressed.connect(
+        #     self.show_select_algorithm_page)
         self.btn_go_to_results_page = QPushButton("Show Results")
         self.btn_go_to_results_page.pressed.connect(
             self.show_results_page)
@@ -264,7 +259,7 @@ class Efficient(QWidget):
         layout.addWidget(self.btn_smartva_run)
         layout.addStretch(1)
         h_box = QHBoxLayout()
-        h_box.addWidget(self.btn_go_to_select_algorithm_page)
+        h_box.addWidget(self.btn_smartva_to_select_algorithm)
         h_box.addWidget(self.btn_go_to_results_page)
         layout.addLayout(h_box)
         self.smartva_page.setLayout(layout)
@@ -298,12 +293,19 @@ class Efficient(QWidget):
         self.btn_download_individual_results.clicked.connect(
             self.download_interva_indiv
         )
-        self.btn_go_to_algorithm_page = QPushButton("Back")
-        self.btn_go_to_algorithm_page.pressed.connect(
-            self.show_algorithm_page)
+        self.spinbox_n_causes = QSpinBox()
+        self.spinbox_n_causes.setRange(1, 64)
+        self.spinbox_n_causes.setPrefix("Include ")
+        self.spinbox_n_causes.setSuffix(" causes in the results")
+        self.spinbox_n_causes.valueChanged.connect(self.set_n_top_causes)
+        #self.spinbox_n_causes.textChanged(self.set_n_top_causes_text)
+        self.btn_results_to_algorithm = QPushButton("Back")
+        # self.btn_go_to_algorithm_page.pressed.connect(
+        #     self.show_algorithm_page)
         layout.addWidget(self.btn_download_individual_results)
+        layout.addWidget(self.spinbox_n_causes)
         layout.addStretch(1)
-        layout.addWidget(self.btn_go_to_algorithm_page)
+        layout.addWidget(self.btn_results_to_algorithm)
         self.results_page.setLayout(layout)
 
     def load_data(self):
@@ -350,9 +352,12 @@ class Efficient(QWidget):
     def set_chosen_algorithm(self, updated_choice):
         self.chosen_algorithm = updated_choice
 
+    def set_n_top_causes(self, n):
+        self.n_top_causes = n
+
+    # TODO: need to clean these up (window management handled in main
     def show_data_page(self):
         self.stacked_layout.setCurrentIndex(0)
-        self.setWindowTitle("Efficient Mode: Data")
 
     def show_algorithm_page(self):
         if self.chosen_algorithm == "insilicova":
@@ -364,23 +369,18 @@ class Efficient(QWidget):
 
     def show_select_algorithm_page(self):
         self.stacked_layout.setCurrentIndex(1)
-        self.setWindowTitle("Efficient Mode: Select Algorithm")
 
     def show_insilicova_page(self):
         self.stacked_layout.setCurrentIndex(2)
-        self.setWindowTitle("Efficient Mode: InSilicoVA")
 
     def show_interva_page(self):
         self.stacked_layout.setCurrentIndex(3)
-        self.setWindowTitle("Efficient Mode: InterVA")
 
     def show_smartva_page(self):
         self.stacked_layout.setCurrentIndex(4)
-        self.setWindowTitle("Efficient Mode: SmartVA")
 
     def show_results_page(self):
         self.stacked_layout.setCurrentIndex(5)
-        self.setWindowTitle("Efficient Mode: Results")
 
     def run_interva(self):
         if self.pycrossva_data is None:
@@ -407,7 +407,7 @@ class Efficient(QWidget):
         else:
             self.plot_dialog = PlotDialog(self.interva_results,
                                           self,
-                                          top=10)
+                                          top=self.n_top_causes)
             self.plot_dialog.exec()
 
     def run_table_dialog(self):
@@ -419,7 +419,7 @@ class Efficient(QWidget):
         else:
             self.table_dialog = TableDialog(self.interva_results,
                                             self,
-                                            top=10)
+                                            top=self.n_top_causes)
             self.table_dialog.resize(self.table_dialog.table.width(),
                                      self.table_dialog.table.height())
             self.table_dialog.exec()
@@ -439,7 +439,7 @@ class Efficient(QWidget):
             if path != ("", ""):
                 #os.remove(path[0])
                 with open(path[0], "a") as f:
-                    n_top_causes = 10
+                    n_top_causes = self.n_top_causes
                     csmf = self.interva_results.get_csmf(top=n_top_causes)
                     csmf.sort_values(ascending=False, inplace=True)
                     csmf_df = csmf.reset_index()[0:n_top_causes]
@@ -465,7 +465,8 @@ class Efficient(QWidget):
                                                "PDF Files (*.pdf)")
             if path != ("", ""):
                 #os.remove(path[0])
-                save_plot(self.interva_results,
+                save_plot(results=self.interva_results,
+                          top=self.n_top_causes,
                           file_name=path[0])
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()

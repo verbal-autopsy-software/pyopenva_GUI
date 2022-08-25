@@ -6,8 +6,8 @@ pyopenva.results
 This module creates the window for displaying and downloading results.
 """
 
-from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QGroupBox,
-                             QMessageBox, QPushButton, QFileDialog)
+from PyQt5.QtWidgets import (QFileDialog, QGroupBox, QHBoxLayout, QMessageBox,
+                             QPushButton, QSpinBox, QVBoxLayout, QWidget)
 from output import PlotDialog, TableDialog, save_plot
 import os
 
@@ -39,8 +39,8 @@ class Results(QWidget):
         self.insilico_results = None
         self.interva_results = None
         self.smartva_results = None
+        self.n_top_causes = 10
 
-    #TODO: add slider for number of causes to include in the results
     #TODO: add option for comparison plot?
     #TODO: add option to group causes into aggregated categories?
     def create_insilico_panel(self):
@@ -97,7 +97,13 @@ class Results(QWidget):
             "Download Individual Cause Assignments")
         self.btn_save_interva_indiv.clicked.connect(
             self.download_interva_indiv)
+        self.spinbox_n_causes = QSpinBox()
+        self.spinbox_n_causes.setRange(1, 64)
+        self.spinbox_n_causes.setPrefix("Include ")
+        self.spinbox_n_causes.setSuffix(" causes in the results")
+        self.spinbox_n_causes.valueChanged.connect(self.set_n_top_causes)
         layout.addWidget(self.btn_save_interva_indiv)
+        layout.addWidget(self.spinbox_n_causes)
         self.interva_panel = QGroupBox("InterVA")
         self.interva_panel.setLayout(layout)
 
@@ -135,7 +141,7 @@ class Results(QWidget):
         else:
             self.interva_plot_dialog = PlotDialog(self.interva_results,
                                                   self,
-                                                  top=10)
+                                                  top=self.n_top_causes)
             self.interva_plot_dialog.exec()
 
     def interva_table(self):
@@ -147,7 +153,7 @@ class Results(QWidget):
         else:
             self.interva_table = TableDialog(self.interva_results,
                                              self,
-                                             top=10)
+                                             top=self.n_top_causes)
             self.interva_table.resize(self.interva_table.table.width(),
                                       self.interva_table.table.height())
             self.interva_table.exec()
@@ -167,7 +173,7 @@ class Results(QWidget):
             if path != ("", ""):
                 #os.remove(path[0])
                 with open(path[0], "a") as f:
-                    n_top_causes = 10
+                    n_top_causes = self.n_top_causes
                     csmf = self.interva_results.get_csmf(top=n_top_causes)
                     csmf.sort_values(ascending=False, inplace=True)
                     csmf_df = csmf.reset_index()[0:n_top_causes]
@@ -193,7 +199,8 @@ class Results(QWidget):
                                                "PDF Files (*.pdf)")
             if path != ("", ""):
                 #os.remove(path[0])
-                save_plot(self.interva_results,
+                save_plot(results=self.interva_results,
+                          top=self.n_top_causes,
                           file_name=path[0])
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
@@ -229,3 +236,6 @@ class Results(QWidget):
 
     def update_smartva(self, new_smartva_results):
         self.smartva_results = new_smartva_results
+
+    def set_n_top_causes(self, n):
+        self.n_top_causes = n
