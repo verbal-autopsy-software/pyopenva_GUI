@@ -17,15 +17,18 @@ class Results(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setGeometry(400, 400, 500, 400)
+        #self.setGeometry(400, 400, 500, 400)
         self.setWindowTitle("openVA GUI: Results")
         self.results_v_box = QVBoxLayout()
         self.create_insilico_panel()
         self.create_interva_panel()
         self.create_smartva_panel()
         self.results_v_box.addWidget(self.insilico_panel)
+        self.results_v_box.insertSpacing(1, 50)
         self.results_v_box.addWidget(self.interva_panel)
+        self.results_v_box.insertSpacing(3, 50)
         self.results_v_box.addWidget(self.smartva_panel)
+        self.results_v_box.insertSpacing(5, 50)
         self.btn_go_to_mode = QPushButton("Go Back to User Mode Selection")
         self.btn_go_to_command_center = QPushButton(
             "Go Back to the Command Center")
@@ -62,6 +65,7 @@ class Results(QWidget):
         self.btn_save_insilico_indiv = QPushButton(
             "Download Individual Cause Assignments")
         layout.addWidget(self.btn_save_insilico_indiv)
+
         self.insilico_panel = QGroupBox("InSilicoVA")
         self.insilico_panel.setLayout(layout)
 

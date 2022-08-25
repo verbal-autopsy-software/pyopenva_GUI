@@ -17,6 +17,7 @@ class WindowManager(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.setGeometry(350, 350, 800, 600)
         self.setWindowTitle("Select Mode")
         self.efficient = Efficient()
         self.mode = Mode()

@@ -40,7 +40,7 @@ class CommandCenter(QWidget):
         self.interva_dialog = None
         self.load_window = None
 
-        self.setGeometry(400, 400, 700, 600)
+        #self.setGeometry(400, 400, 700, 600)
         self.setWindowTitle("openVA GUI: Command Center")
         self.data_algorithm_h_box = QHBoxLayout()
         self.create_data_panel()
@@ -77,6 +77,8 @@ class CommandCenter(QWidget):
         self.label_data = QLabel("(no data loaded)")
         self.label_data.setAlignment(Qt.AlignCenter)
         label_data_format = QLabel("Data Format:")
+        # TODO: use format in argument for pycrossva (need a setter function
+        #       with a dictionary for mapping options to pycrossva parameters)
         self.btn_data_format = QComboBox()
         self.btn_data_format.addItems(("WHO 2016 (v151)",
                                        "WHO 2012",

@@ -13,7 +13,7 @@ from PyQt5.QtGui import QFont, QPixmap
 class Mode(QWidget):
     def __init__(self):
         super().__init__()
-        self.setGeometry(400, 400, 500, 400)
+        #self.setGeometry(400, 400, 500, 400)
 
         #self.setWindowTitle("openVA GUI")
         openva_pixmap = QPixmap("../icons/openva-logo.png")

@@ -6,36 +6,33 @@ pyopenva.efficient
 This module creates a stacked layout to walk through the analysis step-by-step.
 """
 
-from algorithms import InterVA5
+import os
+from interva.interva5 import InterVA5
 from data import COUNTRIES
 from pandas import read_csv
+from pycrossva.transform import transform
 from PyQt5.QtCore import QAbstractTableModel, Qt
 from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QFileDialog,
-                             QHBoxLayout, QLabel, QProgressBar, QPushButton,
-                             QStackedLayout, QTableView, QVBoxLayout, QWidget)
+                             QHBoxLayout, QMessageBox, QLabel, QProgressBar,
+                             QPushButton, QStackedLayout, QTableView,
+                             QVBoxLayout, QWidget)
 from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg,
                                                 NavigationToolbar2QT)
 from matplotlib.figure import Figure
 from matplotlib import style
-
-
-class MplCanvas(FigureCanvasQTAgg):
-
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
-        fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
-        super(MplCanvas, self).__init__(fig)
+from output import PlotDialog, TableDialog, save_plot
 
 
 class Efficient(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setGeometry(400, 400, 500, 400)
+        #self.setGeometry(400, 400, 500, 400)
         self.setWindowTitle("Efficient Mode: Data")
         self.data_page = QWidget()
         self.data = None
         self.data_loaded = False
+        self.pycrossva_data = None
         self.data_ui()
         self.select_algorithm_page = QWidget()
         self.select_algorithm_ui()
@@ -46,7 +43,8 @@ class Efficient(QWidget):
         self.interva_page = QWidget()
         self.interva_hiv = "low"
         self.interva_malaria = "low"
-        self.interva_progress_bar = QProgressBar()
+        self.interva_pbar = QProgressBar()
+        self.label_interva_progress = QLabel("(no results)")
         self.interva_ui()
         self.smartva_page = QWidget()
         self.smartva_country = "Unknown"
@@ -85,9 +83,14 @@ class Efficient(QWidget):
 
         label_data_format = QLabel("Data Format:")
         self.btn_data_format = QComboBox()
+        # TODO: use format in argument for pycrossva (need a setter function
+        #       with a dictionary for mapping options to pycrossva parameters)
         self.btn_data_format.addItems(("WHO 2016 (v151)",
                                        "WHO 2012",
                                        "PHMRC"))
+        self.btn_run_pycrossva = QPushButton("Run pyCrossVA")
+        self.btn_run_pycrossva.clicked.connect(self.run_pycrossva)
+        self.label_run_pycrossva = QLabel('(no data loaded)')
         self.btn_data_check = QPushButton("Data Check")
 
         h_box = QHBoxLayout()
@@ -102,6 +105,9 @@ class Efficient(QWidget):
         layout.addStretch(2)
         layout.addWidget(label_data_format)
         layout.addWidget(self.btn_data_format)
+        layout.addStretch(2)
+        layout.addWidget(self.btn_run_pycrossva)
+        layout.addWidget(self.label_run_pycrossva)
         layout.addStretch(2)
         layout.addLayout(h_box)
         self.data_page.setLayout(layout)
@@ -177,12 +183,12 @@ class Efficient(QWidget):
         self.interva_combo_malaria.currentTextChanged.connect(
             self.set_interva_malaria)
         self.btn_interva_run = QPushButton("Run InterVA")
-        self.btn_interva_run.pressed.connect(self.run_interva)
+        self.btn_interva_run.clicked.connect(self.run_interva)
         self.btn_go_to_select_algorithm_page = QPushButton("Back")
-        self.btn_go_to_select_algorithm_page.pressed.connect(
+        self.btn_go_to_select_algorithm_page.clicked.connect(
             self.show_select_algorithm_page)
         self.btn_go_to_results_page = QPushButton("Show Results")
-        self.btn_go_to_results_page.pressed.connect(
+        self.btn_go_to_results_page.clicked.connect(
             self.show_results_page)
 
         layout.addWidget(label_hiv)
@@ -190,7 +196,8 @@ class Efficient(QWidget):
         layout.addWidget(label_malaria)
         layout.addWidget(self.interva_combo_malaria)
         layout.addWidget(self.btn_interva_run)
-        layout.addWidget(self.interva_progress_bar)
+        layout.addWidget(self.interva_pbar)
+        layout.addWidget(self.label_interva_progress)
         layout.addStretch(1)
         h_box = QHBoxLayout()
         h_box.addWidget(self.btn_go_to_select_algorithm_page)
@@ -269,6 +276,7 @@ class Efficient(QWidget):
         self.btn_show_table = QPushButton("Show CSMF table")
         self.btn_show_table.pressed.connect(self.run_table_dialog)
         self.btn_download_table = QPushButton("Download Table")
+        self.btn_download_table.clicked.connect(self.download_interva_table)
         vbox_table.addWidget(self.btn_show_table)
         vbox_table.addWidget(self.btn_download_table)
 
@@ -276,6 +284,7 @@ class Efficient(QWidget):
         self.btn_show_plot = QPushButton("Show CSMF plot")
         self.btn_show_plot.pressed.connect(self.run_plot_dialog)
         self.btn_download_plot = QPushButton("Download Plot")
+        self.btn_download_plot.clicked.connect(self.download_interva_plot)
         vbox_plot.addWidget(self.btn_show_plot)
         vbox_plot.addWidget(self.btn_download_plot)
 
@@ -286,6 +295,9 @@ class Efficient(QWidget):
         layout.addLayout(hbox)
         self.btn_download_individual_results = QPushButton(
             "Download Individual Cause Assignments")
+        self.btn_download_individual_results.clicked.connect(
+            self.download_interva_indiv
+        )
         self.btn_go_to_algorithm_page = QPushButton("Back")
         self.btn_go_to_algorithm_page.pressed.connect(
             self.show_algorithm_page)
@@ -303,6 +315,16 @@ class Efficient(QWidget):
             n_records = self.data.shape[0]
             self.label_data.setText(f'Data loaded: {n_records} deaths')
             self.data_loaded = True
+
+    def run_pycrossva(self):
+        if not self.data_loaded:
+            alert = QMessageBox()
+            alert.setText("Please load data before running pyCrossVA.")
+            alert.exec()
+        else:
+            self.pycrossva_data = transform(("2016WHOv151", "InterVA5"),
+                                            self.data)
+            self.label_run_pycrossva.setText("data are ready to go!")
 
     def set_interva_hiv(self, updated_hiv):
         self.interva_hiv = updated_hiv
@@ -361,107 +383,112 @@ class Efficient(QWidget):
         self.setWindowTitle("Efficient Mode: Results")
 
     def run_interva(self):
-        self.interva_results = InterVA5(self.data, self)
-        self.interva_results.assign_causes()
+        if self.pycrossva_data is None:
+            alert = QMessageBox()
+            alert.setText(
+                "Data need to be loaded and/or prepared with pyCrossVA.")
+            alert.exec()
+        else:
+            iv5out = InterVA5(self.pycrossva_data,
+                              hiv=self.interva_hiv[0],
+                              malaria=self.interva_malaria[0],
+                              write=False,
+                              openva_app=self)
+            iv5out.run()
+            self.interva_results = iv5out
+            self.label_interva_progress.setText("InterVA5 results are ready")
 
     def run_plot_dialog(self):
-        self.plot_dialog = PlotDialog(self.interva_results,
-                                      self,
-                                      top=10)
-        self.plot_dialog.exec()
+        if self.interva_results is None:
+            alert = QMessageBox()
+            alert.setText(
+                "Need to run VA algorithm first.")
+            alert.exec()
+        else:
+            self.plot_dialog = PlotDialog(self.interva_results,
+                                          self,
+                                          top=10)
+            self.plot_dialog.exec()
 
     def run_table_dialog(self):
-        self.table_dialog = TableDialog(self.interva_results,
-                                        self,
-                                        top=10)
-        self.table_dialog.resize(self.table_dialog.table.width(),
-                                 self.table_dialog.table.height())
-        self.table_dialog.exec()
+        if self.interva_results is None:
+            alert = QMessageBox()
+            alert.setText(
+                "Need to run VA algorithm first.")
+            alert.exec()
+        else:
+            self.table_dialog = TableDialog(self.interva_results,
+                                            self,
+                                            top=10)
+            self.table_dialog.resize(self.table_dialog.table.width(),
+                                     self.table_dialog.table.height())
+            self.table_dialog.exec()
 
+    def download_interva_table(self):
+        if self.interva_results is None:
+            alert = QMessageBox()
+            alert.setText(
+                "Need to run VA algorithm first.")
+            alert.exec()
+        else:
+            results_file_name = "interva5_csmf.csv"
+            path = QFileDialog.getSaveFileName(self,
+                                               "Save CSMF (csv)",
+                                               results_file_name,
+                                               "CSV Files (*.csv)")
+            if path != ("", ""):
+                #os.remove(path[0])
+                with open(path[0], "a") as f:
+                    n_top_causes = 10
+                    csmf = self.interva_results.get_csmf(top=n_top_causes)
+                    csmf.sort_values(ascending=False, inplace=True)
+                    csmf_df = csmf.reset_index()[0:n_top_causes]
+                    csmf_df.rename(columns={"index": "Cause", 0: "CSMF"},
+                                   inplace=True)
+                    csmf_df.round(4).to_csv(f, index=False)
+                if os.path.isfile(path[0]):
+                    alert = QMessageBox()
+                    alert.setText("results saved to" + path[0])
+                    alert.exec()
 
-class PlotDialog(QDialog):
+    def download_interva_plot(self):
+        if self.interva_results is None:
+            alert = QMessageBox()
+            alert.setText(
+                "Need to run VA algorithm first.")
+            alert.exec()
+        else:
+            results_file_name = "interva5_csmf.pdf"
+            path = QFileDialog.getSaveFileName(self,
+                                               "Save CSMF plot (pdf)",
+                                               results_file_name,
+                                               "PDF Files (*.pdf)")
+            if path != ("", ""):
+                #os.remove(path[0])
+                save_plot(self.interva_results,
+                          file_name=path[0])
+                if os.path.isfile(path[0]):
+                    alert = QMessageBox()
+                    alert.setText("results saved to" + path[0])
+                    alert.exec()
 
-    def __init__(self, results, parent=None, top=5):
-        super(PlotDialog, self).__init__(parent=parent)
-        self.setWindowTitle("Cause-Specific Mortality Fraction")
-        self.results = results
-        self.n_top_cause = top
-        style.use("ggplot")
-        self.figure = Figure(figsize=(7, 5), dpi=100, constrained_layout=True)
-        self.ax = self.figure.add_subplot(111)
-        self.canvas = FigureCanvasQTAgg(self.figure)
-        self.toolbar = NavigationToolbar2QT(self.canvas, self)
-
-        vbox_csmf = QVBoxLayout()
-        vbox_csmf.addWidget(self.toolbar)
-        vbox_csmf.addWidget(self.canvas)
-        self.setLayout(vbox_csmf)
-
-        self.results.plot(top_causes=self.n_top_cause, ax=self.ax)
-        self.canvas.draw()
-
-        # self.btn_box = QDialogButtonBox(QDialogButtonBox.Cancel |
-        #                                 QDialogButtonBox.Ok)
-        # self.btn_box.accepted.connect(self.accept)
-        # self.btn_box.accepted.connect(
-        #     lambda:
-        #     self.parent().update_interva_hiv(self.hiv))
-        # self.btn_box.accepted.connect(
-        #     lambda:
-        #     self.parent().update_interva_malaria(self.malaria))
-        # self.btn_box.rejected.connect(self.reject)
-
-
-class TableDialog(QDialog):
-
-    def __init__(self, results, parent=None, top=5):
-        super(TableDialog, self).__init__(parent=parent)
-        self.setWindowTitle("Cause-Specific Mortality Fraction")
-        self.results = results
-        self.n_top_cause = top
-
-        self.table = QTableView()
-        self.table.setShowGrid(False)
-        csmf_df = results.csmf.reset_index()[0:top]
-        csmf_df.rename(columns={"index": "Cause", "cause": "CSMF"},
-                       inplace=True)
-        self.model = TableModel(csmf_df)
-        self.table.setModel(self.model)
-        column_width = self.table.sizeHintForColumn(0) + 100
-        #self.table.resizeColumnToContents(0)
-        self.table.setColumnWidth(0, column_width)
-
-        clipboard = QApplication.clipboard()
-        self.btn_copy = QPushButton("Copy table to clipboard")
-        self.btn_copy.pressed.connect(lambda: clipboard.setText(csmf_df.to_csv(index=False)))
-
-        vbox_csmf = QVBoxLayout()
-        vbox_csmf.addWidget(self.table)
-        vbox_csmf.addWidget(self.btn_copy)
-        self.setLayout(vbox_csmf)
-
-
-class TableModel(QAbstractTableModel):
-
-    def __init__(self, data):
-        super(TableModel, self).__init__()
-        self._data = data
-
-    def data(self, index, role):
-        if role == Qt.DisplayRole:
-            value = self._data.iloc[index.row(), index.column()]
-            return str(value)
-
-    def rowCount(self, index):
-        return self._data.shape[0]
-
-    def columnCount(self, index):
-        return self._data.shape[1]
-
-    def headerData(self, section, orientation, role):
-        # section is the index of the column/row.
-        if role == Qt.DisplayRole:
-            if orientation == Qt.Horizontal:
-                return str(self._data.columns[section])
-            # if orientation == Qt.Vertical:
-            #     return str(self._data.index[section])
+    def download_interva_indiv(self):
+        if self.interva_results is None:
+            alert = QMessageBox()
+            alert.setText(
+                "Need to run VA algorithm first.")
+            alert.exec()
+        else:
+            results_file_name = "interva5_individual_cod.csv"
+            path = QFileDialog.getSaveFileName(self,
+                                               "Save CSMF (csv)",
+                                               results_file_name,
+                                               "CSV Files (*.csv)")
+            if path != ("", ""):
+                with open(path[0], "a") as f:
+                    out = self.interva_results.get_indiv_prob(top=1)
+                    out.to_csv(f, index=False)
+                if os.path.isfile(path[0]):
+                    alert = QMessageBox()
+                    alert.setText("results saved to" + path[0])
+                    alert.exec()
