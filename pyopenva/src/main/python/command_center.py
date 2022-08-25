@@ -13,17 +13,18 @@ from io import StringIO
 import logging
 from pandas import DataFrame
 from numpy.random import default_rng
+from interva.interva5 import InterVA5
 from PyQt5.QtCore import Qt, QDate, QTime
 from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QGroupBox,
                              QLabel, QPushButton, QComboBox, QFileDialog,
                              QMessageBox, QLineEdit, QInputDialog, 
-                             QTableView, QCheckBox)
+                             QTableView, QCheckBox, QProgressBar)
 
 from edit_window import EditData, EditableHeaderView
-from insilico import InSilicoDialog
-from interva import InterVADialog
+from insilico_ui import InSilicoDialog
+from interva_ui import InterVADialog
 from load import LoadData
-from smartva import SmartVADialog
+from smartva_ui import SmartVADialog
 from pycrossva.transform import transform
 
 
@@ -53,10 +54,12 @@ class CommandCenter(QWidget):
         self.jump_scale = 0.1
         self.auto_extend = True
         self.seed = 653
+        self.insilico_results = None
 
         # initialize InterVA parameters
         self.hiv = "low"
         self.malaria = "low"
+        self.interva_results = None
 
         # initialize SmartVA parameters
         self.smartva_country = "Unknown"
@@ -64,6 +67,7 @@ class CommandCenter(QWidget):
         self.smartva_malaria = "False"
         self.smartva_hce = "True"
         self.smartva_freetext = "True"
+        self.smartva_results = None
 
     def create_data_panel(self):
         """Set up data panel for loading, editing, and checking the data."""
@@ -78,6 +82,8 @@ class CommandCenter(QWidget):
                                        "WHO 2012",
                                        "PHMRC"))
         self.btn_pycrossva = QPushButton("Run pyCrossVA")
+        self.label_pycrossva_status = QLabel("(no data loaded)")
+        self.label_pycrossva_status.setAlignment(Qt.AlignCenter)
         #self.btn_data_check = QPushButton("Data Check")
         self.btn_edit_data = QPushButton("Edit Check")
         self.btn_edit_data.setEnabled(False)
@@ -87,6 +93,7 @@ class CommandCenter(QWidget):
         data_panel_v_box.addWidget(label_data_format)
         data_panel_v_box.addWidget(self.btn_data_format)
         data_panel_v_box.addWidget(self.btn_pycrossva)
+        data_panel_v_box.addWidget(self.label_pycrossva_status)
         #data_panel_v_box.addWidget(self.btn_data_check)
         data_panel_v_box.addWidget(self.btn_edit_data)
         data_panel_v_box.addStretch(2)
@@ -106,6 +113,7 @@ class CommandCenter(QWidget):
             self.btn_edit_data.setEnabled(True)
             n_records = len(self.load_window.data) - 1
             self.label_data.setText(f"({n_records} records loaded)")
+            self.label_pycrossva_status.setText("(need to run pyCrossVA)")
 
     def update_data(self):
         """Update status of data."""
@@ -127,6 +135,7 @@ class CommandCenter(QWidget):
             self.pycrossva_data = transform(("2016WHOv151", "InterVA5"), df)
         logging.info(pycrossva_stdout.getvalue())
         self.pycrossva_messages = pycrossva_stdout.getvalue()
+        self.label_pycrossva_status.setText("(pyCrossVA finished)")
 
     def show_pycrossva(self):
         if self.load_window is None:
@@ -562,7 +571,7 @@ class CommandCenter(QWidget):
         self.btn_interva_options.clicked.connect(self.run_interva_dialog)
         self.btn_smartva_options.clicked.connect(self.run_smartva_dialog)
         self.btn_insilico_run.clicked.connect(self.print_insilico)
-        self.btn_interva_run.clicked.connect(self.print_interva)
+        self.btn_interva_run.clicked.connect(self.run_interva)
         self.btn_smartva_run.clicked.connect(self.print_smartva)
         # self.btn_interva_options.clicked.connect(self.run_interva_dialog)
         # self.btn_smartva_options.clicked.connect(self.run_smartva_dialog)
@@ -574,12 +583,14 @@ class CommandCenter(QWidget):
         insilico_vbox = QVBoxLayout()
         insilico_hbox = QHBoxLayout()
         self.btn_insilico_options = QPushButton("Set Options")
-        self.btn_insilico_run = QPushButton("Run Algorithm")
+        self.btn_insilico_run = QPushButton("Run InSilicoVA")
         insilico_hbox.addWidget(self.btn_insilico_options)
         insilico_hbox.addWidget(self.btn_insilico_run)
-        label_insilico_progress = QLabel("InSilico Progress Bar goes here")
+        self.insilico_pbar = QProgressBar(self)
+        self.label_insilico_progress = QLabel("")
         insilico_vbox.addLayout(insilico_hbox)
-        insilico_vbox.addWidget(label_insilico_progress)
+        insilico_vbox.addWidget(self.insilico_pbar)
+        insilico_vbox.addWidget(self.label_insilico_progress)
         self.insilico_box.setLayout(insilico_vbox)
 
     def create_interva_box(self):
@@ -589,13 +600,15 @@ class CommandCenter(QWidget):
         interva_label = QLabel("InterVA")
         interva_hbox = QHBoxLayout()
         self.btn_interva_options = QPushButton("Set Options")
-        self.btn_interva_run = QPushButton("Run Algorithm")
+        self.btn_interva_run = QPushButton("Run InterVA5")
         interva_hbox.addWidget(self.btn_interva_options)
         interva_hbox.addWidget(self.btn_interva_run)
-        label_interva_progress = QLabel("InterVA Progress Bar goes here")
+        self.interva_pbar = QProgressBar(self)
+        self.label_interva_progress = QLabel("")
         self.interva_box.addWidget(interva_label)
         self.interva_box.addLayout(interva_hbox)
-        self.interva_box.addWidget(label_interva_progress)
+        self.interva_box.addWidget(self.interva_pbar)
+        self.interva_box.addWidget(self.label_interva_progress)
 
     def create_smartva_box(self):
         """Set up box of widgets for SmartVA."""
@@ -604,13 +617,15 @@ class CommandCenter(QWidget):
         smartva_label = QLabel("SmartVA")
         smartva_hbox_2 = QHBoxLayout()
         self.btn_smartva_options = QPushButton("Set Options")
-        self.btn_smartva_run = QPushButton("Run Algorithm")
+        self.btn_smartva_run = QPushButton("Run SmartVA")
         smartva_hbox_2.addWidget(self.btn_smartva_options)
         smartva_hbox_2.addWidget(self.btn_smartva_run)
-        label_smartva_progress = QLabel("SmartVA Progress Bar goes here")
+        self.smartva_pbar = QProgressBar(self)
+        self.label_smartva_progress = QLabel("")
         self.smartva_box.addWidget(smartva_label)
         self.smartva_box.addLayout(smartva_hbox_2)
-        self.smartva_box.addWidget(label_smartva_progress)
+        self.smartva_box.addWidget(self.smartva_pbar)
+        self.smartva_box.addWidget(self.label_smartva_progress)
 
     def run_insilico_dialog(self):
         self.insilico_dialog = InSilicoDialog(self,
@@ -646,6 +661,22 @@ class CommandCenter(QWidget):
 
     def update_interva_malaria(self, updated_malaria):
         self.malaria = updated_malaria
+
+    def run_interva(self):
+        if self.pycrossva_data is None:
+            alert = QMessageBox()
+            alert.setText(
+                "Data need to be loaded and/or prepared with pyCrossVA.")
+            alert.exec()
+        else:
+            iv5out = InterVA5(self.pycrossva_data,
+                              hiv=self.hiv[0],
+                              malaria=self.malaria[0],
+                              write=False,
+                              openva_app=self)
+            iv5out.run()
+            self.interva_results = iv5out
+            self.label_interva_progress.setText("InterVA5 results are ready")
 
     def run_smartva_dialog(self):
         self.smartva_dialog = SmartVADialog(self,

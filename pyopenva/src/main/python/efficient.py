@@ -300,8 +300,8 @@ class Efficient(QWidget):
                                            "All Files(*.*)")
         if path != ("", ""):
             self.data = read_csv(path[0])
-            n_train = self.data.shape[0]
-            self.label_data.setText(f'Data loaded: {n_train} deaths')
+            n_records = self.data.shape[0]
+            self.label_data.setText(f'Data loaded: {n_records} deaths')
             self.data_loaded = True
 
     def set_interva_hiv(self, updated_hiv):

@@ -22,7 +22,7 @@ class Mode(QWidget):
             openva_pixmap.scaled(96, 96,
                                  Qt.KeepAspectRatio,
                                  Qt.SmoothTransformation))
-        self.label_openva = QLabel("openVA GUI App")
+        self.label_openva = QLabel("openVA App    ")
         self.label_openva.setFont(QFont("Arial", 48, QFont.Bold))
         self.grid = QGridLayout(self)
         self.grid.addWidget(self.label_logo, 0, 0)
