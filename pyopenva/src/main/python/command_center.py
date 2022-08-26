@@ -15,13 +15,13 @@ from pandas import DataFrame
 from numpy.random import default_rng
 from interva.interva5 import InterVA5
 from PyQt5.QtCore import Qt, QDate, QTime
-from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QGroupBox,
-                             QLabel, QPushButton, QComboBox, QFileDialog,
-                             QMessageBox, QLineEdit, QInputDialog, 
-                             QTableView, QCheckBox, QProgressBar)
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
+                             QHBoxLayout, QInputDialog, QLabel, QLineEdit,
+                             QMessageBox, QProgressBar, QPushButton,
+                             QTableView, QVBoxLayout, QWidget)
 
 from edit_window import EditData, EditableHeaderView
-from insilico_ui import InSilicoDialog
+from insilicova_ui import InSilicoVADialog
 from interva_ui import InterVADialog
 from load import LoadData
 from smartva_ui import SmartVADialog
@@ -35,8 +35,9 @@ class CommandCenter(QWidget):
         self.raw_data = None
         self.raw_data_loaded = False
         self.label_data = None
+        self.data_id_col = None
         self.pycrossva_data = None
-        self.insilico_dialog = None
+        self.insilicova_dialog = None
         self.interva_dialog = None
         self.load_window = None
 
@@ -54,7 +55,7 @@ class CommandCenter(QWidget):
         self.jump_scale = 0.1
         self.auto_extend = True
         self.seed = 653
-        self.insilico_results = None
+        self.insilicova_results = None
 
         # initialize InterVA parameters
         self.hiv = "low"
@@ -75,6 +76,10 @@ class CommandCenter(QWidget):
         data_panel_v_box = QVBoxLayout()
         self.btn_load_data = QPushButton("Load Data (.csv)")
         self.label_data = QLabel("(no data loaded)")
+        label_data_id_col = QLabel("Select ID column in data")
+        self.combo_data_id_col = QComboBox()
+        self.combo_data_id_col.currentTextChanged.connect(
+            self.set_data_id_col)
         self.label_data.setAlignment(Qt.AlignCenter)
         label_data_format = QLabel("Data Format:")
         # TODO: use format in argument for pycrossva (need a setter function
@@ -87,16 +92,22 @@ class CommandCenter(QWidget):
         self.label_pycrossva_status = QLabel("(no data loaded)")
         self.label_pycrossva_status.setAlignment(Qt.AlignCenter)
         #self.btn_data_check = QPushButton("Data Check")
-        self.btn_edit_data = QPushButton("Edit Check")
+        self.btn_edit_data = QPushButton("Edit Data")
         self.btn_edit_data.setEnabled(False)
         self.btn_user_mode = QPushButton("Go Back to User Mode Selection")
         data_panel_v_box.addWidget(self.btn_load_data)
         data_panel_v_box.addWidget(self.label_data)
+        data_panel_v_box.addStretch(1)
+        data_panel_v_box.addWidget(label_data_id_col)
+        data_panel_v_box.addWidget(self.combo_data_id_col)
+        data_panel_v_box.addStretch(1)
         data_panel_v_box.addWidget(label_data_format)
         data_panel_v_box.addWidget(self.btn_data_format)
+        data_panel_v_box.addStretch(1)
         data_panel_v_box.addWidget(self.btn_pycrossva)
         data_panel_v_box.addWidget(self.label_pycrossva_status)
         #data_panel_v_box.addWidget(self.btn_data_check)
+        data_panel_v_box.addStretch(1)
         data_panel_v_box.addWidget(self.btn_edit_data)
         data_panel_v_box.addStretch(2)
         data_panel_v_box.addWidget(self.btn_user_mode)
@@ -116,9 +127,20 @@ class CommandCenter(QWidget):
             n_records = len(self.load_window.data) - 1
             self.label_data.setText(f"({n_records} records loaded)")
             self.label_pycrossva_status.setText("(need to run pyCrossVA)")
+            self.combo_data_id_col.addItems(
+                ["no ID column"] + self.load_window.header[0])
+            self.combo_data_id_col.setCurrentIndex(0)
+
+            self.insilicova_results = None
+            self.label_insilicova_progress.setText("")
+            self.interva_results = None
+            self.label_interva_progress.setText("")
+            self.smartva_results = None
+            self.label_smartva_progress.setText("")
 
     def update_data(self):
         """Update status of data."""
+        pass
 
     @contextmanager
     def _capture_stdout(self, output):
@@ -133,8 +155,15 @@ class CommandCenter(QWidget):
         df = DataFrame(self.load_window.data[1:],
                        columns=self.load_window.data[0])
         pycrossva_stdout = StringIO()
+        if self.data_id_col == "no ID column":
+            raw_data_id = None
+        else:
+            raw_data_id = self.data_id_col
         with self._capture_stdout(pycrossva_stdout):
-            self.pycrossva_data = transform(("2016WHOv151", "InterVA5"), df)
+            self.pycrossva_data = transform(
+                mapping=("2016WHOv151", "InterVA5"),
+                raw_data=df,
+                raw_data_id=raw_data_id)
         logging.info(pycrossva_stdout.getvalue())
         self.pycrossva_messages = pycrossva_stdout.getvalue()
         self.label_pycrossva_status.setText("(pyCrossVA finished)")
@@ -555,104 +584,137 @@ class CommandCenter(QWidget):
 
         algorithm_panel_v_box = QVBoxLayout()
 
-        self.create_insilico_box()
+        self.create_insilicova_box()
         self.create_interva_box()
         self.create_smartva_box()
         self.btn_algorithm_results = QPushButton("Results")
 
-        algorithm_panel_v_box.addWidget(self.insilico_box)
+        algorithm_panel_v_box.addWidget(self.insilicova_box)
         algorithm_panel_v_box.addStretch(1)
-        algorithm_panel_v_box.addLayout(self.interva_box)
+        # algorithm_panel_v_box.addLayout(self.interva_box)
+        algorithm_panel_v_box.addWidget(self.interva_box)
         algorithm_panel_v_box.addStretch(1)
-        algorithm_panel_v_box.addLayout(self.smartva_box)
+        # algorithm_panel_v_box.addLayout(self.smartva_box)
+        algorithm_panel_v_box.addWidget(self.smartva_box)
         algorithm_panel_v_box.addStretch(1)
         algorithm_panel_v_box.addWidget(self.btn_algorithm_results)
         self.algorithm_panel = QGroupBox("Algorithms")
         self.algorithm_panel.setLayout(algorithm_panel_v_box)
-        self.btn_insilico_options.clicked.connect(self.run_insilico_dialog)
+        self.btn_insilicova_options.clicked.connect(self.run_insilicova_dialog)
         self.btn_interva_options.clicked.connect(self.run_interva_dialog)
         self.btn_smartva_options.clicked.connect(self.run_smartva_dialog)
-        self.btn_insilico_run.clicked.connect(self.print_insilico)
+        self.btn_insilicova_run.clicked.connect(self.run_insilicova)
         self.btn_interva_run.clicked.connect(self.run_interva)
-        self.btn_smartva_run.clicked.connect(self.print_smartva)
+        self.btn_smartva_run.clicked.connect(self.run_smartva)
         # self.btn_interva_options.clicked.connect(self.run_interva_dialog)
         # self.btn_smartva_options.clicked.connect(self.run_smartva_dialog)
 
-    def create_insilico_box(self):
+    def create_insilicova_box(self):
         """Set up box of widgets for InSilicoVA."""
 
-        self.insilico_box = QGroupBox("InSilicoVA")
-        insilico_vbox = QVBoxLayout()
-        insilico_hbox = QHBoxLayout()
-        self.btn_insilico_options = QPushButton("Set Options")
-        self.btn_insilico_run = QPushButton("Run InSilicoVA")
-        insilico_hbox.addWidget(self.btn_insilico_options)
-        insilico_hbox.addWidget(self.btn_insilico_run)
-        self.insilico_pbar = QProgressBar(self)
-        self.label_insilico_progress = QLabel("")
-        insilico_vbox.addLayout(insilico_hbox)
-        insilico_vbox.addWidget(self.insilico_pbar)
-        insilico_vbox.addWidget(self.label_insilico_progress)
-        self.insilico_box.setLayout(insilico_vbox)
+        self.insilicova_box = QGroupBox("InSilicoVA")
+        insilicova_vbox = QVBoxLayout()
+        insilicova_hbox = QHBoxLayout()
+        self.btn_insilicova_options = QPushButton("Set Options")
+        self.btn_insilicova_run = QPushButton("Run InSilicoVA")
+        insilicova_hbox.addWidget(self.btn_insilicova_options)
+        insilicova_hbox.addWidget(self.btn_insilicova_run)
+        self.insilicova_pbar = QProgressBar(self)
+        self.label_insilicova_progress = QLabel("")
+        insilicova_vbox.addLayout(insilicova_hbox)
+        insilicova_vbox.addWidget(self.insilicova_pbar)
+        insilicova_vbox.addWidget(self.label_insilicova_progress)
+        self.insilicova_box.setLayout(insilicova_vbox)
 
     def create_interva_box(self):
         """Set up box of widgets for InterVA."""
 
-        self.interva_box = QVBoxLayout()
-        interva_label = QLabel("InterVA")
+        # self.interva_box = QVBoxLayout()
+        # interva_label = QLabel("InterVA")
+        # interva_hbox = QHBoxLayout()
+        # self.btn_interva_options = QPushButton("Set Options")
+        # self.btn_interva_run = QPushButton("Run InterVA5")
+        # interva_hbox.addWidget(self.btn_interva_options)
+        # interva_hbox.addWidget(self.btn_interva_run)
+        # self.interva_pbar = QProgressBar(self)
+        # self.label_interva_progress = QLabel("")
+        # self.interva_box.addWidget(interva_label)
+        # self.interva_box.addLayout(interva_hbox)
+        # self.interva_box.addWidget(self.interva_pbar)
+        # self.interva_box.addWidget(self.label_interva_progress)
+        self.interva_box = QGroupBox("InterVA")
+        interva_vbox = QVBoxLayout()
         interva_hbox = QHBoxLayout()
         self.btn_interva_options = QPushButton("Set Options")
-        self.btn_interva_run = QPushButton("Run InterVA5")
+        self.btn_interva_run = QPushButton("Run InterVA")
         interva_hbox.addWidget(self.btn_interva_options)
         interva_hbox.addWidget(self.btn_interva_run)
         self.interva_pbar = QProgressBar(self)
         self.label_interva_progress = QLabel("")
-        self.interva_box.addWidget(interva_label)
-        self.interva_box.addLayout(interva_hbox)
-        self.interva_box.addWidget(self.interva_pbar)
-        self.interva_box.addWidget(self.label_interva_progress)
+        interva_vbox.addLayout(interva_hbox)
+        interva_vbox.addWidget(self.interva_pbar)
+        interva_vbox.addWidget(self.label_interva_progress)
+        self.interva_box.setLayout(interva_vbox)
 
     def create_smartva_box(self):
         """Set up box of widgets for SmartVA."""
 
-        self.smartva_box = QVBoxLayout()
-        smartva_label = QLabel("SmartVA")
-        smartva_hbox_2 = QHBoxLayout()
+        # self.smartva_box = QVBoxLayout()
+        # smartva_label = QLabel("SmartVA")
+        # smartva_hbox_2 = QHBoxLayout()
+        # self.btn_smartva_options = QPushButton("Set Options")
+        # self.btn_smartva_run = QPushButton("Run SmartVA")
+        # smartva_hbox_2.addWidget(self.btn_smartva_options)
+        # smartva_hbox_2.addWidget(self.btn_smartva_run)
+        # self.smartva_pbar = QProgressBar(self)
+        # self.label_smartva_progress = QLabel("")
+        # self.smartva_box.addWidget(smartva_label)
+        # self.smartva_box.addLayout(smartva_hbox_2)
+        # self.smartva_box.addWidget(self.smartva_pbar)
+        # self.smartva_box.addWidget(self.label_smartva_progress)
+        self.smartva_box = QGroupBox("SmartVA")
+        smartva_vbox = QVBoxLayout()
+        smartva_hbox = QHBoxLayout()
         self.btn_smartva_options = QPushButton("Set Options")
         self.btn_smartva_run = QPushButton("Run SmartVA")
-        smartva_hbox_2.addWidget(self.btn_smartva_options)
-        smartva_hbox_2.addWidget(self.btn_smartva_run)
+        smartva_hbox.addWidget(self.btn_smartva_options)
+        smartva_hbox.addWidget(self.btn_smartva_run)
         self.smartva_pbar = QProgressBar(self)
         self.label_smartva_progress = QLabel("")
-        self.smartva_box.addWidget(smartva_label)
-        self.smartva_box.addLayout(smartva_hbox_2)
-        self.smartva_box.addWidget(self.smartva_pbar)
-        self.smartva_box.addWidget(self.label_smartva_progress)
+        smartva_vbox.addLayout(smartva_hbox)
+        smartva_vbox.addWidget(self.smartva_pbar)
+        smartva_vbox.addWidget(self.label_smartva_progress)
+        self.smartva_box.setLayout(smartva_vbox)
 
-    def run_insilico_dialog(self):
-        self.insilico_dialog = InSilicoDialog(self,
-                                              self.seed,
-                                              self.auto_extend,
-                                              self.jump_scale,
-                                              self.n_iterations)
-        self.insilico_dialog.exec()
+    def run_insilicova_dialog(self):
+        # self.insilicova_dialog = InSilicoDialog(self,
+        #                                       self.seed,
+        #                                       self.auto_extend,
+        #                                       self.jump_scale,
+        #                                       self.n_iterations)
+        # self.insilicova_dialog.exec()
+        alert = QMessageBox()
+        alert.setText("InSilicoVA is currently unavailable, but coming soon!")
+        alert.exec()
 
-    def update_insilico_n_iterations(self, updated_n_iterations):
+    def update_insilicova_n_iterations(self, updated_n_iterations):
         self.n_iterations = updated_n_iterations
 
-    def update_insilico_jump_scale(self, updated_jump_scale):
+    def update_insilicova_jump_scale(self, updated_jump_scale):
         self.jump_scale = updated_jump_scale
 
-    def update_insilico_auto_extend(self, updated_auto_extend):
+    def update_insilicova_auto_extend(self, updated_auto_extend):
             self.auto_extend = updated_auto_extend
 
-    def update_insilico_seed(self, updated_seed):
+    def update_insilicova_seed(self, updated_seed):
         self.seed = updated_seed
 
-    def run_insilico(self):
-        rng = default_rng(self.seed)
-        # pass rng to the insilico function to make results reproducible
-        pass
+    def run_insilicova(self):
+        # rng = default_rng(self.seed)
+        # pass rng to the insilicova function to make results reproducible
+        alert = QMessageBox()
+        alert.setText("InSilicoVA is currently unavailable, but coming soon!")
+        alert.exec()
 
     def run_interva_dialog(self):
         self.interva_dialog = InterVADialog(self, self.hiv, self.malaria)
@@ -681,13 +743,27 @@ class CommandCenter(QWidget):
             self.label_interva_progress.setText("InterVA5 results are ready")
 
     def run_smartva_dialog(self):
-        self.smartva_dialog = SmartVADialog(self,
-                                            self.smartva_country,
-                                            self.smartva_hiv,
-                                            self.smartva_malaria,
-                                            self.smartva_hce,
-                                            self.smartva_freetext)
-        self.smartva_dialog.exec()
+        # self.smartva_dialog = SmartVADialog(self,
+        #                                     self.smartva_country,
+        #                                     self.smartva_hiv,
+        #                                     self.smartva_malaria,
+        #                                     self.smartva_hce,
+        #                                     self.smartva_freetext)
+        # self.smartva_dialog.exec()
+        alert = QMessageBox()
+        alert.setText("SmartVA is not available (it is based on Python 2" +
+                      "which is no longer supported by the Python Software " +
+                      "Foundation).  It will be included when a verison " +
+                      "based on Python 3 is released.")
+        alert.exec()
+        
+    def run_smartva(self):
+        alert = QMessageBox()
+        alert.setText("SmartVA is not available (it is based on Python 2" +
+                      "which is no longer supported by the Python Software " +
+                      "Foundation).  It will be included when a verison " +
+                      "based on Python 3 is released.")
+        alert.exec()
 
     def update_smartva_country(self, updated_country):
         self.smartva_country = updated_country
@@ -704,7 +780,19 @@ class CommandCenter(QWidget):
     def update_smartva_freetext(self, updated_freetext):
         self.smartva_freetext = updated_freetext
 
-    def print_insilico(self):
+    def set_data_id_col(self, id_col):
+        self.data_id_col = id_col
+        if self.data_id_col != "no ID column":
+            df = DataFrame(self.load_window.data[1:],
+                           columns=self.load_window.data[0])
+            if df[self.data_id_col].nunique() != df.shape[0]:
+                alert = QMessageBox()
+                alert.setIcon(QMessageBox.Warning)
+                alert.setText(
+                    "ID column does not have a unique value for every row")
+                alert.exec()
+
+    def print_insilicova(self):
         print(self.n_iterations)
         print(self.auto_extend)
         print(self.jump_scale)

@@ -5,7 +5,8 @@ pyopenva.main
 ~~~~~~~~~~~~~~
 This module creates user interface for the app.
 """
-from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication, QStackedLayout
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QMessageBox,
+                             QStackedLayout, QWidget)
 import sys
 from efficient import Efficient
 from mode import Mode
@@ -17,7 +18,7 @@ class WindowManager(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setGeometry(200, 200, 800, 600)
+        #self.setGeometry(200, 200, 500, 300)
         self.setWindowTitle("Select Mode")
         self.efficient = Efficient()
         self.mode = Mode()
@@ -89,9 +90,9 @@ class WindowManager(QMainWindow):
             lambda: self.update_interva_results(
                 self.command_center.interva_results))
 
-        self.command_center.btn_insilico_run.clicked.connect(
-            lambda: self.update_insilico_results(
-                self.command_center.insilico_results))
+        self.command_center.btn_insilicova_run.clicked.connect(
+            lambda: self.update_insilicova_results(
+                self.command_center.insilicova_results))
 
         self.command_center.btn_smartva_run.clicked.connect(
             lambda: self.update_smartva_results(
@@ -99,7 +100,7 @@ class WindowManager(QMainWindow):
 
     def show_efficient(self):
         self.stacked_layout.setCurrentIndex(3)
-        self.setWindowTitle("Efficient Mode: load and prepare data")
+        self.setWindowTitle("openVA App: load and prepare data")
 
     def show_command_center(self):
         self.stacked_layout.setCurrentIndex(1)
@@ -115,15 +116,15 @@ class WindowManager(QMainWindow):
 
     def show_efficient_data_page(self):
         self.efficient.show_data_page()
-        self.setWindowTitle("Efficient Mode: load and prepare data")
+        self.setWindowTitle("openVA App: load and prepare data")
 
     def show_efficient_select_algorithm_page(self):
         self.efficient.show_select_algorithm_page()
-        self.setWindowTitle("Efficient Mode: select algorithm")
+        self.setWindowTitle("openVA App: select algorithm")
 
     def show_efficient_select_algorithm_from_algorithm(self):
         self.efficient.show_select_algorithm_page()
-        self.setWindowTitle("Efficient Mode: select algorithm")
+        self.setWindowTitle("openVA App: select algorithm")
 
     def show_efficient_algorithm(self):
         if self.efficient.chosen_algorithm == "insilicova":
@@ -134,26 +135,35 @@ class WindowManager(QMainWindow):
             self.show_efficient_smartva_page()
 
     def show_efficient_insilicova_page(self):
-        self.efficient.show_insilicova_page()
-        self.setWindowTitle("Efficient Mode: InSilicoVA")
+        # self.efficient.show_insilicova_page()
+        # self.setWindowTitle("openVA App: InSilicoVA")
+        alert = QMessageBox()
+        alert.setText("InSilicoVA currently unavailable, but coming soon!")
+        alert.exec()
 
     def show_efficient_interva_page(self):
         self.efficient.show_interva_page()
-        self.setWindowTitle("Efficient Mode: InterVA")
+        self.setWindowTitle("openVA App: InterVA")
 
     def show_efficient_smartva_page(self):
-        self.efficient.show_smartva_page()
-        self.setWindowTitle("Efficient Mode: SmartVA")
+        # self.efficient.show_smartva_page()
+        # self.setWindowTitle("openVA App: SmartVA")
+        alert = QMessageBox()
+        alert.setText("SmartVA is not available (it is based on Python 2" +
+                      "which is no longer supported by the Python Software " +
+                      "Foundation).  It will be included when a verison " +
+                      "based on Python 3 is released.")
+        alert.exec()
 
     def show_efficient_results_page(self):
         self.efficient.show_results_page()
-        self.setWindowTitle("Efficient Mode: results")
+        self.setWindowTitle("openVA App: results")
 
     def update_interva_results(self, new_results):
         self.results.update_interva(new_results)
 
-    def update_insilico_results(self, new_results):
-        self.results.update_insilico(new_results)
+    def update_insilicova_results(self, new_results):
+        self.results.update_insilicova(new_results)
 
     def update_smartva_results(self, new_results):
         self.results.update_smartva(new_results)

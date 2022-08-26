@@ -20,10 +20,10 @@ class Results(QWidget):
         #self.setGeometry(400, 400, 500, 400)
         self.setWindowTitle("openVA GUI: Results")
         self.results_v_box = QVBoxLayout()
-        self.create_insilico_panel()
+        self.create_insilicova_panel()
         self.create_interva_panel()
         self.create_smartva_panel()
-        self.results_v_box.addWidget(self.insilico_panel)
+        self.results_v_box.addWidget(self.insilicova_panel)
         self.results_v_box.insertSpacing(1, 50)
         self.results_v_box.addWidget(self.interva_panel)
         self.results_v_box.insertSpacing(3, 50)
@@ -36,38 +36,38 @@ class Results(QWidget):
         self.results_v_box.addWidget(self.btn_go_to_command_center)
         self.setLayout(self.results_v_box)
 
-        self.insilico_results = None
+        self.insilicova_results = None
         self.interva_results = None
         self.smartva_results = None
         self.n_top_causes = 10
 
     #TODO: add option for comparison plot?
     #TODO: add option to group causes into aggregated categories?
-    def create_insilico_panel(self):
+    def create_insilicova_panel(self):
         layout = QVBoxLayout()
 
         vbox_table = QVBoxLayout()
-        self.btn_insilico_table = QPushButton("Show CSMF Table")
-        self.btn_save_insilico_table = QPushButton("Download CSMF Table")
-        vbox_table.addWidget(self.btn_insilico_table)
-        vbox_table.addWidget(self.btn_save_insilico_table)
+        self.btn_insilicova_table = QPushButton("Show CSMF Table")
+        self.btn_save_insilicova_table = QPushButton("Download CSMF Table")
+        vbox_table.addWidget(self.btn_insilicova_table)
+        vbox_table.addWidget(self.btn_save_insilicova_table)
 
         vbox_plot = QVBoxLayout()
-        self.btn_insilico_plot = QPushButton("Show CSMF Plot")
-        self.btn_save_insilico_plot = QPushButton("Download CSMF Plot")
-        vbox_plot.addWidget(self.btn_insilico_plot)
-        vbox_plot.addWidget(self.btn_save_insilico_plot)
+        self.btn_insilicova_plot = QPushButton("Show CSMF Plot")
+        self.btn_save_insilicova_plot = QPushButton("Download CSMF Plot")
+        vbox_plot.addWidget(self.btn_insilicova_plot)
+        vbox_plot.addWidget(self.btn_save_insilicova_plot)
 
         hbox = QHBoxLayout()
         hbox.addLayout(vbox_table)
         hbox.addLayout(vbox_plot)
         layout.addLayout(hbox)
-        self.btn_save_insilico_indiv = QPushButton(
+        self.btn_save_insilicova_indiv = QPushButton(
             "Download Individual Cause Assignments")
-        layout.addWidget(self.btn_save_insilico_indiv)
+        layout.addWidget(self.btn_save_insilicova_indiv)
 
-        self.insilico_panel = QGroupBox("InSilicoVA")
-        self.insilico_panel.setLayout(layout)
+        self.insilicova_panel = QGroupBox("InSilicoVA")
+        self.insilicova_panel.setLayout(layout)
 
     def create_interva_panel(self):
         layout = QVBoxLayout()
@@ -231,8 +231,8 @@ class Results(QWidget):
     def update_interva(self, new_interva_results):
         self.interva_results = new_interva_results
 
-    def update_insilico(self, new_insilico_results):
-        self.insilico_results = new_insilico_results
+    def update_insilicova(self, new_insilicova_results):
+        self.insilicova_results = new_insilicova_results
 
     def update_smartva(self, new_smartva_results):
         self.smartva_results = new_smartva_results

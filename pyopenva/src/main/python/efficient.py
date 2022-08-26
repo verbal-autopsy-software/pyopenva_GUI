@@ -11,9 +11,9 @@ from interva.interva5 import InterVA5
 from data import COUNTRIES
 from pandas import read_csv
 from pycrossva.transform import transform
-from PyQt5.QtWidgets import (QComboBox, QFileDialog, QHBoxLayout, QMessageBox,
-                             QLabel, QProgressBar, QPushButton, QSpinBox,
-                             QStackedLayout, QVBoxLayout, QWidget)
+from PyQt5.QtWidgets import (QComboBox, QFileDialog, QGroupBox, QHBoxLayout,
+                             QMessageBox, QLabel, QProgressBar, QPushButton,
+                             QSpinBox, QStackedLayout, QVBoxLayout, QWidget)
 from output import PlotDialog, TableDialog, save_plot
 
 
@@ -25,6 +25,7 @@ class Efficient(QWidget):
         self.data_page = QWidget()
         self.data = None
         self.data_loaded = False
+        self.data_id_col = None
         self.pycrossva_data = None
         self.data_ui()
         self.select_algorithm_page = QWidget()
@@ -71,39 +72,65 @@ class Efficient(QWidget):
         """Set up page for loading, editing, and checking the data."""
 
         layout = QVBoxLayout()
+
+        load_groupbox = QGroupBox("Load Data")
+        load_vbox = QVBoxLayout()
+        label_data_info = QLabel("Select the file with VA data from an ODK export")
         self.btn_load_data = QPushButton("Load Data (.csv)")
         self.btn_load_data.clicked.connect(self.load_data)
-        self.label_data = QLabel('(no data loaded)')
+        self.label_data = QLabel("(no data loaded)")
+        label_data_id_col = QLabel("Select ID column in data")
+        self.combo_data_id_col = QComboBox()
+        self.combo_data_id_col.currentTextChanged.connect(
+            self.set_data_id_col)
+        # load_vbox.insertSpacing(0, 20)
+        load_vbox.addWidget(label_data_info)
+        load_vbox.addWidget(self.btn_load_data)
+        load_vbox.addWidget(self.label_data)
+        load_vbox.insertSpacing(3, 50)
+        load_vbox.addWidget(label_data_id_col)
+        load_vbox.addWidget(self.combo_data_id_col)
+        load_groupbox.setLayout(load_vbox)
 
-        label_data_format = QLabel("Data Format:")
+        form_groupbox = QGroupBox("Data Format")
+        form_vbox = QVBoxLayout()
+        label_data_format = QLabel(
+            "Select the ODK form used for data collection")
         self.btn_data_format = QComboBox()
         # TODO: use format in argument for pycrossva (need a setter function
         #       with a dictionary for mapping options to pycrossva parameters)
         self.btn_data_format.addItems(("WHO 2016 (v151)",
                                        "WHO 2012",
                                        "PHMRC"))
-        self.btn_run_pycrossva = QPushButton("Run pyCrossVA")
-        self.btn_run_pycrossva.clicked.connect(self.run_pycrossva)
-        self.label_run_pycrossva = QLabel('(no data loaded)')
-        self.btn_data_check = QPushButton("Data Check")
+        form_vbox.addWidget(label_data_format)
+        form_vbox.addWidget(self.btn_data_format)
+        # load_vbox.insertSpacing(2, 50)
+        form_groupbox.setLayout(form_vbox)
 
-        h_box = QHBoxLayout()
+        # self.btn_run_pycrossva = QPushButton("Run pyCrossVA")
+        # self.btn_run_pycrossva.clicked.connect(self.run_pycrossva)
+        # self.label_run_pycrossva = QLabel('(no data loaded)')
+        # self.btn_data_check = QPushButton("Data Check")
+        h_box_btns = QHBoxLayout()
         self.btn_go_to_mode = QPushButton("Back")
         self.btn_algorithm = QPushButton("Next")
-        h_box.addWidget(self.btn_go_to_mode)
-        h_box.addWidget(self.btn_algorithm)
+        h_box_btns.addWidget(self.btn_go_to_mode)
+        h_box_btns.addWidget(self.btn_algorithm)
         # self.btn_algorithm.pressed.connect(self.show_select_algorithm_page)
 
-        layout.addWidget(self.btn_load_data)
-        layout.addWidget(self.label_data)
+        # layout.addWidget(self.btn_load_data)
+        # layout.addWidget(self.label_data)
+        # layout.addStretch(2)
+        # layout.addWidget(label_data_format)
+        # layout.addWidget(self.btn_data_format)
+        # layout.addStretch(2)
+        # layout.addWidget(self.btn_run_pycrossva)
+        # layout.addWidget(self.label_run_pycrossva)
+        layout.addWidget(load_groupbox)
         layout.addStretch(2)
-        layout.addWidget(label_data_format)
-        layout.addWidget(self.btn_data_format)
+        layout.addWidget(form_groupbox)
         layout.addStretch(2)
-        layout.addWidget(self.btn_run_pycrossva)
-        layout.addWidget(self.label_run_pycrossva)
-        layout.addStretch(2)
-        layout.addLayout(h_box)
+        layout.addLayout(h_box_btns)
         self.data_page.setLayout(layout)
 
     def select_algorithm_ui(self):
@@ -310,13 +337,28 @@ class Efficient(QWidget):
 
     def load_data(self):
         path = QFileDialog.getOpenFileName(self,
-                                           "Open a CSV file", "",
+                                           "Open a CSV file",
+                                           "",
                                            "All Files(*.*)")
         if path != ("", ""):
             self.data = read_csv(path[0])
             n_records = self.data.shape[0]
             self.label_data.setText(f'Data loaded: {n_records} deaths')
             self.data_loaded = True
+            self.combo_data_id_col.addItems(
+                ["no ID column"] + list(self.data)
+            )
+            self.combo_data_id_col.setCurrentIndex(0)
+
+    def set_data_id_col(self, id_col):
+        self.data_id_col = id_col
+        if self.data_id_col != "no ID column":
+            if self.data[self.data_id_col].nunique() != self.data.shape[0]:
+                alert = QMessageBox()
+                alert.setIcon(QMessageBox.Warning)
+                alert.setText(
+                    "ID column does not have a unique value for every row")
+                alert.exec()
 
     def run_pycrossva(self):
         if not self.data_loaded:
@@ -324,9 +366,11 @@ class Efficient(QWidget):
             alert.setText("Please load data before running pyCrossVA.")
             alert.exec()
         else:
-            self.pycrossva_data = transform(("2016WHOv151", "InterVA5"),
-                                            self.data)
-            self.label_run_pycrossva.setText("data are ready to go!")
+            self.pycrossva_data = transform(
+                mapping=("2016WHOv151", "InterVA5"),
+                raw_data=self.data,
+                raw_data_id=self.data_id_col)
+            # self.label_run_pycrossva.setText("data are ready to go!")
 
     def set_interva_hiv(self, updated_hiv):
         self.interva_hiv = updated_hiv
@@ -383,12 +427,14 @@ class Efficient(QWidget):
         self.stacked_layout.setCurrentIndex(5)
 
     def run_interva(self):
-        if self.pycrossva_data is None:
+        if self.data_loaded is None:
             alert = QMessageBox()
             alert.setText(
-                "Data need to be loaded and/or prepared with pyCrossVA.")
+                # "Data need to be loaded and/or prepared with pyCrossVA.")
+                "Data need to be loaded.")
             alert.exec()
         else:
+            self.run_pycrossva()
             iv5out = InterVA5(self.pycrossva_data,
                               hiv=self.interva_hiv[0],
                               malaria=self.interva_malaria[0],

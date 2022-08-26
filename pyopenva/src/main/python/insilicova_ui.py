@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-pyopenva.insilico
+pyopenva.insilicova
 ~~~~~~~~~~~~~~
 This module creates a dialog for setting InSilicoVA options.
 """
@@ -12,11 +12,11 @@ from PyQt5.QtWidgets import (QCheckBox, QDialog, QDialogButtonBox,
 from PyQt5.QtCore import Qt
 
 
-class InSilicoDialog(QDialog):
+class InSilicoVADialog(QDialog):
 
     def __init__(self, parent=None, seed=None, auto_extend=True, jump_scale=0.1,
                  n_iterations=3000):
-        super(InSilicoDialog, self).__init__(parent=parent)
+        super(InSilicoVADialog, self).__init__(parent=parent)
         self.setWindowTitle("InSilicoVA Options")
         self.auto_extend = auto_extend
         self.jump_scale = jump_scale
@@ -54,16 +54,16 @@ class InSilicoDialog(QDialog):
         self.btn_box.accepted.connect(self.accept)
         self.btn_box.accepted.connect(
             lambda:
-            self.parent().update_insilico_n_iterations(self.n_iterations))
+            self.parent().update_insilicova_n_iterations(self.n_iterations))
         self.btn_box.accepted.connect(
             lambda:
-            self.parent().update_insilico_jump_scale(self.jump_scale))
+            self.parent().update_insilicova_jump_scale(self.jump_scale))
         self.btn_box.accepted.connect(
             lambda:
-            self.parent().update_insilico_auto_extend(self.auto_extend))
+            self.parent().update_insilicova_auto_extend(self.auto_extend))
         self.btn_box.accepted.connect(
             lambda:
-            self.parent().update_insilico_seed(self.seed))
+            self.parent().update_insilicova_seed(self.seed))
         self.btn_box.rejected.connect(self.reject)
 
         self.layout = QVBoxLayout()
