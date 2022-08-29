@@ -24,11 +24,11 @@ class Results(QWidget):
         self.create_interva_panel()
         self.create_smartva_panel()
         self.results_v_box.addWidget(self.insilicova_panel)
-        self.results_v_box.insertSpacing(1, 50)
+        #self.results_v_box.insertSpacing(1, 50)
         self.results_v_box.addWidget(self.interva_panel)
-        self.results_v_box.insertSpacing(3, 50)
+        #self.results_v_box.insertSpacing(3, 50)
         self.results_v_box.addWidget(self.smartva_panel)
-        self.results_v_box.insertSpacing(5, 50)
+        #self.results_v_box.insertSpacing(5, 50)
         self.btn_go_to_mode = QPushButton("Go Back to User Mode Selection")
         self.btn_go_to_command_center = QPushButton(
             "Go Back to the Command Center")
@@ -47,13 +47,13 @@ class Results(QWidget):
         layout = QVBoxLayout()
 
         vbox_table = QVBoxLayout()
-        self.btn_insilicova_table = QPushButton("Show CSMF Table")
+        self.btn_insilicova_table = QPushButton("Show \n CSMF Table")
         self.btn_save_insilicova_table = QPushButton("Download CSMF Table")
         vbox_table.addWidget(self.btn_insilicova_table)
         vbox_table.addWidget(self.btn_save_insilicova_table)
 
         vbox_plot = QVBoxLayout()
-        self.btn_insilicova_plot = QPushButton("Show CSMF Plot")
+        self.btn_insilicova_plot = QPushButton("Show \n CSMF Plot")
         self.btn_save_insilicova_plot = QPushButton("Download CSMF Plot")
         vbox_plot.addWidget(self.btn_insilicova_plot)
         vbox_plot.addWidget(self.btn_save_insilicova_plot)
@@ -63,7 +63,7 @@ class Results(QWidget):
         hbox.addLayout(vbox_plot)
         layout.addLayout(hbox)
         self.btn_save_insilicova_indiv = QPushButton(
-            "Download Individual Cause Assignments")
+            "Download \n Individual Cause Assignments")
         layout.addWidget(self.btn_save_insilicova_indiv)
 
         self.insilicova_panel = QGroupBox("InSilicoVA")
@@ -73,7 +73,7 @@ class Results(QWidget):
         layout = QVBoxLayout()
 
         vbox_table = QVBoxLayout()
-        self.btn_interva_table = QPushButton("Show CSMF Table")
+        self.btn_interva_table = QPushButton("Show \n CSMF Table")
         self.btn_interva_table.clicked.connect(self.interva_table)
         self.btn_save_interva_table = QPushButton("Download CSMF Table")
         self.btn_save_interva_table.clicked.connect(
@@ -82,7 +82,7 @@ class Results(QWidget):
         vbox_table.addWidget(self.btn_save_interva_table)
 
         vbox_plot = QVBoxLayout()
-        self.btn_interva_plot = QPushButton("Show CSMF Plot")
+        self.btn_interva_plot = QPushButton("Show \n CSMF Plot")
         self.btn_interva_plot.clicked.connect(self.interva_plot)
         self.btn_save_interva_plot = QPushButton("Download CSMF Plot")
         self.btn_save_interva_plot.clicked.connect(self.download_interva_plot)
@@ -94,7 +94,7 @@ class Results(QWidget):
         hbox.addLayout(vbox_plot)
         layout.addLayout(hbox)
         self.btn_save_interva_indiv = QPushButton(
-            "Download Individual Cause Assignments")
+            "Download Individual \n Cause Assignments")
         self.btn_save_interva_indiv.clicked.connect(
             self.download_interva_indiv)
         self.spinbox_n_causes = QSpinBox()
@@ -102,6 +102,7 @@ class Results(QWidget):
         self.spinbox_n_causes.setPrefix("Include ")
         self.spinbox_n_causes.setSuffix(" causes in the results")
         self.spinbox_n_causes.valueChanged.connect(self.set_n_top_causes)
+        self.spinbox_n_causes.setMaximumWidth(350)
         layout.addWidget(self.btn_save_interva_indiv)
         layout.addWidget(self.spinbox_n_causes)
         self.interva_panel = QGroupBox("InterVA")
@@ -111,13 +112,13 @@ class Results(QWidget):
         layout = QVBoxLayout()
 
         vbox_table = QVBoxLayout()
-        self.btn_smartva_table = QPushButton("Show CSMF Table")
+        self.btn_smartva_table = QPushButton("Show \n CSMF Table")
         self.btn_save_smartva_table = QPushButton("Download CSMF Table")
         vbox_table.addWidget(self.btn_smartva_table)
         vbox_table.addWidget(self.btn_save_smartva_table)
 
         vbox_plot = QVBoxLayout()
-        self.btn_smartva_plot = QPushButton("Show CSMF Plot")
+        self.btn_smartva_plot = QPushButton("Show \n CSMF Plot")
         self.btn_save_smartva_plot = QPushButton("Download CSMF Plot")
         vbox_plot.addWidget(self.btn_smartva_plot)
         vbox_plot.addWidget(self.btn_save_smartva_plot)
@@ -127,7 +128,7 @@ class Results(QWidget):
         hbox.addLayout(vbox_plot)
         layout.addLayout(hbox)
         self.btn_save_smartva_indiv = QPushButton(
-            "Download Individual Cause Assignments")
+            "Download \n Individual Cause Assignments")
         layout.addWidget(self.btn_save_smartva_indiv)
         self.smartva_panel = QGroupBox("SmartVA")
         self.smartva_panel.setLayout(layout)
@@ -221,7 +222,8 @@ class Results(QWidget):
                                                "CSV Files (*.csv)")
             if path != ("", ""):
                 with open(path[0], "a") as f:
-                    out = self.interva_results.get_indiv_prob(top=1)
+                    out = self.interva_results.out["VA5"]
+                    out.drop("WHOLEPROB", axis=1, inplace=True)
                     out.to_csv(f, index=False)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()

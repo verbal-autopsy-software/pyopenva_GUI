@@ -77,12 +77,14 @@ class Efficient(QWidget):
         load_vbox = QVBoxLayout()
         label_data_info = QLabel("Select the file with VA data from an ODK export")
         self.btn_load_data = QPushButton("Load Data (.csv)")
+        self.btn_load_data.setMaximumWidth(350)
         self.btn_load_data.clicked.connect(self.load_data)
         self.label_data = QLabel("(no data loaded)")
         label_data_id_col = QLabel("Select ID column in data")
         self.combo_data_id_col = QComboBox()
         self.combo_data_id_col.currentTextChanged.connect(
             self.set_data_id_col)
+        self.combo_data_id_col.setMaximumWidth(350)
         # load_vbox.insertSpacing(0, 20)
         load_vbox.addWidget(label_data_info)
         load_vbox.addWidget(self.btn_load_data)
@@ -102,6 +104,7 @@ class Efficient(QWidget):
         self.btn_data_format.addItems(("WHO 2016 (v151)",
                                        "WHO 2012",
                                        "PHMRC"))
+        self.btn_data_format.setMaximumWidth(350)
         form_vbox.addWidget(label_data_format)
         form_vbox.addWidget(self.btn_data_format)
         # load_vbox.insertSpacing(2, 50)
@@ -294,43 +297,86 @@ class Efficient(QWidget):
     def results_ui(self):
         layout = QVBoxLayout()
 
-        vbox_table = QVBoxLayout()
-        self.btn_show_table = QPushButton("Show CSMF table")
-        self.btn_show_table.pressed.connect(self.run_table_dialog)
-        self.btn_download_table = QPushButton("Download Table")
-        self.btn_download_table.clicked.connect(self.download_interva_table)
-        vbox_table.addWidget(self.btn_show_table)
-        vbox_table.addWidget(self.btn_download_table)
-
-        vbox_plot = QVBoxLayout()
-        self.btn_show_plot = QPushButton("Show CSMF plot")
-        self.btn_show_plot.pressed.connect(self.run_plot_dialog)
-        self.btn_download_plot = QPushButton("Download Plot")
-        self.btn_download_plot.clicked.connect(self.download_interva_plot)
-        vbox_plot.addWidget(self.btn_show_plot)
-        vbox_plot.addWidget(self.btn_download_plot)
-
-        hbox = QHBoxLayout()
-        hbox.addLayout(vbox_table)
-        hbox.addLayout(vbox_plot)
-
-        layout.addLayout(hbox)
-        self.btn_download_individual_results = QPushButton(
-            "Download Individual Cause Assignments")
-        self.btn_download_individual_results.clicked.connect(
-            self.download_interva_indiv
-        )
+        gbox_top_causes = QGroupBox("Number of top causes")
+        hbox_top = QHBoxLayout()
         self.spinbox_n_causes = QSpinBox()
         self.spinbox_n_causes.setRange(1, 64)
         self.spinbox_n_causes.setPrefix("Include ")
         self.spinbox_n_causes.setSuffix(" causes in the results")
+        self.spinbox_n_causes.setValue(10)
         self.spinbox_n_causes.valueChanged.connect(self.set_n_top_causes)
+        self.spinbox_n_causes.setMaximumWidth(250)
+        hbox_top.addWidget(self.spinbox_n_causes)
+        gbox_top_causes.setLayout(hbox_top)
+
+        gbox_show = QGroupBox("Show Results")
+        hbox_show = QHBoxLayout()
+        self.btn_show_table = QPushButton("Show \n CSMF table")
+        self.btn_show_table.pressed.connect(self.run_table_dialog)
+        self.btn_show_plot = QPushButton("Show \n CSMF plot")
+        self.btn_show_plot.pressed.connect(self.run_plot_dialog)
+        hbox_show.addWidget(self.btn_show_table)
+        hbox_show.addWidget(self.btn_show_plot)
+        gbox_show.setLayout(hbox_show)
+
+        gbox_download = QGroupBox("Download Results")
+        vbox_download = QVBoxLayout()
+        hbox_download = QHBoxLayout()
+        self.btn_download_table = QPushButton("Download Table")
+        self.btn_download_table.clicked.connect(self.download_interva_table)
+        self.btn_download_plot = QPushButton("Download Plot")
+        self.btn_download_plot.clicked.connect(self.download_interva_plot)
+        self.btn_download_individual_results = QPushButton(
+            "Download \n Individual Cause Assignments")
+        self.btn_download_individual_results.clicked.connect(
+            self.download_interva_indiv
+        )
+        hbox_download.addWidget(self.btn_download_table)
+        hbox_download.addWidget(self.btn_download_plot)
+        vbox_download.addLayout(hbox_download)
+        vbox_download.addWidget(self.btn_download_individual_results)
+        gbox_download.setLayout(vbox_download)
+
+        # vbox_table = QVBoxLayout()
+        # self.btn_show_table = QPushButton("Show CSMF table")
+        # self.btn_show_table.pressed.connect(self.run_table_dialog)
+        # self.btn_download_table = QPushButton("Download Table")
+        # self.btn_download_table.clicked.connect(self.download_interva_table)
+        # vbox_table.addWidget(self.btn_show_table)
+        # vbox_table.addWidget(self.btn_download_table)
+        #
+        # vbox_plot = QVBoxLayout()
+        # self.btn_show_plot = QPushButton("Show CSMF plot")
+        # self.btn_show_plot.pressed.connect(self.run_plot_dialog)
+        # self.btn_download_plot = QPushButton("Download Plot")
+        # self.btn_download_plot.clicked.connect(self.download_interva_plot)
+        # vbox_plot.addWidget(self.btn_show_plot)
+        # vbox_plot.addWidget(self.btn_download_plot)
+        #
+        # hbox = QHBoxLayout()
+        # hbox.addLayout(vbox_table)
+        # hbox.addLayout(vbox_plot)
+        #
+        # layout.addLayout(hbox)
+        # self.btn_download_individual_results = QPushButton(
+        #     "Download Individual Cause Assignments")
+        # self.btn_download_individual_results.clicked.connect(
+        #     self.download_interva_indiv
+        # )
+
         #self.spinbox_n_causes.textChanged(self.set_n_top_causes_text)
         self.btn_results_to_algorithm = QPushButton("Back")
         # self.btn_go_to_algorithm_page.pressed.connect(
         #     self.show_algorithm_page)
-        layout.addWidget(self.btn_download_individual_results)
-        layout.addWidget(self.spinbox_n_causes)
+
+        # layout.addWidget(self.btn_download_individual_results)
+        # layout.addWidget(self.spinbox_n_causes)
+        # layout.addStretch(1)
+        layout.addWidget(gbox_top_causes)
+        layout.addStretch(1)
+        layout.addWidget(gbox_show)
+        layout.addStretch(1)
+        layout.addWidget(gbox_download)
         layout.addStretch(1)
         layout.addWidget(self.btn_results_to_algorithm)
         self.results_page.setLayout(layout)
@@ -533,7 +579,8 @@ class Efficient(QWidget):
                                                "CSV Files (*.csv)")
             if path != ("", ""):
                 with open(path[0], "a") as f:
-                    out = self.interva_results.get_indiv_prob(top=1)
+                    out = self.interva_results.out["VA5"]
+                    out.drop("WHOLEPROB", axis=1, inplace=True)
                     out.to_csv(f, index=False)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()

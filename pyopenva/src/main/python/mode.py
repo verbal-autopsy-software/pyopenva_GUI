@@ -5,7 +5,8 @@ pyopenva.mode
 ~~~~~~~~~~~~~~
 This module creates the welcome screen where users select the mode.
 """
-from PyQt5.QtWidgets import (QWidget, QLabel, QPushButton, QGridLayout)
+from PyQt5.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QWidget,
+                             QVBoxLayout)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QPixmap
 
@@ -16,11 +17,11 @@ class Mode(QWidget):
         openva_pixmap = QPixmap("../icons/openva-logo.png")
         self.logo_openva = QLabel()
         self.logo_openva.setPixmap(
-            openva_pixmap.scaled(192, 192,
+            openva_pixmap.scaled(160, 160,
                                  Qt.KeepAspectRatio,
                                  Qt.SmoothTransformation))
-        self.label_openva = QLabel("openVA App    ")
-        self.label_openva.setFont(QFont("Arial", 48, QFont.Bold))
+        self.label_openva = QLabel("openVA App")
+        self.label_openva.setFont(QFont("Arial", 36, QFont.Bold))
         d4h_pixmap = QPixmap("../icons/d4h.jpg")
         self.logo_d4h = QLabel()
         self.logo_d4h.setPixmap(
@@ -34,25 +35,27 @@ class Mode(QWidget):
                                            Qt.KeepAspectRatio,
                                            Qt.SmoothTransformation))
         self.btn_efficient = QPushButton("Start")
+        self.btn_efficient.setMaximumWidth(250)
         self.btn_advanced = QPushButton("Advanced Mode")
+        self.btn_advanced.setMaximumWidth(250)
+        self.vbox = QVBoxLayout()
+        hbox = QHBoxLayout()
+        hbox.addWidget(self.logo_openva)
+        hbox.addWidget(self.label_openva)
+        self.vbox.addLayout(hbox)
+        self.vbox.insertSpacing(1, 25)
+        hbox_btn_eff = QHBoxLayout()
+        hbox_btn_eff.addWidget(self.btn_efficient)
+        self.vbox.addLayout(hbox_btn_eff)
+        hbox_btn_adv = QHBoxLayout()
+        hbox_btn_adv.addWidget(self.btn_advanced)
+        self.vbox.addLayout(hbox_btn_adv)
+        self.vbox.insertSpacing(4, 75)
+        hbox_low = QHBoxLayout()
+        hbox_low.addWidget(self.logo_d4h)
+        hbox_low.addWidget(self.logo_vital_strategies)
+        self.vbox.addLayout(hbox_low)
+        self.vbox.setAlignment(Qt.AlignCenter)
+        self.setLayout(self.vbox)
 
-        self.grid = QGridLayout(self)
-        self.grid.addWidget(self.logo_openva, 0, 0)
-        self.grid.addWidget(self.label_openva, 0, 2)
-        self.grid.addWidget(self.btn_efficient, 1, 2)
-        self.grid.addWidget(self.btn_advanced, 2, 2)
-        self.grid.addWidget(self.logo_d4h, 3, 0)
-        self.grid.addWidget(self.logo_vital_strategies, 3, 1)
-        # self.grid.addWidget(self.logo_openva, 3, 0)
-        # self.grid.addWidget(self.label_openva, 0, 1)
-        # self.grid.addWidget(self.btn_efficient, 1, 1)
-        # self.grid.addWidget(self.btn_advanced, 2, 1)
-        # self.grid.addWidget(self.logo_d4h, 3, 1)
-        # self.grid.addWidget(self.logo_vital_strategies, 3, 2)
-        # self.grid.addWidget(self.logo_openva, 0, 0)
-        # #self.grid.addWidget(self.label_openva, 0, 1)
-        # self.grid.addWidget(self.btn_efficient, 0, 1)
-        # self.grid.addWidget(self.btn_advanced, 0, 2)
-        # self.grid.addWidget(self.logo_d4h, 3, 0)
-        # self.grid.addWidget(self.logo_vital_strategies, 3, 2)
 

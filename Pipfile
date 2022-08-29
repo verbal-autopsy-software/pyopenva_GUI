@@ -9,6 +9,7 @@ pandas = "*"
 pyinstaller = "*"
 pycrossva = "*"
 matplotlib = "*"
+interva = "*"
 
 [dev-packages]
 
