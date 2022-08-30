@@ -412,10 +412,13 @@ class Efficient(QWidget):
             alert.setText("Please load data before running pyCrossVA.")
             alert.exec()
         else:
+            raw_data_col_id = self.data_id_col
+            if self.data_id_col == "no ID column":
+                raw_data_col_id = None
             self.pycrossva_data = transform(
                 mapping=("2016WHOv151", "InterVA5"),
                 raw_data=self.data,
-                raw_data_id=self.data_id_col)
+                raw_data_id=raw_data_col_id)
             # self.label_run_pycrossva.setText("data are ready to go!")
 
     def set_interva_hiv(self, updated_hiv):

@@ -101,6 +101,7 @@ class Results(QWidget):
         self.spinbox_n_causes.setRange(1, 64)
         self.spinbox_n_causes.setPrefix("Include ")
         self.spinbox_n_causes.setSuffix(" causes in the results")
+        self.spinbox_n_causes.setValue(10)
         self.spinbox_n_causes.valueChanged.connect(self.set_n_top_causes)
         self.spinbox_n_causes.setMaximumWidth(350)
         layout.addWidget(self.btn_save_interva_indiv)
