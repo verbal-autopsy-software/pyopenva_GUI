@@ -8,7 +8,7 @@ This module creates the window for displaying and downloading results.
 
 from PyQt5.QtWidgets import (QFileDialog, QGroupBox, QHBoxLayout, QMessageBox,
                              QPushButton, QSpinBox, QVBoxLayout, QWidget)
-from output import PlotDialog, TableDialog, save_plot
+from pyopenva.output import PlotDialog, TableDialog, save_plot
 import os
 
 
@@ -19,10 +19,24 @@ class Results(QWidget):
 
         #self.setGeometry(400, 400, 500, 400)
         self.setWindowTitle("openVA GUI: Results")
+        self.insilicova_results = None
+        self.interva_results = None
+        self.smartva_results = None
+        self.n_top_causes = 5
         self.results_v_box = QVBoxLayout()
         self.create_insilicova_panel()
         self.create_interva_panel()
         self.create_smartva_panel()
+
+        self.spinbox_n_causes = QSpinBox()
+        self.spinbox_n_causes.setRange(1, 64)
+        self.spinbox_n_causes.setPrefix("Include ")
+        self.spinbox_n_causes.setSuffix(" causes in the results")
+        self.spinbox_n_causes.setValue(self.n_top_causes)
+        self.spinbox_n_causes.valueChanged.connect(self.set_n_top_causes)
+        self.spinbox_n_causes.setMaximumWidth(350)
+        self.results_v_box.addWidget(self.spinbox_n_causes)
+
         self.results_v_box.addWidget(self.insilicova_panel)
         #self.results_v_box.insertSpacing(1, 50)
         self.results_v_box.addWidget(self.interva_panel)
@@ -36,11 +50,6 @@ class Results(QWidget):
         self.results_v_box.addWidget(self.btn_go_to_command_center)
         self.setLayout(self.results_v_box)
 
-        self.insilicova_results = None
-        self.interva_results = None
-        self.smartva_results = None
-        self.n_top_causes = 10
-
     #TODO: add option for comparison plot?
     #TODO: add option to group causes into aggregated categories?
     def create_insilicova_panel(self):
@@ -48,13 +57,21 @@ class Results(QWidget):
 
         vbox_table = QVBoxLayout()
         self.btn_insilicova_table = QPushButton("Show \n CSMF Table")
+        self.btn_insilicova_table.clicked.connect(
+            self.insilicova_table)
         self.btn_save_insilicova_table = QPushButton("Download CSMF Table")
+        self.btn_save_insilicova_table.clicked.connect(
+            self.download_insilicova_table)
         vbox_table.addWidget(self.btn_insilicova_table)
         vbox_table.addWidget(self.btn_save_insilicova_table)
 
         vbox_plot = QVBoxLayout()
         self.btn_insilicova_plot = QPushButton("Show \n CSMF Plot")
+        self.btn_insilicova_plot.clicked.connect(
+            self.insilicova_plot)
         self.btn_save_insilicova_plot = QPushButton("Download CSMF Plot")
+        self.btn_save_insilicova_plot.clicked.connect(
+            self.download_insilicova_plot)
         vbox_plot.addWidget(self.btn_insilicova_plot)
         vbox_plot.addWidget(self.btn_save_insilicova_plot)
 
@@ -64,6 +81,8 @@ class Results(QWidget):
         layout.addLayout(hbox)
         self.btn_save_insilicova_indiv = QPushButton(
             "Download \n Individual Cause Assignments")
+        self.btn_save_insilicova_indiv.clicked.connect(
+            self.download_insilicova_indiv)
         layout.addWidget(self.btn_save_insilicova_indiv)
 
         self.insilicova_panel = QGroupBox("InSilicoVA")
@@ -97,15 +116,15 @@ class Results(QWidget):
             "Download Individual \n Cause Assignments")
         self.btn_save_interva_indiv.clicked.connect(
             self.download_interva_indiv)
-        self.spinbox_n_causes = QSpinBox()
-        self.spinbox_n_causes.setRange(1, 64)
-        self.spinbox_n_causes.setPrefix("Include ")
-        self.spinbox_n_causes.setSuffix(" causes in the results")
-        self.spinbox_n_causes.setValue(10)
-        self.spinbox_n_causes.valueChanged.connect(self.set_n_top_causes)
-        self.spinbox_n_causes.setMaximumWidth(350)
+        # self.spinbox_n_causes = QSpinBox()
+        # self.spinbox_n_causes.setRange(1, 64)
+        # self.spinbox_n_causes.setPrefix("Include ")
+        # self.spinbox_n_causes.setSuffix(" causes in the results")
+        # self.spinbox_n_causes.setValue(self.n_top_causes)
+        # self.spinbox_n_causes.valueChanged.connect(self.set_n_top_causes)
+        # self.spinbox_n_causes.setMaximumWidth(350)
         layout.addWidget(self.btn_save_interva_indiv)
-        layout.addWidget(self.spinbox_n_causes)
+        # layout.addWidget(self.spinbox_n_causes)
         self.interva_panel = QGroupBox("InterVA")
         self.interva_panel.setLayout(layout)
 
@@ -153,8 +172,9 @@ class Results(QWidget):
                 "Need to run InterVA5 first.")
             alert.exec()
         else:
-            self.interva_table = TableDialog(self.interva_results,
-                                             self,
+            self.interva_table = TableDialog(results=self.interva_results,
+                                             algorithm="interva",
+                                             parent=self,
                                              top=self.n_top_causes)
             self.interva_table.resize(self.interva_table.table.width(),
                                       self.interva_table.table.height())
@@ -174,7 +194,7 @@ class Results(QWidget):
                                                "CSV Files (*.csv)")
             if path != ("", ""):
                 #os.remove(path[0])
-                with open(path[0], "a") as f:
+                with open(path[0], "a", newline="") as f:
                     n_top_causes = self.n_top_causes
                     csmf = self.interva_results.get_csmf(top=n_top_causes)
                     csmf.sort_values(ascending=False, inplace=True)
@@ -202,6 +222,7 @@ class Results(QWidget):
             if path != ("", ""):
                 #os.remove(path[0])
                 save_plot(results=self.interva_results,
+                          algorithm="interva",
                           top=self.n_top_causes,
                           file_name=path[0])
                 if os.path.isfile(path[0]):
@@ -222,10 +243,107 @@ class Results(QWidget):
                                                results_file_name,
                                                "CSV Files (*.csv)")
             if path != ("", ""):
-                with open(path[0], "a") as f:
+                with open(path[0], "a", newline="") as f:
                     out = self.interva_results.out["VA5"]
                     out.drop("WHOLEPROB", axis=1, inplace=True)
                     out.to_csv(f, index=False)
+                if os.path.isfile(path[0]):
+                    alert = QMessageBox()
+                    alert.setText("results saved to" + path[0])
+                    alert.exec()
+
+    def insilicova_plot(self):
+        if self.insilicova_results is None:
+            alert = QMessageBox()
+            alert.setText(
+                "Need to run InSilicoVA first.")
+            alert.exec()
+        else:
+            self.insilicova_plot_dialog = PlotDialog(results=self.insilicova_results,
+                                                     algorithm="insilicova",
+                                                     parent=self,
+                                                     top=self.n_top_causes)
+            self.insilicova_plot_dialog.exec()
+
+    def insilicova_table(self):
+        if self.insilicova_results is None:
+            alert = QMessageBox()
+            alert.setText(
+                "Need to run InSilicoVA first.")
+            alert.exec()
+        else:
+            self.insilicova_table = TableDialog(self.insilicova_results,
+                                                self,
+                                                top=self.n_top_causes)
+            self.insilicova_table.resize(self.insilicova_table.table.width(),
+                                         self.insilicova_table.table.height())
+            self.insilicova_table.exec()
+
+    def download_insilicova_table(self):
+        if self.insilicova_results is None:
+            alert = QMessageBox()
+            alert.setText(
+                "Need to run InSilicoVA first.")
+            alert.exec()
+        else:
+            results_file_name = "insilicova_csmf.csv"
+            path = QFileDialog.getSaveFileName(self,
+                                               "Save CSMF (csv)",
+                                               results_file_name,
+                                               "CSV Files (*.csv)")
+            if path != ("", ""):
+                #os.remove(path[0])
+                with open(path[0], "a", newline="") as f:
+                    n_top_causes = self.n_top_causes
+                    csmf = self.insilicova_results.get_csmf(top=n_top_causes)
+                    csmf_df = csmf.sort_values(by="Mean", ascending=False).copy()
+                    csmf_df = csmf_df.reset_index()
+                    csmf_df.rename(columns={"index": "Cause", "Mean": "CSMF (Mean)"},
+                                   inplace=True)
+                    csmf_df.round(4).to_csv(f, index=False)
+                if os.path.isfile(path[0]):
+                    alert = QMessageBox()
+                    alert.setText("results saved to" + path[0])
+                    alert.exec()
+
+    def download_insilicova_plot(self):
+        if self.insilicova_results is None:
+            alert = QMessageBox()
+            alert.setText(
+                "Need to run InSilicoVA first.")
+            alert.exec()
+        else:
+            results_file_name = "insilicova_csmf.pdf"
+            path = QFileDialog.getSaveFileName(self,
+                                               "Save CSMF plot (pdf)",
+                                               results_file_name,
+                                               "PDF Files (*.pdf)")
+            if path != ("", ""):
+                #os.remove(path[0])
+                save_plot(results=self.insilicova_results,
+                          algorithm="insilicova",
+                          top=self.n_top_causes,
+                          file_name=path[0])
+                if os.path.isfile(path[0]):
+                    alert = QMessageBox()
+                    alert.setText("results saved to" + path[0])
+                    alert.exec()
+
+    def download_insilicova_indiv(self):
+        if self.insilicova_results is None:
+            alert = QMessageBox()
+            alert.setText(
+                "Need to run InSilicoVA first.")
+            alert.exec()
+        else:
+            results_file_name = "insilicova_individual_cod.csv"
+            path = QFileDialog.getSaveFileName(self,
+                                               "Save CSMF (csv)",
+                                               results_file_name,
+                                               "CSV Files (*.csv)")
+            if path != ("", ""):
+                with open(path[0], "a", newline="") as f:
+                    self.insilicova_results.indiv_prob.to_csv(f)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
                     alert.setText("results saved to" + path[0])

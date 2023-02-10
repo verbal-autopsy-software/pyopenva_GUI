@@ -8,10 +8,10 @@ This module creates user interface for the app.
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QMessageBox,
                              QStackedLayout, QWidget)
 import sys
-from efficient import Efficient
-from mode import Mode
-from command_center import CommandCenter
-from results import Results
+from pyopenva.efficient import Efficient
+from pyopenva.mode import Mode
+from pyopenva.command_center import CommandCenter
+from pyopenva.results import Results
 
 
 class WindowManager(QMainWindow):
@@ -135,11 +135,11 @@ class WindowManager(QMainWindow):
             self.show_efficient_smartva_page()
 
     def show_efficient_insilicova_page(self):
-        # self.efficient.show_insilicova_page()
-        # self.setWindowTitle("openVA App: InSilicoVA")
-        alert = QMessageBox()
-        alert.setText("InSilicoVA currently unavailable, but coming soon!")
-        alert.exec()
+        self.efficient.show_insilicova_page()
+        self.setWindowTitle("openVA App: InSilicoVA")
+        # alert = QMessageBox()
+        # alert.setText("InSilicoVA currently unavailable, but coming soon!")
+        # alert.exec()
 
     def show_efficient_interva_page(self):
         self.efficient.show_interva_page()

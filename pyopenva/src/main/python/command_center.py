@@ -14,17 +14,18 @@ import logging
 from pandas import DataFrame
 from numpy.random import default_rng
 from interva.interva5 import InterVA5
+from insilicova.api import InSilicoVA
 from PyQt5.QtCore import Qt, QDate, QTime
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
                              QHBoxLayout, QInputDialog, QLabel, QLineEdit,
                              QMessageBox, QProgressBar, QPushButton,
                              QTableView, QVBoxLayout, QWidget)
 
-from edit_window import EditData, EditableHeaderView
-from insilicova_ui import InSilicoVADialog
-from interva_ui import InterVADialog
-from load import LoadData
-from smartva_ui import SmartVADialog
+from pyopenva.edit_window import EditData, EditableHeaderView
+from pyopenva.insilicova_ui import InSilicoVADialog
+from pyopenva.interva_ui import InterVADialog
+from pyopenva.load import LoadData
+from pyopenva.smartva_ui import SmartVADialog
 from pycrossva.transform import transform
 
 
@@ -687,15 +688,12 @@ class CommandCenter(QWidget):
         self.smartva_box.setLayout(smartva_vbox)
 
     def run_insilicova_dialog(self):
-        # self.insilicova_dialog = InSilicoDialog(self,
-        #                                       self.seed,
-        #                                       self.auto_extend,
-        #                                       self.jump_scale,
-        #                                       self.n_iterations)
-        # self.insilicova_dialog.exec()
-        alert = QMessageBox()
-        alert.setText("InSilicoVA is currently unavailable, but coming soon!")
-        alert.exec()
+        self.insilicova_dialog = InSilicoVADialog(self,
+                                                  self.seed,
+                                                  self.auto_extend,
+                                                  self.jump_scale,
+                                                  self.n_iterations)
+        self.insilicova_dialog.exec()
 
     def update_insilicova_n_iterations(self, updated_n_iterations):
         self.n_iterations = updated_n_iterations
@@ -712,9 +710,24 @@ class CommandCenter(QWidget):
     def run_insilicova(self):
         # rng = default_rng(self.seed)
         # pass rng to the insilicova function to make results reproducible
-        alert = QMessageBox()
-        alert.setText("InSilicoVA is currently unavailable, but coming soon!")
-        alert.exec()
+        if self.pycrossva_data is None:
+            alert = QMessageBox()
+            alert.setText(
+                "Data need to be loaded and/or prepared with pyCrossVA.")
+            alert.exec()
+        else:
+            burnin = max(int(self.n_iterations / 2), 1)
+            thin = 10
+            insilico_out = InSilicoVA(self.pycrossva_data,
+                                      data_type="WHO2016",
+                                      n_sim=self.n_iterations,
+                                      thin=thin,
+                                      burnin=burnin,
+                                      auto_length=self.auto_extend,
+                                      seed=self.seed,
+                                      openva_app=self)
+            self.insilicova_results = insilico_out.get_results()
+            self.label_insilicova_progress.setText("InSilicoVA results are ready")
 
     def run_interva_dialog(self):
         self.interva_dialog = InterVADialog(self, self.hiv, self.malaria)

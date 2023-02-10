@@ -6,7 +6,7 @@ pyopenva.smartva
 This module creates a dialog for setting SmartVA options.
 """
 
-from data import COUNTRIES
+from pyopenva.data import COUNTRIES
 from PyQt5.QtWidgets import (QComboBox, QDialog, QDialogButtonBox,
                              QLabel, QVBoxLayout)
 

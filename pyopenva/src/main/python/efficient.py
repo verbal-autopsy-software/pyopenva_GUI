@@ -6,15 +6,17 @@ pyopenva.efficient
 This module creates a stacked layout to walk through the analysis step-by-step.
 """
 
+from operator import ne
 import os
+from insilicova.api import InSilicoVA
 from interva.interva5 import InterVA5
-from data import COUNTRIES
-from pandas import read_csv
+from pyopenva.data import COUNTRIES
+from pandas import read_csv, DataFrame
 from pycrossva.transform import transform
 from PyQt5.QtWidgets import (QComboBox, QFileDialog, QGroupBox, QHBoxLayout,
                              QMessageBox, QLabel, QProgressBar, QPushButton,
                              QSpinBox, QStackedLayout, QVBoxLayout, QWidget)
-from output import PlotDialog, TableDialog, save_plot
+from pyopenva.output import PlotDialog, TableDialog, save_plot
 
 
 class Efficient(QWidget):
@@ -28,10 +30,16 @@ class Efficient(QWidget):
         self.data_id_col = None
         self.pycrossva_data = None
         self.data_ui()
+        self.insilicova_results = None
         self.select_algorithm_page = QWidget()
         self.select_algorithm_ui()
         self.chosen_algorithm = "insilicova"
         self.insilicova_page = QWidget()
+        self.insilicova_n_sim: int = 4000
+        self.insilicova_auto: str = "True"
+        self.insilicova_seed: int = 1
+        self.insilicova_pbar = QProgressBar()
+        self.label_insilicova_progress = QLabel("(no results)")
         self.insilicova_ui()
         self.interva_results = None
         self.interva_page = QWidget()
@@ -47,7 +55,6 @@ class Efficient(QWidget):
         self.smartva_hce = "True"
         self.smartva_freetext = "True"
         self.smartva_ui()
-        self.n_top_causes = 5
         self.results_page = QWidget()
         self.btn_show_plot = None
         self.btn_show_table = None
@@ -55,6 +62,7 @@ class Efficient(QWidget):
         self.btn_download_plot = None
         self.btn_download_table = None
         self.btn_download_individual_results = None
+        self.n_top_causes = 5
         self.results_ui()
         self.stacked_layout = QStackedLayout()
         self.stacked_layout.addWidget(self.data_page)
@@ -166,10 +174,28 @@ class Efficient(QWidget):
 
     def insilicova_ui(self):
         layout = QVBoxLayout()
-        label_iterations = QLabel("Number of Iterations")
+        spinbox_n_iter = QSpinBox()
+        spinbox_n_iter.setRange(400, 8000)
+        spinbox_n_iter.setPrefix("Number of Iterations: ")
+        spinbox_n_iter.setValue(self.insilicova_n_sim)
+        spinbox_n_iter.valueChanged.connect(self.set_insilicova_n_sim)
+        spinbox_n_iter.setMaximumWidth(150)
         label_auto_length = QLabel("Automatically increase chain length")
-        label_seed = QLabel("Set Seed")
+        option_set = ["True", "False"]
+        self.insilicova_combo_auto = QComboBox()
+        self.insilicova_combo_auto.addItems(option_set)
+        self.insilicova_combo_auto.setCurrentIndex(
+            option_set.index(self.insilicova_auto))
+        self.insilicova_combo_auto.currentTextChanged.connect(
+            self.set_insilicova_auto)
+        spinbox_seed = QSpinBox()
+        spinbox_seed.setRange(1, 10000)
+        spinbox_seed.setPrefix("Set Seed: ")
+        spinbox_seed.setValue(self.insilicova_seed)
+        spinbox_seed.valueChanged.connect(self.set_insilicova_seed)
+        spinbox_seed.setMaximumWidth(250)
         self.btn_insilicova_run = QPushButton("Run InSilicoVA")
+        self.btn_insilicova_run.clicked.connect(self.run_insilicova)
 
         self.btn_insilicova_to_select_algorithm = QPushButton("Back")
         # self.btn_go_to_select_algorithm_page = QPushButton("Back")
@@ -179,10 +205,13 @@ class Efficient(QWidget):
         self.btn_go_to_results_page.pressed.connect(
             self.show_results_page)
 
-        layout.addWidget(label_iterations)
+        layout.addWidget(spinbox_n_iter)
         layout.addWidget(label_auto_length)
-        layout.addWidget(label_seed)
+        layout.addWidget(self.insilicova_combo_auto)
+        layout.addWidget(spinbox_seed)
         layout.addWidget(self.btn_insilicova_run)
+        layout.addWidget(self.insilicova_pbar)
+        layout.addWidget(self.label_insilicova_progress)
         layout.addStretch(1)
         h_box = QHBoxLayout()
         h_box.addWidget(self.btn_insilicova_to_select_algorithm)
@@ -303,7 +332,7 @@ class Efficient(QWidget):
         self.spinbox_n_causes.setRange(1, 64)
         self.spinbox_n_causes.setPrefix("Include ")
         self.spinbox_n_causes.setSuffix(" causes in the results")
-        self.spinbox_n_causes.setValue(10)
+        self.spinbox_n_causes.setValue(self.n_top_causes)
         self.spinbox_n_causes.valueChanged.connect(self.set_n_top_causes)
         self.spinbox_n_causes.setMaximumWidth(250)
         hbox_top.addWidget(self.spinbox_n_causes)
@@ -421,6 +450,15 @@ class Efficient(QWidget):
                 raw_data_id=raw_data_col_id)
             # self.label_run_pycrossva.setText("data are ready to go!")
 
+    def set_insilicova_n_sim(self, n_sim: int):
+        self.insilicova_n_sim = n_sim
+
+    def set_insilicova_auto(self, auto: str):
+        self.insilicova_auto = auto
+
+    def set_insilicova_seed(self, seed: int):
+        self.insilicova_seed = seed
+
     def set_interva_hiv(self, updated_hiv):
         self.interva_hiv = updated_hiv
 
@@ -475,6 +513,35 @@ class Efficient(QWidget):
     def show_results_page(self):
         self.stacked_layout.setCurrentIndex(5)
 
+    def run_insilicova(self):
+        if self.data_loaded is None:
+            alert = QMessageBox()
+            alert.setText(
+                # "Data need to be loaded and/or prepared with pyCrossVA.")
+                "Data need to be loaded.")
+            alert.exec()
+        else:
+            self.run_pycrossva()
+            auto_extend = False
+            # # the following msg is updated by InSilicoVA
+            # msg = "Running InSilicoVA"
+            if self.insilicova_auto == "True":
+                auto_extend = True
+            #     msg = "Running InSilicoVA: progress bar may reset several times (auto increase is True)"
+            # self.label_insilicova_progress.setText(msg)
+            burnin = max(int(self.insilicova_n_sim/2), 1)
+            thin = 10
+            insilico_out = InSilicoVA(self.pycrossva_data,
+                                      data_type="WHO2016",
+                                      n_sim=self.insilicova_n_sim,
+                                      thin=thin,
+                                      burnin=burnin,
+                                      auto_length=auto_extend,
+                                      seed=self.insilicova_seed,
+                                      openva_app=self)
+            self.insilicova_results = insilico_out.get_results()
+            self.label_insilicova_progress.setText("InSilicoVA results are ready")
+
     def run_interva(self):
         if self.data_loaded is None:
             alert = QMessageBox()
@@ -494,25 +561,34 @@ class Efficient(QWidget):
             self.label_interva_progress.setText("InterVA5 results are ready")
 
     def run_plot_dialog(self):
-        if self.interva_results is None:
+        if self.chosen_algorithm == "insilicova":
+            results = self.insilicova_results
+        else:
+            results = self.interva_results
+        if results is None:
             alert = QMessageBox()
             alert.setText(
                 "Need to run VA algorithm first.")
             alert.exec()
         else:
-            self.plot_dialog = PlotDialog(self.interva_results,
-                                          self,
+            self.plot_dialog = PlotDialog(results=results,
+                                          algorithm=self.chosen_algorithm,
+                                          parent=self,
                                           top=self.n_top_causes)
             self.plot_dialog.exec()
 
     def run_table_dialog(self):
-        if self.interva_results is None:
+        if self.chosen_algorithm == "insilicova":
+            results = self.insilicova_results
+        else:
+            results = self.interva_results
+        if results is None:
             alert = QMessageBox()
             alert.setText(
                 "Need to run VA algorithm first.")
             alert.exec()
         else:
-            self.table_dialog = TableDialog(self.interva_results,
+            self.table_dialog = TableDialog(results,
                                             self,
                                             top=self.n_top_causes)
             self.table_dialog.resize(self.table_dialog.table.width(),
@@ -520,47 +596,63 @@ class Efficient(QWidget):
             self.table_dialog.exec()
 
     def download_interva_table(self):
-        if self.interva_results is None:
+        if self.chosen_algorithm == "insilicova":
+            results = self.insilicova_results
+        else:
+            results = self.interva_results
+        if results is None:
             alert = QMessageBox()
             alert.setText(
                 "Need to run VA algorithm first.")
             alert.exec()
         else:
-            results_file_name = "interva5_csmf.csv"
+            results_file_name = f"{self.chosen_algorithm}_csmf.csv"
             path = QFileDialog.getSaveFileName(self,
                                                "Save CSMF (csv)",
                                                results_file_name,
                                                "CSV Files (*.csv)")
             if path != ("", ""):
                 #os.remove(path[0])
-                with open(path[0], "a") as f:
+                with open(path[0], "a", newline="") as f:
                     n_top_causes = self.n_top_causes
-                    csmf = self.interva_results.get_csmf(top=n_top_causes)
-                    csmf.sort_values(ascending=False, inplace=True)
-                    csmf_df = csmf.reset_index()[0:n_top_causes]
-                    csmf_df.rename(columns={"index": "Cause", 0: "CSMF"},
-                                   inplace=True)
-                    csmf_df.round(4).to_csv(f, index=False)
+                    csmf = results.get_csmf(top=n_top_causes)
+                    if isinstance(csmf, DataFrame):
+                        csmf_df = csmf.sort_values(by="Mean", ascending=False).copy()
+                        csmf_df = csmf_df.reset_index()
+                        csmf_df.rename(columns={"index": "Cause", "Mean": "CSMF (Mean)"},
+                                       inplace=True)
+                    else:
+                        csmf.sort_values(ascending=False, inplace=True)
+                        csmf_df = csmf.reset_index()[0:n_top_causes]
+                        csmf_df.rename(columns={"index": "Cause", 0: "CSMF"},
+                                       inplace=True)
+                    # csmf_df.round(4).to_csv(f, index=False)
+                    csmf_df.to_csv(f, index=False)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
                     alert.setText("results saved to" + path[0])
                     alert.exec()
 
     def download_interva_plot(self):
-        if self.interva_results is None:
+        if self.chosen_algorithm == "insilicova":
+            results = self.insilicova_results
+        else:
+            results = self.interva_results
+        if results is None:
             alert = QMessageBox()
             alert.setText(
                 "Need to run VA algorithm first.")
             alert.exec()
         else:
-            results_file_name = "interva5_csmf.pdf"
+            results_file_name = f"{self.chosen_algorithm}_csmf.pdf"
             path = QFileDialog.getSaveFileName(self,
                                                "Save CSMF plot (pdf)",
                                                results_file_name,
                                                "PDF Files (*.pdf)")
             if path != ("", ""):
                 #os.remove(path[0])
-                save_plot(results=self.interva_results,
+                save_plot(results=results,
+                          algorithm=self.chosen_algorithm,
                           top=self.n_top_causes,
                           file_name=path[0])
                 if os.path.isfile(path[0]):
@@ -569,22 +661,29 @@ class Efficient(QWidget):
                     alert.exec()
 
     def download_interva_indiv(self):
-        if self.interva_results is None:
+        if self.chosen_algorithm == "insilicova":
+            results = self.insilicova_results
+        else:
+            results = self.interva_results
+        if results is None:
             alert = QMessageBox()
             alert.setText(
                 "Need to run VA algorithm first.")
             alert.exec()
         else:
-            results_file_name = "interva5_individual_cod.csv"
+            results_file_name = f"{self.chosen_algorithm}_individual_cod.csv"
             path = QFileDialog.getSaveFileName(self,
                                                "Save CSMF (csv)",
                                                results_file_name,
                                                "CSV Files (*.csv)")
             if path != ("", ""):
-                with open(path[0], "a") as f:
-                    out = self.interva_results.out["VA5"]
-                    out.drop("WHOLEPROB", axis=1, inplace=True)
-                    out.to_csv(f, index=False)
+                with open(path[0], "a", newline="") as f:
+                    if self.chosen_algorithm == "insilicova":
+                        results.indiv_prob.to_csv(f)
+                    else:
+                        out = results.out["VA5"]
+                        out.drop("WHOLEPROB", axis=1, inplace=True)
+                        out.to_csv(f, index=False)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
                     alert.setText("results saved to" + path[0])
