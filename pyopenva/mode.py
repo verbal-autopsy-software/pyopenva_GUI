@@ -16,8 +16,8 @@ class Mode(QWidget):
     def __init__(self):
         super().__init__()
         openva_pixmap = QPixmap(
-            os.path.join(os.path.dirname(__file__), 
-            "openva-logo.png"))
+            os.path.join(os.path.dirname(__file__),
+                         "icons/openva-logo.png"))
         self.logo_openva = QLabel()
         self.logo_openva.setPixmap(
             openva_pixmap.scaled(160, 160,
@@ -27,8 +27,7 @@ class Mode(QWidget):
         self.label_openva.setFont(QFont("Arial", 36, QFont.Bold))
         d4h_pixmap = QPixmap(
             os.path.join(os.path.dirname(__file__),
-            "logo-d4h.png"))
-            #"d4h.png"))
+                         "icons/d4h.jpg"))
         self.logo_d4h = QLabel()
         self.logo_d4h.setPixmap(
             d4h_pixmap.scaled(192, 192,
@@ -36,7 +35,7 @@ class Mode(QWidget):
                               Qt.SmoothTransformation))
         vital_strategies_pixmap = QPixmap(
             os.path.join(os.path.dirname(__file__),
-            "vital_strategies.png"))
+                         "icons/vital_strategies.png"))
         self.logo_vital_strategies = QLabel()
         self.logo_vital_strategies.setPixmap(
             vital_strategies_pixmap.scaled(128, 128,
