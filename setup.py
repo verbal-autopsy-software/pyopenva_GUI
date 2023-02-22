@@ -80,7 +80,7 @@ bdist_msi_options = {
 
 executables = [
         Executable(
-            "pyopenva/src/main/python/main.py",
+            "pyopenva/main.py",
              base=base,
             icon="pyopenva/icons/openva-logo.ico",
             shortcut_name="pyopenva",
