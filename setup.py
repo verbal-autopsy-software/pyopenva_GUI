@@ -18,18 +18,28 @@ from cx_Freeze import Executable, setup
 try:
     from cx_Freeze.hooks import get_qt_plugins_paths
 except ImportError:
-    include_files = []
-else:
-    # Inclusion of extra plugins (new in cx_Freeze 6.8b2)
+    get_qt_plugins_paths = None
+
+include_files = []
+if get_qt_plugins_paths:
+    # Inclusion of extra plugins (since cx_Freeze 6.8b2)
     # cx_Freeze imports automatically the following plugins depending of the
     # use of some modules:
-    # imageformats - QtGui
-    # platforms - QtGui
+    # imageformats, platforms, platformthemes, styles - QtGui
     # mediaservice - QtMultimedia
     # printsupport - QtPrintSupport
-    #
-    # So, "platforms" is used here for demonstration purposes.
-    include_files = get_qt_plugins_paths("PyQt5", "platforms")
+    for plugin_name in (
+        # "accessible",
+        # "iconengines",
+        # "platforminputcontexts",
+        # "xcbglintegrations",
+        # "egldeviceintegrations",
+        "wayland-decoration-client",
+        "wayland-graphics-integration-client",
+        # "wayland-graphics-integration-server",
+        "wayland-shell-integration",
+    ):
+        include_files += get_qt_plugins_paths("PyQt5", plugin_name)
 
 # base="Win32GUI" should be used only for Windows GUI app
 base = None
@@ -39,9 +49,9 @@ if sys.platform == "win32":
 build_exe_options = {
     "excludes": ["tkinter"],
     "include_files": include_files,
-    "zip_include_packages": ["PyQt5"],
+    # note: need to manuaaly copy over PyQt5\\Qt5\\bin and the matplotlib.libs folders
+    # (from site-package of Python or venv) into the lib folder of the build
     "packages": ["pyopenva", "interva", "vacheck", "pycrossva", "insilicova"]
-    #"includes": ["pyopenva"]
 }
 
 bdist_mac_options = {
