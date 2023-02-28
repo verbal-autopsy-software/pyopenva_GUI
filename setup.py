@@ -12,7 +12,6 @@ subdirectory that contains the files needed to run the application
 """
 
 import sys
-import os
 from cx_Freeze import Executable, setup
 
 try:
@@ -34,24 +33,20 @@ if get_qt_plugins_paths:
         # "platforminputcontexts",
         # "xcbglintegrations",
         # "egldeviceintegrations",
-        "wayland-decoration-client",
-        "wayland-graphics-integration-client",
+        # "wayland-decoration-client",
+        # "wayland-graphics-integration-client",
         # "wayland-graphics-integration-server",
-        "wayland-shell-integration",
+        # "wayland-shell-integration",
+        "platform"
     ):
         include_files += get_qt_plugins_paths("PyQt5", plugin_name)
 
 # base="Win32GUI" should be used only for Windows GUI app
-base = None
-if sys.platform == "win32":
-    base = "Win32GUI"
+base = "Win32GUI" if sys.platform == "win32" else None
 
 build_exe_options = {
     "excludes": ["tkinter"],
     "include_files": include_files,
-    # note: need to manuaaly copy over PyQt5\\Qt5\\bin and the matplotlib.libs folders
-    # (from site-package of Python or venv) into the lib folder of the build
-    "packages": ["pyopenva", "interva", "vacheck", "pycrossva", "insilicova"]
 }
 
 bdist_mac_options = {
@@ -70,7 +65,8 @@ directory_table = [
 msi_data = {
     "Directory": directory_table,
     "ProgId": [
-        ("Prog.Id", None, None, "openVA App for verbal autopsy data", "IconId", None),
+        ("Prog.Id", None, None,
+         "openVA App for verbal autopsy data", "IconId", None),
     ],
     "Icon": [
         ("IconId", "pyopenva/icons/openva-logo.ico"),
@@ -83,15 +79,13 @@ bdist_msi_options = {
     # "environment_variables": [
     #     ("E_MYAPP_VAR", "=-*MYAPP_VAR", "1", "TARGETDIR")
     # ],
-    #"upgrade_code": "{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}",
+    # "upgrade_code": "{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}",
 }
-
-#build_exe_options = {"excludes": ["tkinter"], "include_msvcr": True}
 
 executables = [
         Executable(
             "pyopenva/main.py",
-             base=base,
+            base=base,
             icon="pyopenva/icons/openva-logo.ico",
             shortcut_name="pyopenva",
             shortcut_dir="DesktopFolder",
@@ -99,15 +93,13 @@ executables = [
         ),
     ]
 
-#executables = [Executable("pyopenva/main.py", base=None, target_name="pyopenva")]
-
 setup(
     name="pyopenva",
     version="0.1",
     description="openVA App for analyzing Verbal Autopsy data",
     options={
         "build_exe": build_exe_options,
-        #"bdist_msi": bdist_msi_options,
+        "bdist_msi": bdist_msi_options,
         "bdist_mac": bdist_mac_options,
         "bdist_dmg": bdist_dmg_options,
     },

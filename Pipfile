@@ -8,10 +8,6 @@ pyqt5 = "*"
 pandas = "*"
 pyinstaller = "*"
 pycrossva = "*"
-matplotlib = "*"
 interva = "*"
-
-[dev-packages]
-
-[requires]
-python_version = "3.9"
+insilicova = {git = "https://github.com/verbal-autopsy-software/pyinsilicova"}
+matplotlib = "==3.6.3"
