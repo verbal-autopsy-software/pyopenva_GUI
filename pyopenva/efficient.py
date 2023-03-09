@@ -352,13 +352,13 @@ class Efficient(QWidget):
         vbox_download = QVBoxLayout()
         hbox_download = QHBoxLayout()
         self.btn_download_table = QPushButton("Download Table")
-        self.btn_download_table.clicked.connect(self.download_interva_table)
+        self.btn_download_table.clicked.connect(self.download_csmf_table)
         self.btn_download_plot = QPushButton("Download Plot")
-        self.btn_download_plot.clicked.connect(self.download_interva_plot)
+        self.btn_download_plot.clicked.connect(self.download_csmf_plot)
         self.btn_download_individual_results = QPushButton(
             "Download \n Individual Cause Assignments")
         self.btn_download_individual_results.clicked.connect(
-            self.download_interva_indiv
+            self.download_indiv_cod
         )
         hbox_download.addWidget(self.btn_download_table)
         hbox_download.addWidget(self.btn_download_plot)
@@ -370,7 +370,7 @@ class Efficient(QWidget):
         # self.btn_show_table = QPushButton("Show CSMF table")
         # self.btn_show_table.pressed.connect(self.run_table_dialog)
         # self.btn_download_table = QPushButton("Download Table")
-        # self.btn_download_table.clicked.connect(self.download_interva_table)
+        # self.btn_download_table.clicked.connect(self.download_csmf_table)
         # vbox_table.addWidget(self.btn_show_table)
         # vbox_table.addWidget(self.btn_download_table)
         #
@@ -378,7 +378,7 @@ class Efficient(QWidget):
         # self.btn_show_plot = QPushButton("Show CSMF plot")
         # self.btn_show_plot.pressed.connect(self.run_plot_dialog)
         # self.btn_download_plot = QPushButton("Download Plot")
-        # self.btn_download_plot.clicked.connect(self.download_interva_plot)
+        # self.btn_download_plot.clicked.connect(self.download_csmf_plot)
         # vbox_plot.addWidget(self.btn_show_plot)
         # vbox_plot.addWidget(self.btn_download_plot)
         #
@@ -390,7 +390,7 @@ class Efficient(QWidget):
         # self.btn_download_individual_results = QPushButton(
         #     "Download Individual Cause Assignments")
         # self.btn_download_individual_results.clicked.connect(
-        #     self.download_interva_indiv
+        #     self.download_indiv_cod
         # )
 
         #self.spinbox_n_causes.textChanged(self.set_n_top_causes_text)
@@ -420,9 +420,12 @@ class Efficient(QWidget):
             n_records = self.data.shape[0]
             self.label_data.setText(f'Data loaded: {n_records} deaths')
             self.data_loaded = True
+            self.combo_data_id_col.blockSignals(True)
+            self.combo_data_id_col.clear()
             self.combo_data_id_col.addItems(
                 ["no ID column"] + list(self.data)
             )
+            self.combo_data_id_col.blockSignals(False)
             self.combo_data_id_col.setCurrentIndex(0)
 
     def set_data_id_col(self, id_col):
@@ -595,7 +598,7 @@ class Efficient(QWidget):
                                      self.table_dialog.table.height())
             self.table_dialog.exec()
 
-    def download_interva_table(self):
+    def download_csmf_table(self):
         if self.chosen_algorithm == "insilicova":
             results = self.insilicova_results
         else:
@@ -633,7 +636,7 @@ class Efficient(QWidget):
                     alert.setText("results saved to" + path[0])
                     alert.exec()
 
-    def download_interva_plot(self):
+    def download_csmf_plot(self):
         if self.chosen_algorithm == "insilicova":
             results = self.insilicova_results
         else:
@@ -660,7 +663,7 @@ class Efficient(QWidget):
                     alert.setText("results saved to" + path[0])
                     alert.exec()
 
-    def download_interva_indiv(self):
+    def download_indiv_cod(self):
         if self.chosen_algorithm == "insilicova":
             results = self.insilicova_results
         else:

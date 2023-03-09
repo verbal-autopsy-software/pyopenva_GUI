@@ -128,8 +128,11 @@ class CommandCenter(QWidget):
             n_records = len(self.load_window.data) - 1
             self.label_data.setText(f"({n_records} records loaded)")
             self.label_pycrossva_status.setText("(need to run pyCrossVA)")
+            self.combo_data_id_col.blockSignals(True)
+            self.combo_data_id_col.clear()
             self.combo_data_id_col.addItems(
                 ["no ID column"] + self.load_window.header[0])
+            self.combo_data_id_col.blockSignals(False)
             self.combo_data_id_col.setCurrentIndex(0)
 
             self.insilicova_results = None
