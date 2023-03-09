@@ -4,17 +4,19 @@ Graphical User Interface for the openVA tool implemented in Python.
 
 ## Details
 
-* Developing with PyQt5 with Python 3.9.10 
+* Developing with PyQt5, building with [cx_Freeze](https://cx-freeze.readthedocs.io/en/latest/index.html)
 
-* Building app/executable with `python pyinstaller.py`
+* Building app/executable 
 
-  + includes OS-specific calls (only 'darwin' has been tested so far)
-  + set up splash screen?
+  + Windows:  `python setup.py bdist_msi`
+  + Mac: `python setup.py bdist_dmg`
 
 ## To Do
 
+* Set up splash screen?
+
 * Can we set up continuous integration service that builds executables/apps and
-adds them (for different OS's) to this site as releases?
+adds them (for different OS's) to this site as releases?  Something like [https://github.com/ncipollo/release-action](https://github.com/ncipollo/release-action)
 
 * Unit tests for Qt: [pytest-qt](https://pytest-qt.readthedocs.io/en/latest/intro.html)
 
