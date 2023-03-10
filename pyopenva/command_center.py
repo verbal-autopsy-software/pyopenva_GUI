@@ -713,6 +713,7 @@ class CommandCenter(QWidget):
     def run_insilicova(self):
         # rng = default_rng(self.seed)
         # pass rng to the insilicova function to make results reproducible
+        self.btn_insilicova_run.setEnabled(False)
         if self.pycrossva_data is None:
             alert = QMessageBox()
             alert.setText(
@@ -730,7 +731,9 @@ class CommandCenter(QWidget):
                                       seed=self.seed,
                                       openva_app=self)
             self.insilicova_results = insilico_out.get_results()
-            self.label_insilicova_progress.setText("InSilicoVA results are ready")
+            self.label_insilicova_progress.setText(
+                "InSilicoVA results are ready")
+        self.btn_insilicova_run.setEnabled(True)
 
     def run_interva_dialog(self):
         self.interva_dialog = InterVADialog(self, self.hiv, self.malaria)

@@ -6,10 +6,13 @@ pyopenva.results
 This module creates the window for displaying and downloading results.
 """
 
-from PyQt5.QtWidgets import (QFileDialog, QGroupBox, QHBoxLayout, QMessageBox,
-                             QPushButton, QSpinBox, QVBoxLayout, QWidget)
+from PyQt5.QtWidgets import (QCheckBox, QFileDialog, QGroupBox, QHBoxLayout,
+                             QMessageBox, QPushButton, QSpinBox, QVBoxLayout,
+                             QWidget)
 from pyopenva.output import PlotDialog, TableDialog, save_plot
 import os
+from pandas import DataFrame
+from pandas import concat as pd_concat
 
 
 class Results(QWidget):
@@ -83,7 +86,13 @@ class Results(QWidget):
             "Download \n Individual Cause Assignments")
         self.btn_save_insilicova_indiv.clicked.connect(
             self.download_insilicova_indiv)
+        self.insilicova_include_probs = False
+        self.chbox_insilicova_include_probs = QCheckBox(
+            "Include probability of top cause (with individual CODs)")
+        self.chbox_insilicova_include_probs.toggled.connect(
+            self.set_insilicova_include_probs)
         layout.addWidget(self.btn_save_insilicova_indiv)
+        layout.addWidget(self.chbox_insilicova_include_probs)
 
         self.insilicova_panel = QGroupBox("InSilicoVA")
         self.insilicova_panel.setLayout(layout)
@@ -194,7 +203,7 @@ class Results(QWidget):
                                                "CSV Files (*.csv)")
             if path != ("", ""):
                 #os.remove(path[0])
-                with open(path[0], "a", newline="") as f:
+                with open(path[0], "w", newline="") as f:
                     n_top_causes = self.n_top_causes
                     csmf = self.interva_results.get_csmf(top=n_top_causes)
                     csmf.sort_values(ascending=False, inplace=True)
@@ -243,7 +252,7 @@ class Results(QWidget):
                                                results_file_name,
                                                "CSV Files (*.csv)")
             if path != ("", ""):
-                with open(path[0], "a", newline="") as f:
+                with open(path[0], "w", newline="") as f:
                     out = self.interva_results.out["VA5"]
                     out.drop("WHOLEPROB", axis=1, inplace=True)
                     out.to_csv(f, index=False)
@@ -293,7 +302,7 @@ class Results(QWidget):
                                                "CSV Files (*.csv)")
             if path != ("", ""):
                 #os.remove(path[0])
-                with open(path[0], "a", newline="") as f:
+                with open(path[0], "w", newline="") as f:
                     n_top_causes = self.n_top_causes
                     csmf = self.insilicova_results.get_csmf(top=n_top_causes)
                     csmf_df = csmf.sort_values(by="Mean", ascending=False).copy()
@@ -342,12 +351,43 @@ class Results(QWidget):
                                                results_file_name,
                                                "CSV Files (*.csv)")
             if path != ("", ""):
-                with open(path[0], "a", newline="") as f:
-                    self.insilicova_results.indiv_prob.to_csv(f)
+                with open(path[0], "w", newline="") as f:
+                    out = self.prepare_insilico_indiv_cod(
+                        self.insilicova_results)
+                    out.to_csv(f, index=False)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
                     alert.setText("results saved to" + path[0])
                     alert.exec()
+
+    def prepare_insilico_indiv_cod(self, results):
+        all_results = []
+        for i in range(results.indiv_prob.shape[0]):
+            row = results.indiv_prob.iloc[i].copy()
+            top_causes = row.sort_values(ascending=False)[0:self.n_top_causes]
+            top_causes = top_causes.reset_index()
+            if self.insilicova_include_probs:
+                labels = ["Cause", "Prob"] * self.n_top_causes
+                numbers = []
+                [numbers.extend([str(a)]*2) for a in
+                 range(1, self.n_top_causes + 1)]
+                col_names = [a + b for a, b in zip(labels, numbers)]
+                top_causes = top_causes.unstack(level=0)
+                top_causes = top_causes.droplevel(level=0)
+                top_causes = top_causes.sort_index()
+                values = top_causes.tolist()
+                all_results.append(
+                    DataFrame([values], columns=col_names, index=[row.name]))
+            else:
+                col_names = ["Cause" + str(i) for i in
+                             range(1, self.n_top_causes + 1)]
+                all_results.append(
+                    DataFrame([top_causes["index"].tolist()],
+                              columns=col_names,
+                              index=[row.name]))
+        indiv_cod = pd_concat(all_results)
+        indiv_cod = indiv_cod.reset_index(names="ID")
+        return indiv_cod
 
     def update_interva(self, new_interva_results):
         self.interva_results = new_interva_results
@@ -360,3 +400,9 @@ class Results(QWidget):
 
     def set_n_top_causes(self, n):
         self.n_top_causes = n
+
+    def set_insilicova_include_probs(self, checked):
+        if checked:
+            self.insilicova_include_probs = True
+        else:
+            self.insilicova_include_probs = False

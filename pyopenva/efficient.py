@@ -13,9 +13,11 @@ from interva.interva5 import InterVA5
 from pyopenva.data import COUNTRIES
 from pandas import read_csv, DataFrame
 from pycrossva.transform import transform
-from PyQt5.QtWidgets import (QComboBox, QFileDialog, QGroupBox, QHBoxLayout,
-                             QMessageBox, QLabel, QProgressBar, QPushButton,
-                             QSpinBox, QStackedLayout, QVBoxLayout, QWidget)
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
+                             QHBoxLayout, QMessageBox, QLabel, QProgressBar,
+                             QPushButton, QSpinBox, QStackedLayout,
+                             QVBoxLayout, QWidget)
+from PyQt5.QtCore import Qt
 from pyopenva.output import PlotDialog, TableDialog, save_plot
 
 
@@ -38,6 +40,7 @@ class Efficient(QWidget):
         self.insilicova_n_sim: int = 4000
         self.insilicova_auto: str = "True"
         self.insilicova_seed: int = 1
+        self.insilicova_include_probs = False
         self.insilicova_pbar = QProgressBar()
         self.label_insilicova_progress = QLabel("(no results)")
         self.insilicova_ui()
@@ -148,14 +151,17 @@ class Efficient(QWidget):
         layout = QVBoxLayout()
         label_select_algorithm = QLabel("Select which algorithm to use:")
         self.btn_insilicova = QPushButton("InSilicoVA")
+        self.btn_insilicova.setMaximumWidth(400)
         # self.btn_insilicova.pressed.connect(self.show_insilicova_page)
         self.btn_insilicova.pressed.connect(
             lambda: self.set_chosen_algorithm("insilicova"))
         self.btn_interva = QPushButton("InterVA")
+        self.btn_interva.setMaximumWidth(400)
         # self.btn_interva.pressed.connect(self.show_interva_page)
         self.btn_interva.pressed.connect(
             lambda: self.set_chosen_algorithm("interva"))
         self.btn_smartva = QPushButton("SmartVA")
+        self.btn_smartva.setMaximumWidth(400)
         # self.btn_smartva.pressed.connect(self.show_smartva_page)
         self.btn_smartva.pressed.connect(
             lambda: self.set_chosen_algorithm("smartva"))
@@ -174,9 +180,12 @@ class Efficient(QWidget):
 
     def insilicova_ui(self):
         layout = QVBoxLayout()
+        label_n_iter = QLabel("Number of Iterations (range: 400 - 8000):")
         spinbox_n_iter = QSpinBox()
         spinbox_n_iter.setRange(400, 8000)
-        spinbox_n_iter.setPrefix("Number of Iterations: ")
+        spinbox_n_iter.setSingleStep(100)
+        # spinbox_n_iter.setPrefix("Number of Interations: ")
+        spinbox_n_iter.setAlignment(Qt.AlignCenter)
         spinbox_n_iter.setValue(self.insilicova_n_sim)
         spinbox_n_iter.valueChanged.connect(self.set_insilicova_n_sim)
         spinbox_n_iter.setMaximumWidth(150)
@@ -184,17 +193,24 @@ class Efficient(QWidget):
         option_set = ["True", "False"]
         self.insilicova_combo_auto = QComboBox()
         self.insilicova_combo_auto.addItems(option_set)
+        self.insilicova_combo_auto.setEditable(True)
+        self.insilicova_combo_auto.lineEdit().setReadOnly(True)
+        self.insilicova_combo_auto.lineEdit().setAlignment(Qt.AlignCenter)
+        self.insilicova_combo_auto.setMaximumWidth(150)
         self.insilicova_combo_auto.setCurrentIndex(
             option_set.index(self.insilicova_auto))
         self.insilicova_combo_auto.currentTextChanged.connect(
             self.set_insilicova_auto)
+        label_seed = QLabel("Set Seed:")
         spinbox_seed = QSpinBox()
         spinbox_seed.setRange(1, 10000)
-        spinbox_seed.setPrefix("Set Seed: ")
+        spinbox_seed.setAlignment(Qt.AlignCenter)
+        # spinbox_seed.setPrefix("Set Seed: ")
         spinbox_seed.setValue(self.insilicova_seed)
         spinbox_seed.valueChanged.connect(self.set_insilicova_seed)
-        spinbox_seed.setMaximumWidth(250)
+        spinbox_seed.setMaximumWidth(150)
         self.btn_insilicova_run = QPushButton("Run InSilicoVA")
+        self.btn_insilicova_run.setMaximumWidth(300)
         self.btn_insilicova_run.clicked.connect(self.run_insilicova)
 
         self.btn_insilicova_to_select_algorithm = QPushButton("Back")
@@ -205,11 +221,17 @@ class Efficient(QWidget):
         self.btn_go_to_results_page.pressed.connect(
             self.show_results_page)
 
+        layout.addWidget(label_n_iter)
         layout.addWidget(spinbox_n_iter)
+        layout.addStretch(1)
         layout.addWidget(label_auto_length)
         layout.addWidget(self.insilicova_combo_auto)
+        layout.addStretch(1)
+        layout.addWidget(label_seed)
         layout.addWidget(spinbox_seed)
+        layout.addStretch(1)
         layout.addWidget(self.btn_insilicova_run)
+        layout.addStretch(1)
         layout.addWidget(self.insilicova_pbar)
         layout.addWidget(self.label_insilicova_progress)
         layout.addStretch(1)
@@ -325,7 +347,6 @@ class Efficient(QWidget):
 
     def results_ui(self):
         layout = QVBoxLayout()
-
         gbox_top_causes = QGroupBox("Number of top causes")
         hbox_top = QHBoxLayout()
         self.spinbox_n_causes = QSpinBox()
@@ -360,10 +381,16 @@ class Efficient(QWidget):
         self.btn_download_individual_results.clicked.connect(
             self.download_indiv_cod
         )
+        self.chbox_insilicova_include_probs = QCheckBox(
+            "Include probability of top cause (with individual CODs)")
+        self.chbox_insilicova_include_probs.toggled.connect(
+            self.set_insilicova_include_probs)
         hbox_download.addWidget(self.btn_download_table)
         hbox_download.addWidget(self.btn_download_plot)
         vbox_download.addLayout(hbox_download)
         vbox_download.addWidget(self.btn_download_individual_results)
+        if self.chosen_algorithm == "insilicova":
+            vbox_download.addWidget(self.chbox_insilicova_include_probs)
         gbox_download.setLayout(vbox_download)
 
         # vbox_table = QVBoxLayout()
@@ -437,6 +464,12 @@ class Efficient(QWidget):
                 alert.setText(
                     "ID column does not have a unique value for every row")
                 alert.exec()
+
+    def set_insilicova_include_probs(self, checked):
+        if checked:
+            self.insilicova_include_probs = True
+        else:
+            self.insilicova_include_probs = False
 
     def run_pycrossva(self):
         if not self.data_loaded:
@@ -514,9 +547,14 @@ class Efficient(QWidget):
         self.stacked_layout.setCurrentIndex(4)
 
     def show_results_page(self):
+        if self.chosen_algorithm == "insilicova":
+            self.chbox_insilicova_include_probs.show()
+        else:
+            self.chbox_insilicova_include_probs.hide()
         self.stacked_layout.setCurrentIndex(5)
 
     def run_insilicova(self):
+        self.btn_insilicova_run.setEnabled(False)
         if self.data_loaded is None:
             alert = QMessageBox()
             alert.setText(
@@ -543,7 +581,9 @@ class Efficient(QWidget):
                                       seed=self.insilicova_seed,
                                       openva_app=self)
             self.insilicova_results = insilico_out.get_results()
-            self.label_insilicova_progress.setText("InSilicoVA results are ready")
+            self.label_insilicova_progress.setText(
+                "InSilicoVA results are ready")
+        self.btn_insilicova_run.setEnabled(True)
 
     def run_interva(self):
         if self.data_loaded is None:
@@ -616,7 +656,7 @@ class Efficient(QWidget):
                                                "CSV Files (*.csv)")
             if path != ("", ""):
                 #os.remove(path[0])
-                with open(path[0], "a", newline="") as f:
+                with open(path[0], "w", newline="") as f:
                     n_top_causes = self.n_top_causes
                     csmf = results.get_csmf(top=n_top_causes)
                     if isinstance(csmf, DataFrame):
@@ -680,9 +720,10 @@ class Efficient(QWidget):
                                                results_file_name,
                                                "CSV Files (*.csv)")
             if path != ("", ""):
-                with open(path[0], "a", newline="") as f:
+                with open(path[0], "w", newline="") as f:
                     if self.chosen_algorithm == "insilicova":
-                        results.indiv_prob.to_csv(f)
+                        out = self.prepare_insilico_indiv_cod(results)
+                        out.to_csv(f, index=False)
                     else:
                         out = results.out["VA5"]
                         out.drop("WHOLEPROB", axis=1, inplace=True)
@@ -691,3 +732,13 @@ class Efficient(QWidget):
                     alert = QMessageBox()
                     alert.setText("results saved to" + path[0])
                     alert.exec()
+
+    def prepare_insilico_indiv_cod(self, results):
+        top_cause = results.indiv_prob.idxmax(axis=1)
+        indiv_cod = top_cause.reset_index()
+        indiv_cod = indiv_cod.set_index("index", drop=False)
+        indiv_cod.columns = ["ID", "Top Cause"]
+        if self.insilicova_include_probs is True:
+            top_prob = results.indiv_prob.max(axis=1)
+            indiv_cod["Probability"] = top_prob
+        return indiv_cod
