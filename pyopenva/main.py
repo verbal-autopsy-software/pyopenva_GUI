@@ -88,7 +88,8 @@ class WindowManager(QMainWindow):
         # update results
         self.command_center.btn_interva_run.clicked.connect(
             lambda: self.update_interva_results(
-                self.command_center.interva_results))
+                self.command_center.interva_results,
+                self.command_center.interva_tmp_dir))
 
         self.command_center.btn_insilicova_run.clicked.connect(
             lambda: self.update_insilicova_results(
@@ -97,6 +98,8 @@ class WindowManager(QMainWindow):
         self.command_center.btn_smartva_run.clicked.connect(
             lambda: self.update_smartva_results(
                 self.command_center.smartva_results))
+
+        # self.results.btn_save_insilicova_log.clicked.connect()
 
     def show_efficient(self):
         self.stacked_layout.setCurrentIndex(3)
@@ -159,8 +162,8 @@ class WindowManager(QMainWindow):
         self.efficient.show_results_page()
         self.setWindowTitle("openVA App: results")
 
-    def update_interva_results(self, new_results):
-        self.results.update_interva(new_results)
+    def update_interva_results(self, new_results, tmp_dir):
+        self.results.update_interva(new_results, tmp_dir)
 
     def update_insilicova_results(self, new_results):
         self.results.update_insilicova(new_results)

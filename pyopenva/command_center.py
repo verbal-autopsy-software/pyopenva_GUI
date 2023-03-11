@@ -7,6 +7,7 @@ This module creates the window for loading data and setting algorithm options.
 """
 
 import csv
+import tempfile
 import sys
 from contextlib import contextmanager
 from io import StringIO
@@ -62,6 +63,7 @@ class CommandCenter(QWidget):
         self.hiv = "low"
         self.malaria = "low"
         self.interva_results = None
+        self.interva_tmp_dir = None
 
         # initialize SmartVA parameters
         self.smartva_country = "Unknown"
@@ -746,20 +748,24 @@ class CommandCenter(QWidget):
         self.malaria = updated_malaria
 
     def run_interva(self):
+        self.btn_interva_run.setEnabled(False)
         if self.pycrossva_data is None:
             alert = QMessageBox()
             alert.setText(
                 "Data need to be loaded and/or prepared with pyCrossVA.")
             alert.exec()
         else:
+            self.interva_tmp_dir = tempfile.TemporaryDirectory()
             iv5out = InterVA5(self.pycrossva_data,
                               hiv=self.hiv[0],
                               malaria=self.malaria[0],
-                              write=False,
+                              write=True,
+                              directory=self.interva_tmp_dir.name,
                               openva_app=self)
             iv5out.run()
             self.interva_results = iv5out
             self.label_interva_progress.setText("InterVA5 results are ready")
+        self.btn_interva_run.setEnabled(True)
 
     def run_smartva_dialog(self):
         # self.smartva_dialog = SmartVADialog(self,

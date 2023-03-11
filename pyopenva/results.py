@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import (QCheckBox, QFileDialog, QGroupBox, QHBoxLayout,
                              QWidget)
 from pyopenva.output import PlotDialog, TableDialog, save_plot
 import os
+import shutil
 from pandas import DataFrame
 from pandas import concat as pd_concat
 
@@ -24,6 +25,7 @@ class Results(QWidget):
         self.setWindowTitle("openVA GUI: Results")
         self.insilicova_results = None
         self.interva_results = None
+        self.interva_tmp_dir = None
         self.smartva_results = None
         self.n_top_causes = 5
         self.results_v_box = QVBoxLayout()
@@ -91,8 +93,13 @@ class Results(QWidget):
             "Include probability of top cause (with individual CODs)")
         self.chbox_insilicova_include_probs.toggled.connect(
             self.set_insilicova_include_probs)
+        self.btn_save_insilicova_log = QPushButton(
+            "Download log file from data checks")
+        self.btn_save_insilicova_log.clicked.connect(
+            self.download_insilicova_log)
         layout.addWidget(self.btn_save_insilicova_indiv)
         layout.addWidget(self.chbox_insilicova_include_probs)
+        layout.addWidget(self.btn_save_insilicova_log)
 
         self.insilicova_panel = QGroupBox("InSilicoVA")
         self.insilicova_panel.setLayout(layout)
@@ -125,6 +132,10 @@ class Results(QWidget):
             "Download Individual \n Cause Assignments")
         self.btn_save_interva_indiv.clicked.connect(
             self.download_interva_indiv)
+        self.btn_save_interva_log = QPushButton(
+            "Download log file from data checks")
+        self.btn_save_interva_log.clicked.connect(
+            self.download_interva_log)
         # self.spinbox_n_causes = QSpinBox()
         # self.spinbox_n_causes.setRange(1, 64)
         # self.spinbox_n_causes.setPrefix("Include ")
@@ -133,6 +144,7 @@ class Results(QWidget):
         # self.spinbox_n_causes.valueChanged.connect(self.set_n_top_causes)
         # self.spinbox_n_causes.setMaximumWidth(350)
         layout.addWidget(self.btn_save_interva_indiv)
+        layout.addWidget(self.btn_save_interva_log)
         # layout.addWidget(self.spinbox_n_causes)
         self.interva_panel = QGroupBox("InterVA")
         self.interva_panel.setLayout(layout)
@@ -259,6 +271,27 @@ class Results(QWidget):
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
                     alert.setText("results saved to" + path[0])
+                    alert.exec()
+
+    def download_interva_log(self):
+        if self.interva_results is None:
+            alert = QMessageBox()
+            alert.setText(
+                "Need to run InterVA first.")
+            alert.exec()
+        else:
+            log_file_name = "interva_log.txt"
+            path = QFileDialog.getSaveFileName(self,
+                                               "Save log (txt)",
+                                               log_file_name,
+                                               "Text Files (*.txt)")
+            if path != ("", ""):
+                tmp_log = os.path.join(self.interva_tmp_dir.name,
+                                       "errorlogV5.txt")
+                shutil.copyfile(tmp_log, log_file_name)
+                if os.path.isfile(path[0]):
+                    alert = QMessageBox()
+                    alert.setText("log saved to" + path[0])
                     alert.exec()
 
     def insilicova_plot(self):
@@ -389,8 +422,38 @@ class Results(QWidget):
         indiv_cod = indiv_cod.reset_index(names="ID")
         return indiv_cod
 
-    def update_interva(self, new_interva_results):
+    def download_insilicova_log(self):
+        results = self.insilicova_results
+        if results is None:
+            alert = QMessageBox()
+            alert.setText(
+                "Need to run InSilicoVA first.")
+            alert.exec()
+        else:
+            log_file_name = "insilicova_log.txt"
+            path = QFileDialog.getSaveFileName(self,
+                                               "Save log (txt)",
+                                               log_file_name,
+                                               "Text Files (*.txt)")
+            if path != ("", ""):
+                with open(log_file_name, "w") as f_out:
+                    f_out.write("Log file from InSilicoVA")
+                    if len(results.errors) > 0:
+                        f_out.write("The following records are incomplete "
+                                    "and excluded from further processing\n\n")
+                        f_out.write("\n".join(results.errors))
+                    f_out.write("\n \n first pass \n \n")
+                    f_out.write("\n".join(results.warnings["first_pass"]))
+                    f_out.write("\n \n second pass \n \n")
+                    f_out.write("\n".join(results.warnings["second_pass"]))
+                if os.path.isfile(path[0]):
+                    alert = QMessageBox()
+                    alert.setText("log saved to" + path[0])
+                    alert.exec()
+
+    def update_interva(self, new_interva_results, tmp_dir):
         self.interva_results = new_interva_results
+        self.interva_tmp_dir = tmp_dir
 
     def update_insilicova(self, new_insilicova_results):
         self.insilicova_results = new_insilicova_results
