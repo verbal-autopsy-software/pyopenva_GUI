@@ -1,5 +1,6 @@
-idea
+.idea
 build
 dist
 venv
 pyopenva/__pycache__
+pyopenva/.idea
