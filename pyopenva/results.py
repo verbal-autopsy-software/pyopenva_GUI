@@ -7,8 +7,8 @@ This module creates the window for displaying and downloading results.
 """
 
 from PyQt5.QtWidgets import (QCheckBox, QFileDialog, QGroupBox, QHBoxLayout,
-                             QMessageBox, QPushButton, QSpinBox, QVBoxLayout,
-                             QWidget)
+                             QMessageBox, QPushButton, QSpinBox, QTabWidget,
+                             QVBoxLayout, QWidget)
 from pyopenva.output import PlotDialog, TableDialog, save_plot
 import os
 import shutil
@@ -42,19 +42,20 @@ class Results(QWidget):
         self.spinbox_n_causes.setMaximumWidth(350)
         self.results_v_box.addWidget(self.spinbox_n_causes)
 
-        self.results_v_box.addWidget(self.insilicova_panel)
-        #self.results_v_box.insertSpacing(1, 50)
-        self.results_v_box.addWidget(self.interva_panel)
-        #self.results_v_box.insertSpacing(3, 50)
-        self.results_v_box.addWidget(self.smartva_panel)
-        #self.results_v_box.insertSpacing(5, 50)
+        self.results_tabs = QTabWidget()
+        self.results_tabs.addTab(self.insilicova_panel, "InSilicoVA")
+        self.results_tabs.addTab(self.interva_panel, "InterVA")
+        self.results_tabs.addTab(self.smartva_panel, "SmartVA")
+        self.results_v_box.addWidget(self.results_tabs)
+        hbox_navigate = QHBoxLayout()
         self.btn_go_to_mode = QPushButton("Go Back to User Mode Selection")
         self.btn_go_to_command_center = QPushButton(
             "Go Back to the Command Center")
         self.btn_results_ui_exit = QPushButton("Exit")
-        self.results_v_box.addWidget(self.btn_go_to_mode)
-        self.results_v_box.addWidget(self.btn_go_to_command_center)
-        self.results_v_box.addWidget(self.btn_results_ui_exit)
+        hbox_navigate.addWidget(self.btn_go_to_mode)
+        hbox_navigate.addWidget(self.btn_go_to_command_center)
+        hbox_navigate.addWidget(self.btn_results_ui_exit)
+        self.results_v_box.addLayout(hbox_navigate)
         self.setLayout(self.results_v_box)
 
     #TODO: add option for comparison plot?
@@ -95,15 +96,14 @@ class Results(QWidget):
             "Include probability of top cause (with individual CODs)")
         self.chbox_insilicova_include_probs.toggled.connect(
             self.set_insilicova_include_probs)
-        self.btn_save_insilicova_log = QPushButton(
-            "Download log file from data checks")
-        self.btn_save_insilicova_log.clicked.connect(
-            self.download_insilicova_log)
+        # self.btn_save_insilicova_log = QPushButton(
+        #     "Download log file from data checks")
+        # self.btn_save_insilicova_log.clicked.connect(
+        #     self.download_insilicova_log)
         layout.addWidget(self.btn_save_insilicova_indiv)
         layout.addWidget(self.chbox_insilicova_include_probs)
-        layout.addWidget(self.btn_save_insilicova_log)
-
-        self.insilicova_panel = QGroupBox("InSilicoVA")
+        # layout.addWidget(self.btn_save_insilicova_log)
+        self.insilicova_panel = QWidget()
         self.insilicova_panel.setLayout(layout)
 
     def create_interva_panel(self):
@@ -134,10 +134,10 @@ class Results(QWidget):
             "Download Individual \n Cause Assignments")
         self.btn_save_interva_indiv.clicked.connect(
             self.download_interva_indiv)
-        self.btn_save_interva_log = QPushButton(
-            "Download log file from data checks")
-        self.btn_save_interva_log.clicked.connect(
-            self.download_interva_log)
+        # self.btn_save_interva_log = QPushButton(
+        #     "Download log file from data checks")
+        # self.btn_save_interva_log.clicked.connect(
+        #     self.download_interva_log)
         # self.spinbox_n_causes = QSpinBox()
         # self.spinbox_n_causes.setRange(1, 64)
         # self.spinbox_n_causes.setPrefix("Include ")
@@ -146,9 +146,9 @@ class Results(QWidget):
         # self.spinbox_n_causes.valueChanged.connect(self.set_n_top_causes)
         # self.spinbox_n_causes.setMaximumWidth(350)
         layout.addWidget(self.btn_save_interva_indiv)
-        layout.addWidget(self.btn_save_interva_log)
+        # layout.addWidget(self.btn_save_interva_log)
         # layout.addWidget(self.spinbox_n_causes)
-        self.interva_panel = QGroupBox("InterVA")
+        self.interva_panel = QWidget()
         self.interva_panel.setLayout(layout)
 
     def create_smartva_panel(self):
@@ -156,13 +156,17 @@ class Results(QWidget):
 
         vbox_table = QVBoxLayout()
         self.btn_smartva_table = QPushButton("Show \n CSMF Table")
+        self.btn_smartva_table.clicked.connect(self.smartva_table)
         self.btn_save_smartva_table = QPushButton("Download CSMF Table")
+        self.btn_save_smartva_table.clicked.connect(self.download_smartva_table)
         vbox_table.addWidget(self.btn_smartva_table)
         vbox_table.addWidget(self.btn_save_smartva_table)
 
         vbox_plot = QVBoxLayout()
         self.btn_smartva_plot = QPushButton("Show \n CSMF Plot")
+        self.btn_smartva_plot.clicked.connect(self.smartva_plot)
         self.btn_save_smartva_plot = QPushButton("Download CSMF Plot")
+        self.btn_save_smartva_plot.clicked.connect(self.download_smartva_plot)
         vbox_plot.addWidget(self.btn_smartva_plot)
         vbox_plot.addWidget(self.btn_save_smartva_plot)
 
@@ -172,8 +176,9 @@ class Results(QWidget):
         layout.addLayout(hbox)
         self.btn_save_smartva_indiv = QPushButton(
             "Download \n Individual Cause Assignments")
+        self.btn_save_smartva_indiv.clicked.connect(self.download_smartva_indiv)
         layout.addWidget(self.btn_save_smartva_indiv)
-        self.smartva_panel = QGroupBox("SmartVA")
+        self.smartva_panel = QWidget()
         self.smartva_panel.setLayout(layout)
 
     def interva_plot(self):
@@ -281,29 +286,6 @@ class Results(QWidget):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
                     alert.setText("results saved to" + path[0])
-                    alert.exec()
-
-    def download_interva_log(self):
-        if self.interva_results is None:
-            alert = QMessageBox()
-            alert.setWindowTitle("openVA App")
-            alert.setText(
-                "Need to run InterVA first.")
-            alert.exec()
-        else:
-            log_file_name = "interva_log.txt"
-            path = QFileDialog.getSaveFileName(self,
-                                               "Save log (txt)",
-                                               log_file_name,
-                                               "Text Files (*.txt)")
-            if path != ("", ""):
-                tmp_log = os.path.join(self.interva_tmp_dir.name,
-                                       "errorlogV5.txt")
-                shutil.copyfile(tmp_log, log_file_name)
-                if os.path.isfile(path[0]):
-                    alert = QMessageBox()
-                    alert.setWindowTitle("openVA App")
-                    alert.setText("log saved to" + path[0])
                     alert.exec()
 
     def insilicova_plot(self):
@@ -442,36 +424,50 @@ class Results(QWidget):
         indiv_cod = indiv_cod.reset_index(names="ID")
         return indiv_cod
 
-    def download_insilicova_log(self):
-        results = self.insilicova_results
-        if results is None:
-            alert = QMessageBox()
-            alert.setWindowTitle("openVA App")
-            alert.setText(
-                "Need to run InSilicoVA first.")
-            alert.exec()
-        else:
-            log_file_name = "insilicova_log.txt"
-            path = QFileDialog.getSaveFileName(self,
-                                               "Save log (txt)",
-                                               log_file_name,
-                                               "Text Files (*.txt)")
-            if path != ("", ""):
-                with open(log_file_name, "w") as f_out:
-                    f_out.write("Log file from InSilicoVA")
-                    if len(results.errors) > 0:
-                        f_out.write("The following records are incomplete "
-                                    "and excluded from further processing\n\n")
-                        f_out.write("\n".join(results.errors))
-                    f_out.write("\n \n first pass \n \n")
-                    f_out.write("\n".join(results.warnings["first_pass"]))
-                    f_out.write("\n \n second pass \n \n")
-                    f_out.write("\n".join(results.warnings["second_pass"]))
-                if os.path.isfile(path[0]):
-                    alert = QMessageBox()
-                    alert.setWindowTitle("openVA App")
-                    alert.setText("log saved to" + path[0])
-                    alert.exec()
+    def smartva_plot(self):
+        alert = QMessageBox()
+        alert.setWindowTitle("openVA App")
+        alert.setText("SmartVA is not available (it is based on Python 2" +
+                      "which is no longer supported by the Python Software " +
+                      "Foundation).  It will be included when a version " +
+                      "based on Python 3 is released.")
+        alert.exec()
+
+    def smartva_table(self):
+        alert = QMessageBox()
+        alert.setWindowTitle("openVA App")
+        alert.setText("SmartVA is not available (it is based on Python 2" +
+                      "which is no longer supported by the Python Software " +
+                      "Foundation).  It will be included when a version " +
+                      "based on Python 3 is released.")
+        alert.exec()
+
+    def download_smartva_plot(self):
+        alert = QMessageBox()
+        alert.setWindowTitle("openVA App")
+        alert.setText("SmartVA is not available (it is based on Python 2" +
+                      "which is no longer supported by the Python Software " +
+                      "Foundation).  It will be included when a version " +
+                      "based on Python 3 is released.")
+        alert.exec()
+
+    def download_smartva_table(self):
+        alert = QMessageBox()
+        alert.setWindowTitle("openVA App")
+        alert.setText("SmartVA is not available (it is based on Python 2" +
+                      "which is no longer supported by the Python Software " +
+                      "Foundation).  It will be included when a version " +
+                      "based on Python 3 is released.")
+        alert.exec()
+
+    def download_smartva_indiv(self):
+        alert = QMessageBox()
+        alert.setWindowTitle("openVA App")
+        alert.setText("SmartVA is not available (it is based on Python 2" +
+                      "which is no longer supported by the Python Software " +
+                      "Foundation).  It will be included when a version " +
+                      "based on Python 3 is released.")
+        alert.exec()
 
     def update_interva(self, new_interva_results, tmp_dir):
         self.interva_results = new_interva_results

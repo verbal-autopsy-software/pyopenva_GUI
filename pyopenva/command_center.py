@@ -864,7 +864,7 @@ class CommandCenter(QWidget):
         alert.setWindowTitle("openVA App")
         alert.setText("SmartVA is not available (it is based on Python 2" +
                       "which is no longer supported by the Python Software " +
-                      "Foundation).  It will be included when a verison " +
+                      "Foundation).  It will be included when a version " +
                       "based on Python 3 is released.")
         alert.exec()
         
@@ -873,7 +873,7 @@ class CommandCenter(QWidget):
         alert.setWindowTitle("openVA App")
         alert.setText("SmartVA is not available (it is based on Python 2" +
                       "which is no longer supported by the Python Software " +
-                      "Foundation).  It will be included when a verison " +
+                      "Foundation).  It will be included when a version " +
                       "based on Python 3 is released.")
         alert.exec()
 
