@@ -51,8 +51,10 @@ class Results(QWidget):
         self.btn_go_to_mode = QPushButton("Go Back to User Mode Selection")
         self.btn_go_to_command_center = QPushButton(
             "Go Back to the Command Center")
+        self.btn_results_ui_exit = QPushButton("Exit")
         self.results_v_box.addWidget(self.btn_go_to_mode)
         self.results_v_box.addWidget(self.btn_go_to_command_center)
+        self.results_v_box.addWidget(self.btn_results_ui_exit)
         self.setLayout(self.results_v_box)
 
     #TODO: add option for comparison plot?
@@ -177,6 +179,7 @@ class Results(QWidget):
     def interva_plot(self):
         if self.interva_results is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "Need to run InterVA5 first.")
             alert.exec()
@@ -189,6 +192,7 @@ class Results(QWidget):
     def interva_table(self):
         if self.interva_results is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "Need to run InterVA5 first.")
             alert.exec()
@@ -204,6 +208,7 @@ class Results(QWidget):
     def download_interva_table(self):
         if self.interva_results is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "Need to run InterVA5 first.")
             alert.exec()
@@ -225,12 +230,14 @@ class Results(QWidget):
                     csmf_df.round(4).to_csv(f, index=False)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
                     alert.setText("results saved to" + path[0])
                     alert.exec()
 
     def download_interva_plot(self):
         if self.interva_results is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "Need to run InterVA5 first.")
             alert.exec()
@@ -248,12 +255,14 @@ class Results(QWidget):
                           file_name=path[0])
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
                     alert.setText("results saved to" + path[0])
                     alert.exec()
 
     def download_interva_indiv(self):
         if self.interva_results is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "Need to run InterVA5 first.")
             alert.exec()
@@ -270,12 +279,14 @@ class Results(QWidget):
                     out.to_csv(f, index=False)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
                     alert.setText("results saved to" + path[0])
                     alert.exec()
 
     def download_interva_log(self):
         if self.interva_results is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "Need to run InterVA first.")
             alert.exec()
@@ -291,12 +302,14 @@ class Results(QWidget):
                 shutil.copyfile(tmp_log, log_file_name)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
                     alert.setText("log saved to" + path[0])
                     alert.exec()
 
     def insilicova_plot(self):
         if self.insilicova_results is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "Need to run InSilicoVA first.")
             alert.exec()
@@ -310,6 +323,7 @@ class Results(QWidget):
     def insilicova_table(self):
         if self.insilicova_results is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "Need to run InSilicoVA first.")
             alert.exec()
@@ -324,6 +338,7 @@ class Results(QWidget):
     def download_insilicova_table(self):
         if self.insilicova_results is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "Need to run InSilicoVA first.")
             alert.exec()
@@ -345,12 +360,14 @@ class Results(QWidget):
                     csmf_df.round(4).to_csv(f, index=False)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
                     alert.setText("results saved to" + path[0])
                     alert.exec()
 
     def download_insilicova_plot(self):
         if self.insilicova_results is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "Need to run InSilicoVA first.")
             alert.exec()
@@ -368,12 +385,14 @@ class Results(QWidget):
                           file_name=path[0])
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
                     alert.setText("results saved to" + path[0])
                     alert.exec()
 
     def download_insilicova_indiv(self):
         if self.insilicova_results is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "Need to run InSilicoVA first.")
             alert.exec()
@@ -390,6 +409,7 @@ class Results(QWidget):
                     out.to_csv(f, index=False)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
                     alert.setText("results saved to" + path[0])
                     alert.exec()
 
@@ -426,6 +446,7 @@ class Results(QWidget):
         results = self.insilicova_results
         if results is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "Need to run InSilicoVA first.")
             alert.exec()
@@ -448,6 +469,7 @@ class Results(QWidget):
                     f_out.write("\n".join(results.warnings["second_pass"]))
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
                     alert.setText("log saved to" + path[0])
                     alert.exec()
 

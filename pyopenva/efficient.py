@@ -6,7 +6,6 @@ pyopenva.efficient
 This module creates a stacked layout to walk through the analysis step-by-step.
 """
 
-from operator import ne
 import os
 import shutil
 import tempfile
@@ -91,11 +90,17 @@ class Efficient(QWidget):
 
         load_groupbox = QGroupBox("Load Data")
         load_vbox = QVBoxLayout()
-        label_data_info = QLabel("Select the file with VA data from an ODK export")
+        label_data_info = QLabel(
+            "Select the file with VA data from an ODK export")
         self.btn_load_data = QPushButton("Load Data (.csv)")
         self.btn_load_data.setMaximumWidth(350)
         self.btn_load_data.clicked.connect(self.load_data)
         self.label_data = QLabel("(no data loaded)")
+        self.label_data.setMaximumWidth(350)
+        self.label_data_fname = QLabel("")
+        self.label_data_fname.setMaximumWidth(350)
+        self.label_data_n_records = QLabel("")
+        self.label_data_n_records.setMaximumWidth(350)
         label_data_id_col = QLabel("Select ID column in data")
         self.combo_data_id_col = QComboBox()
         self.combo_data_id_col.currentTextChanged.connect(
@@ -105,7 +110,10 @@ class Efficient(QWidget):
         load_vbox.addWidget(label_data_info)
         load_vbox.addWidget(self.btn_load_data)
         load_vbox.addWidget(self.label_data)
-        load_vbox.insertSpacing(3, 50)
+        load_vbox.addWidget(self.label_data_fname)
+        load_vbox.addWidget(self.label_data_n_records)
+        load_vbox.insertSpacing(5, 5)
+        load_vbox.insertSpacing(6, 50)
         load_vbox.addWidget(label_data_id_col)
         load_vbox.addWidget(self.combo_data_id_col)
         load_groupbox.setLayout(load_vbox)
@@ -128,8 +136,10 @@ class Efficient(QWidget):
         h_box_btns = QHBoxLayout()
         self.btn_go_to_mode = QPushButton("Back")
         self.btn_algorithm = QPushButton("Next")
+        self.btn_data_ui_exit = QPushButton("Exit")
         h_box_btns.addWidget(self.btn_go_to_mode)
         h_box_btns.addWidget(self.btn_algorithm)
+        h_box_btns.addWidget(self.btn_data_ui_exit)
 
         layout.addWidget(load_groupbox)
         layout.addStretch(2)
@@ -153,7 +163,6 @@ class Efficient(QWidget):
         self.btn_smartva.setMaximumWidth(400)
         self.btn_smartva.pressed.connect(
             lambda: self.set_chosen_algorithm("smartva"))
-        self.btn_go_to_data_page = QPushButton("Back")
         layout.addWidget(label_select_algorithm)
         layout.addWidget(self.btn_insilicova)
         layout.addStretch(1)
@@ -161,8 +170,13 @@ class Efficient(QWidget):
         layout.addStretch(1)
         layout.addWidget(self.btn_smartva)
         layout.addStretch(1)
-        layout.addWidget(self.btn_go_to_data_page)
-
+        hbox = QHBoxLayout()
+        self.btn_go_to_data_page = QPushButton("Back")
+        self.btn_algorithm_ui_exit = QPushButton("Exit")
+        hbox.addWidget(self.btn_go_to_data_page)
+        hbox.addWidget(self.btn_algorithm_ui_exit)
+        # layout.addWidget(self.btn_go_to_data_page)
+        layout.addLayout(hbox)
         self.select_algorithm_page.setLayout(layout)
 
     def insilicova_ui(self):
@@ -210,6 +224,7 @@ class Efficient(QWidget):
         self.btn_go_to_results_page = QPushButton("Show Results")
         self.btn_go_to_results_page.pressed.connect(
             self.show_results_page)
+        self.btn_insilicova_ui_exit = QPushButton("Exit")
 
         layout_n_iter.addWidget(label_n_iter)
         layout_n_iter.addWidget(spinbox_n_iter)
@@ -232,6 +247,7 @@ class Efficient(QWidget):
         h_box = QHBoxLayout()
         h_box.addWidget(self.btn_insilicova_to_select_algorithm)
         h_box.addWidget(self.btn_go_to_results_page)
+        h_box.addWidget(self.btn_insilicova_ui_exit)
         layout.addLayout(h_box)
         self.insilicova_page.setLayout(layout)
 
@@ -263,6 +279,7 @@ class Efficient(QWidget):
         self.btn_go_to_results_page = QPushButton("Show Results")
         self.btn_go_to_results_page.clicked.connect(
             self.show_results_page)
+        self.btn_interva_ui_exit = QPushButton("Exit")
 
         layout_options.addWidget(label_hiv)
         layout_options.addWidget(self.interva_combo_hiv)
@@ -281,6 +298,7 @@ class Efficient(QWidget):
         h_box = QHBoxLayout()
         h_box.addWidget(self.btn_interva_to_select_algorithm)
         h_box.addWidget(self.btn_go_to_results_page)
+        h_box.addWidget(self.btn_interva_ui_exit)
         layout.addLayout(h_box)
         self.interva_page.setLayout(layout)
 
@@ -327,6 +345,7 @@ class Efficient(QWidget):
         self.btn_go_to_results_page = QPushButton("Show Results")
         self.btn_go_to_results_page.pressed.connect(
             self.show_results_page)
+        self.btn_smartva_ui_exit = QPushButton("Exit")
 
         layout.addWidget(label_country)
         layout.addWidget(self.smartva_combo_country)
@@ -343,6 +362,7 @@ class Efficient(QWidget):
         h_box = QHBoxLayout()
         h_box.addWidget(self.btn_smartva_to_select_algorithm)
         h_box.addWidget(self.btn_go_to_results_page)
+        h_box.addWidget(self.btn_smartva_ui_exit)
         layout.addLayout(h_box)
         self.smartva_page.setLayout(layout)
 
@@ -397,14 +417,19 @@ class Efficient(QWidget):
         # vbox_download.addWidget(self.btn_download_log)
         gbox_download.setLayout(vbox_download)
 
+        hbox_navigate = QHBoxLayout()
         self.btn_results_to_algorithm = QPushButton("Back")
+        self.btn_results_ui_exit = QPushButton("Exit")
+        hbox_navigate.addWidget(self.btn_results_to_algorithm)
+        hbox_navigate.addWidget(self.btn_results_ui_exit)
         layout.addWidget(gbox_top_causes)
         layout.addStretch(1)
         layout.addWidget(gbox_show)
         layout.addStretch(1)
         layout.addWidget(gbox_download)
         layout.addStretch(1)
-        layout.addWidget(self.btn_results_to_algorithm)
+        # layout.addWidget(self.btn_results_to_algorithm)
+        layout.addLayout(hbox_navigate)
         self.results_page.setLayout(layout)
 
     def load_data(self):
@@ -414,8 +439,14 @@ class Efficient(QWidget):
                                            "All Files(*.*)")
         if path != ("", ""):
             self.data = read_csv(path[0])
+            f_name = path[0].split("/")[-1]
             n_records = self.data.shape[0]
-            self.label_data.setText(f'Data loaded: {n_records} deaths')
+            self.label_data.setAlignment(Qt.AlignLeft)
+            self.label_data.setText("Data loaded:")
+            self.label_data_fname.setAlignment(Qt.AlignCenter)
+            self.label_data_fname.setText(f"{f_name}")
+            self.label_data_n_records.setAlignment(Qt.AlignCenter)
+            self.label_data_n_records.setText(f"({n_records} records)")
             self.data_loaded = True
             self.combo_data_id_col.blockSignals(True)
             self.combo_data_id_col.clear()
@@ -444,6 +475,7 @@ class Efficient(QWidget):
         if self.data_id_col != "no ID column":
             if self.data[self.data_id_col].nunique() != self.data.shape[0]:
                 alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
                 alert.setIcon(QMessageBox.Warning)
                 alert.setText(
                     "ID column does not have a unique value for every row")
@@ -463,8 +495,9 @@ class Efficient(QWidget):
             mapping=("2016WHOv151", "InterVA5"),
             raw_data=self.data,
             raw_data_id=raw_data_col_id)
-        if (self.pycrossva_data.iloc[:, 1] == ".").all(axis=None):
+        if (self.pycrossva_data.iloc[:, 1:] == ".").all(axis=None):
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "Problem converting data to openVA format:\n"
                 "ALL VALUES ARE MISSING"
@@ -545,6 +578,7 @@ class Efficient(QWidget):
         self.insilicova_errors = None
         if self.data_loaded is False:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText("Please load data first.")
             alert.exec()
         else:
@@ -583,6 +617,7 @@ class Efficient(QWidget):
         self.btn_interva_run.setEnabled(False)
         if self.data_loaded is False:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText("Please load data first.")
             alert.exec()
         else:
@@ -615,6 +650,7 @@ class Efficient(QWidget):
             results = self.interva_results
         if results is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "No results available.  Please load data in the expected "
                 "format and/or run a VA algorithm.")
@@ -633,6 +669,7 @@ class Efficient(QWidget):
             results = self.interva_results
         if results is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "No results available.  Please load data in the expected "
                 "format and/or run a VA algorithm.")
@@ -652,6 +689,7 @@ class Efficient(QWidget):
             results = self.interva_results
         if results is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "No results available.  Please load data in the expected "
                 "format and/or run a VA algorithm.")
@@ -681,6 +719,7 @@ class Efficient(QWidget):
                     csmf_df.to_csv(f, index=False)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
                     alert.setText("results saved to" + path[0])
                     alert.exec()
 
@@ -691,6 +730,7 @@ class Efficient(QWidget):
             results = self.interva_results
         if results is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "No results available.  Please load data in the expected "
                 "format and/or run a VA algorithm.")
@@ -708,6 +748,7 @@ class Efficient(QWidget):
                           file_name=path[0])
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
                     alert.setText("results saved to" + path[0])
                     alert.exec()
 
@@ -718,6 +759,7 @@ class Efficient(QWidget):
             results = self.interva_results
         if results is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "No results available.  Please load data in the expected "
                 "format and/or run a VA algorithm.")
@@ -739,6 +781,7 @@ class Efficient(QWidget):
                         out.to_csv(f, index=False)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
                     alert.setText("results saved to" + path[0])
                     alert.exec()
 
@@ -761,6 +804,7 @@ class Efficient(QWidget):
             log = self.interva_log
         if log is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "No results available.  Please load data in the expected "
                 "format and/or run a VA algorithm.")
@@ -795,5 +839,6 @@ class Efficient(QWidget):
                             f_out.write("\n\n" + warnings)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
                     alert.setText("log saved to" + path[0])
                     alert.exec()

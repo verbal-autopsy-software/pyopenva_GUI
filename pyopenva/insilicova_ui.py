@@ -7,7 +7,7 @@ This module creates a dialog for setting InSilicoVA options.
 """
 
 from PyQt5.QtWidgets import (QCheckBox, QDialog, QDialogButtonBox,
-                             QDoubleSpinBox, QGroupBox, QLabel, QSlider,
+                             QGroupBox, QLabel, QSlider,
                              QSpinBox, QVBoxLayout)
 from PyQt5.QtCore import Qt
 
@@ -29,7 +29,7 @@ class InSilicoVADialog(QDialog):
         self.n_iterations_label = QLabel(f"value: {self.n_iterations}")
         self.setup_n_iterations_groupbox()
 
-        self.btn_auto_extend = QCheckBox("Automatically increase chain \n" +
+        self.btn_auto_extend = QCheckBox("Automatically increase chain \n"
                                          "length until convergence")
         self.btn_auto_extend.setChecked(self.auto_extend)
         self.btn_auto_extend.toggled.connect(self.set_auto_extend)
@@ -39,10 +39,7 @@ class InSilicoVADialog(QDialog):
                                          self.groupbox_jump_scale)
         self.jump_scale_label = QLabel(f"value: {self.jump_scale}")
         self.setup_jump_scale_groupbox()
-        # jump_scale_qspin_label = QLabel("Jump Scale (0.01 to 2.00)")
-        # jump_scale_qspin = QDoubleSpinBox()
-        # jump_scale_qspin.setRange(0.01, 2.000)
-        # jump_scale_qspin.setSingleStep(0.01)
+
         self.seed_qspin_label = QLabel("Set Seed (1 to 2000)")
         self.seed_qspin = QSpinBox()
         self.seed_qspin.setRange(1, 2000)
@@ -70,8 +67,6 @@ class InSilicoVADialog(QDialog):
         self.layout.addWidget(self.groupbox_n_iterations)
         self.layout.addWidget(self.btn_auto_extend)
         self.layout.addWidget(self.groupbox_jump_scale)
-        # self.layout.addWidget(jump_scale_qspin_label)
-        # self.layout.addWidget(jump_scale_qspin)
         self.layout.addWidget(self.seed_qspin_label)
         self.layout.addWidget(self.seed_qspin)
         self.layout.addWidget(self.btn_box)
@@ -90,7 +85,7 @@ class InSilicoVADialog(QDialog):
     def setup_jump_scale_groupbox(self):
         self.jump_scale_slider.setRange(1, 2000)
         self.jump_scale_slider.setSingleStep(1)
-        self.jump_scale_slider.setValue(self.jump_scale * 1000)
+        self.jump_scale_slider.setValue(int(self.jump_scale * 1000))
         self.jump_scale_slider.valueChanged.connect(self.set_jump_scale)
         layout = QVBoxLayout()
         layout.addWidget(self.jump_scale_slider)

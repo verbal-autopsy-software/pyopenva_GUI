@@ -9,6 +9,8 @@ This module creates the window for loading data and setting algorithm options.
 import csv
 import tempfile
 import sys
+import os
+import shutil
 from contextlib import contextmanager
 from io import StringIO
 import logging
@@ -16,7 +18,9 @@ from pandas import DataFrame
 from numpy.random import default_rng
 from interva.interva5 import InterVA5
 from insilicova.api import InSilicoVA
+from insilicova.exceptions import InSilicoVAException
 from PyQt5.QtCore import Qt, QDate, QTime
+from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
                              QHBoxLayout, QInputDialog, QLabel, QLineEdit,
                              QMessageBox, QProgressBar, QPushButton,
@@ -45,12 +49,23 @@ class CommandCenter(QWidget):
 
         #self.setGeometry(400, 400, 700, 600)
         self.setWindowTitle("openVA GUI: Command Center")
+        layout = QVBoxLayout()
         self.data_algorithm_h_box = QHBoxLayout()
         self.create_data_panel()
         self.create_algorithm_panel()
         self.data_algorithm_h_box.addWidget(self.data_panel)
         self.data_algorithm_h_box.addWidget(self.algorithm_panel)
-        self.setLayout(self.data_algorithm_h_box)
+        self.hbox_navigate = QHBoxLayout()
+        self.btn_user_mode = QPushButton("Go Back to User Mode Selection")
+        self.btn_algorithm_results = QPushButton("Results")
+        self.btn_command_center_exit = QPushButton("Exit")
+        self.hbox_navigate.addWidget(self.btn_user_mode)
+        self.hbox_navigate.addWidget(self.btn_algorithm_results)
+        self.hbox_navigate.addWidget(self.btn_command_center_exit)
+        layout.addLayout(self.data_algorithm_h_box)
+        # self.setLayout(self.data_algorithm_h_box)
+        layout.addLayout(self.hbox_navigate)
+        self.setLayout(layout)
 
         # initialize InSilico parameters
         self.n_iterations = 3000
@@ -58,12 +73,15 @@ class CommandCenter(QWidget):
         self.auto_extend = True
         self.seed = 653
         self.insilicova_results = None
+        self.insilicova_warnings = None
+        self.insilicova_errors = None
 
         # initialize InterVA parameters
         self.hiv = "low"
         self.malaria = "low"
         self.interva_results = None
         self.interva_tmp_dir = None
+        self.interva_log = None
 
         # initialize SmartVA parameters
         self.smartva_country = "Unknown"
@@ -79,27 +97,31 @@ class CommandCenter(QWidget):
         data_panel_v_box = QVBoxLayout()
         self.btn_load_data = QPushButton("Load Data (.csv)")
         self.label_data = QLabel("(no data loaded)")
+        self.label_data_fname = QLabel("")
+        self.label_data_n_records = QLabel("")
         label_data_id_col = QLabel("Select ID column in data")
         self.combo_data_id_col = QComboBox()
         self.combo_data_id_col.currentTextChanged.connect(
             self.set_data_id_col)
         self.label_data.setAlignment(Qt.AlignCenter)
-        label_data_format = QLabel("Data Format:")
+        label_data_format = QLabel("Data Format")
         # TODO: use format in argument for pycrossva (need a setter function
         #       with a dictionary for mapping options to pycrossva parameters)
         self.btn_data_format = QComboBox()
         self.btn_data_format.addItems(("WHO 2016 (v151)",
                                        "WHO 2012",
                                        "PHMRC"))
+        label_pycrossva_info = QLabel("Convert data: ODK -> openVA format")
         self.btn_pycrossva = QPushButton("Run pyCrossVA")
         self.label_pycrossva_status = QLabel("(no data loaded)")
         self.label_pycrossva_status.setAlignment(Qt.AlignCenter)
         #self.btn_data_check = QPushButton("Data Check")
         self.btn_edit_data = QPushButton("Edit Data")
         self.btn_edit_data.setEnabled(False)
-        self.btn_user_mode = QPushButton("Go Back to User Mode Selection")
         data_panel_v_box.addWidget(self.btn_load_data)
         data_panel_v_box.addWidget(self.label_data)
+        data_panel_v_box.addWidget(self.label_data_fname)
+        data_panel_v_box.addWidget(self.label_data_n_records)
         data_panel_v_box.addStretch(1)
         data_panel_v_box.addWidget(label_data_id_col)
         data_panel_v_box.addWidget(self.combo_data_id_col)
@@ -107,13 +129,14 @@ class CommandCenter(QWidget):
         data_panel_v_box.addWidget(label_data_format)
         data_panel_v_box.addWidget(self.btn_data_format)
         data_panel_v_box.addStretch(1)
+        data_panel_v_box.addWidget(label_pycrossva_info)
         data_panel_v_box.addWidget(self.btn_pycrossva)
         data_panel_v_box.addWidget(self.label_pycrossva_status)
         #data_panel_v_box.addWidget(self.btn_data_check)
-        #data_panel_v_box.addStretch(1)
+        data_panel_v_box.addStretch(1)
         data_panel_v_box.addWidget(self.btn_edit_data)
         data_panel_v_box.addStretch(2)
-        data_panel_v_box.addWidget(self.btn_user_mode)
+        # data_panel_v_box.addWidget(self.btn_user_mode)
         self.data_panel = QGroupBox("Data")
         self.data_panel.setLayout(data_panel_v_box)
         self.btn_load_data.clicked.connect(self.load_data)
@@ -128,7 +151,13 @@ class CommandCenter(QWidget):
         if self.load_window.fname != "":
             self.btn_edit_data.setEnabled(True)
             n_records = len(self.load_window.data) - 1
-            self.label_data.setText(f"({n_records} records loaded)")
+            f_name = self.load_window.fname.split("/")[-1]
+            self.label_data.setAlignment(Qt.AlignLeft)
+            self.label_data.setText("Data loaded:")
+            self.label_data_fname.setAlignment(Qt.AlignCenter)
+            self.label_data_fname.setText(f"{f_name}")
+            self.label_data_n_records.setAlignment(Qt.AlignCenter)
+            self.label_data_n_records.setText(f"({n_records} records)")
             self.label_pycrossva_status.setText("(need to run pyCrossVA)")
             self.combo_data_id_col.blockSignals(True)
             self.combo_data_id_col.clear()
@@ -139,8 +168,13 @@ class CommandCenter(QWidget):
 
             self.insilicova_results = None
             self.label_insilicova_progress.setText("")
+            self.insilicova_pbar.setValue(0)
+            self.insilicova_warnings = None
+            self.insilicova_errors = None
             self.interva_results = None
+            self.interva_log = None
             self.label_interva_progress.setText("")
+            self.interva_pbar.setValue(0)
             self.smartva_results = None
             self.label_smartva_progress.setText("")
 
@@ -177,17 +211,27 @@ class CommandCenter(QWidget):
     def show_pycrossva(self):
         if self.load_window is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText("Please load data before running pyCrossVA.")
             alert.exec()
         else:
             self.msg = QMessageBox()
+            self.msg.setWindowTitle("openVA App")
             self.msg.setIcon(QMessageBox.Information)
             self.run_pycrossva()
+            
             if self.pycrossva_messages == "":
                 self.msg.setText(
-                    "pyCrossVA Results: \n \n data are ready to go \U0001f600")
+                    "Data successfully converted to openVA format")
             else:
-                self.msg.setText("Results for pyCrossVA")
+                if (self.pycrossva_data.iloc[:, 1:] == ".").all(axis=None):
+                    self.msg.setText(
+                        "ERROR: ALL VALUES ARE MISSING!\n"
+                        "The data have an unexpected format and cannot be"
+                        "processed.  Please reload data in the expected format")
+                else:
+                    self.msg.setText(
+                        "pyCrossVA returned message(s)\n(details available)")
             self.msg.setWindowTitle("pyCrossVA Results")
             self.msg.setDetailedText(self.pycrossva_messages)
             self.msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
@@ -382,6 +426,7 @@ class CommandCenter(QWidget):
             QMessageBox.Question,
             "Confirm Cancel",
             "Are you sure you want to remove your changes?")
+        confirm_cancel.setWindowTitle("openVA App")
         confirm_cancel.addButton(QMessageBox.Yes)
         confirm_cancel.addButton(QMessageBox.No)
         reply = confirm_cancel.exec()
@@ -423,7 +468,7 @@ class CommandCenter(QWidget):
             else:
                 self.col_search_results_counter.setText("0/0")
                 self.edit_window.table.clearSelection()
-       
+
     def prev_col_clicked(self):
         """Goes to the previous column that matches the text search."""
         
@@ -445,7 +490,7 @@ class CommandCenter(QWidget):
         else:
             self.col_search_index += 1
             no_result_msg = QMessageBox()
-            no_result_msg.setWindowTitle("No results")
+            no_result_msg.setWindowTitle("openVA App: No results")
             no_result_msg.setText("No previous search result available.")
             x = no_result_msg.exec_()
         
@@ -469,7 +514,7 @@ class CommandCenter(QWidget):
         else:
             self.col_search_index -= 1
             no_result_msg = QMessageBox()
-            no_result_msg.setWindowTitle("No results")
+            no_result_msg.setWindowTitle("openVA App: No results")
             no_result_msg.setText("No next search result available.")
             x = no_result_msg.exec_()
         
@@ -528,7 +573,7 @@ class CommandCenter(QWidget):
         else:
             self.row_search_index += 1
             no_result_msg = QMessageBox()
-            no_result_msg.setWindowTitle("No results")
+            no_result_msg.setWindowTitle("openVA App: No results")
             no_result_msg.setText("No previous search result available.")
             x = no_result_msg.exec_()
         
@@ -546,7 +591,7 @@ class CommandCenter(QWidget):
         else:
             self.row_search_index -= 1
             no_result_msg = QMessageBox()
-            no_result_msg.setWindowTitle("No results")
+            no_result_msg.setWindowTitle("openVA App: No results")
             no_result_msg.setText("No next search result available.")
             x = no_result_msg.exec_()
         
@@ -593,7 +638,7 @@ class CommandCenter(QWidget):
         self.create_insilicova_box()
         self.create_interva_box()
         self.create_smartva_box()
-        self.btn_algorithm_results = QPushButton("Results")
+        # self.btn_algorithm_results = QPushButton("Results")
 
         algorithm_panel_v_box.addWidget(self.insilicova_box)
         #algorithm_panel_v_box.addStretch(1)
@@ -603,7 +648,7 @@ class CommandCenter(QWidget):
         # algorithm_panel_v_box.addLayout(self.smartva_box)
         algorithm_panel_v_box.addWidget(self.smartva_box)
         #algorithm_panel_v_box.addStretch(1)
-        algorithm_panel_v_box.addWidget(self.btn_algorithm_results)
+        # algorithm_panel_v_box.addWidget(self.btn_algorithm_results)
         self.algorithm_panel = QGroupBox("Algorithms")
         self.algorithm_panel.setLayout(algorithm_panel_v_box)
         self.btn_insilicova_options.clicked.connect(self.run_insilicova_dialog)
@@ -627,9 +672,15 @@ class CommandCenter(QWidget):
         insilicova_hbox.addWidget(self.btn_insilicova_run)
         self.insilicova_pbar = QProgressBar(self)
         self.label_insilicova_progress = QLabel("")
+        self.btn_download_insilicova_log = QPushButton(
+            "Download log file from data checks")
+        self.btn_download_insilicova_log.clicked.connect(
+            self.download_insilicova_log)
+        insilicova_vbox.setAlignment(Qt.AlignCenter)
         insilicova_vbox.addLayout(insilicova_hbox)
         insilicova_vbox.addWidget(self.insilicova_pbar)
         insilicova_vbox.addWidget(self.label_insilicova_progress)
+        insilicova_vbox.addWidget(self.btn_download_insilicova_log)
         self.insilicova_box.setLayout(insilicova_vbox)
 
     def create_interva_box(self):
@@ -657,9 +708,14 @@ class CommandCenter(QWidget):
         interva_hbox.addWidget(self.btn_interva_run)
         self.interva_pbar = QProgressBar(self)
         self.label_interva_progress = QLabel("")
+        interva_vbox.setAlignment(Qt.AlignCenter)
         interva_vbox.addLayout(interva_hbox)
         interva_vbox.addWidget(self.interva_pbar)
         interva_vbox.addWidget(self.label_interva_progress)
+        self.btn_download_interva_log = QPushButton(
+            "Download log file from data checks")
+        self.btn_download_interva_log.clicked.connect(self.download_interva_log)
+        interva_vbox.addWidget(self.btn_download_interva_log)
         self.interva_box.setLayout(interva_vbox)
 
     def create_smartva_box(self):
@@ -687,6 +743,7 @@ class CommandCenter(QWidget):
         smartva_hbox.addWidget(self.btn_smartva_run)
         self.smartva_pbar = QProgressBar(self)
         self.label_smartva_progress = QLabel("")
+        smartva_vbox.setAlignment(Qt.AlignCenter)
         smartva_vbox.addLayout(smartva_hbox)
         smartva_vbox.addWidget(self.smartva_pbar)
         smartva_vbox.addWidget(self.label_smartva_progress)
@@ -707,7 +764,7 @@ class CommandCenter(QWidget):
         self.jump_scale = updated_jump_scale
 
     def update_insilicova_auto_extend(self, updated_auto_extend):
-            self.auto_extend = updated_auto_extend
+        self.auto_extend = updated_auto_extend
 
     def update_insilicova_seed(self, updated_seed):
         self.seed = updated_seed
@@ -718,23 +775,43 @@ class CommandCenter(QWidget):
         self.btn_insilicova_run.setEnabled(False)
         if self.pycrossva_data is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "Data need to be loaded and/or prepared with pyCrossVA.")
             alert.exec()
         else:
             burnin = max(int(self.n_iterations / 2), 1)
             thin = 10
-            insilico_out = InSilicoVA(self.pycrossva_data,
-                                      data_type="WHO2016",
-                                      n_sim=self.n_iterations,
-                                      thin=thin,
-                                      burnin=burnin,
-                                      auto_length=self.auto_extend,
-                                      seed=self.seed,
-                                      openva_app=self)
-            self.insilicova_results = insilico_out.get_results()
-            self.label_insilicova_progress.setText(
-                "InSilicoVA results are ready")
+            try:
+                insilicova_out = InSilicoVA(self.pycrossva_data,
+                                            data_type="WHO2016",
+                                            n_sim=self.n_iterations,
+                                            thin=thin,
+                                            burnin=burnin,
+                                            auto_length=self.auto_extend,
+                                            seed=self.seed,
+                                            openva_app=self)
+            except InSilicoVAException as exc:
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setText("ERROR: Failed to run InSilicoVA" + exc)
+                alert.exec()
+            try:
+                self.insilicova_results = insilicova_out.get_results()
+                self.insilicova_errors = insilicova_out._error_log
+                self.insilicova_warnings = insilicova_out._warning
+                self.label_insilicova_progress.setText(
+                    "InSilicoVA results are ready")
+            except InSilicoVAException as exc:
+                self.insilicova_errors = insilicova_out._error_log
+                self.insilicova_warnings = insilicova_out._warning
+                if hasattr(insilicova_out, "_data_check") is False:
+                    self.insilicova_warnings = (
+                        "No valid records for data consistency check")
+                self.label_insilicova_progress.setText(
+                    "Data do not have any valid VA records (no results "
+                    "available).  \nSee log file for more details.\n"
+                    "Please reload data in the expected format.")
         self.btn_insilicova_run.setEnabled(True)
 
     def run_interva_dialog(self):
@@ -751,6 +828,7 @@ class CommandCenter(QWidget):
         self.btn_interva_run.setEnabled(False)
         if self.pycrossva_data is None:
             alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
             alert.setText(
                 "Data need to be loaded and/or prepared with pyCrossVA.")
             alert.exec()
@@ -763,8 +841,15 @@ class CommandCenter(QWidget):
                               directory=self.interva_tmp_dir.name,
                               openva_app=self)
             iv5out.run()
-            self.interva_results = iv5out
-            self.label_interva_progress.setText("InterVA5 results are ready")
+            self.interva_log = "ready"
+            if iv5out.out["VA5"] is None:
+                self.label_interva_progress.setText(
+                    "Data do not have any valid VA records (no results "
+                    "available).\nPlease reload data in the expected format.")
+            else:
+                self.interva_results = iv5out
+                self.label_interva_progress.setText(
+                    "InterVA5 results are ready")
         self.btn_interva_run.setEnabled(True)
 
     def run_smartva_dialog(self):
@@ -776,6 +861,7 @@ class CommandCenter(QWidget):
         #                                     self.smartva_freetext)
         # self.smartva_dialog.exec()
         alert = QMessageBox()
+        alert.setWindowTitle("openVA App")
         alert.setText("SmartVA is not available (it is based on Python 2" +
                       "which is no longer supported by the Python Software " +
                       "Foundation).  It will be included when a verison " +
@@ -784,6 +870,7 @@ class CommandCenter(QWidget):
         
     def run_smartva(self):
         alert = QMessageBox()
+        alert.setWindowTitle("openVA App")
         alert.setText("SmartVA is not available (it is based on Python 2" +
                       "which is no longer supported by the Python Software " +
                       "Foundation).  It will be included when a verison " +
@@ -812,10 +899,77 @@ class CommandCenter(QWidget):
                            columns=self.load_window.data[0])
             if df[self.data_id_col].nunique() != df.shape[0]:
                 alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
                 alert.setIcon(QMessageBox.Warning)
                 alert.setText(
                     "ID column does not have a unique value for every row")
                 alert.exec()
+
+    def download_insilicova_log(self):
+        errors = self.insilicova_errors
+        log = self.insilicova_errors
+        warnings = self.insilicova_warnings
+        if log is None:
+            alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
+            alert.setText(
+                "No results available.  Please load data in the expected "
+                "format and/or run a VA algorithm.")
+            alert.exec()
+        else:
+            log_file_name = "insilicova_log.txt"
+            path = QFileDialog.getSaveFileName(self,
+                                               "Save log (txt)",
+                                               log_file_name,
+                                               "Text Files (*.txt)")
+            if path != ("", ""):
+                with open(log_file_name, "w") as f_out:
+                    f_out.write(
+                        "Log file from InSilicoVA")
+                    if len(errors) > 0:
+                        f_out.write(
+                            "\n\nThe following records are incomplete "
+                            "and excluded from further processing\n\n")
+                        errors_list = [str(k) + " - " + i for k, v in
+                                       errors.items() for i in v]
+                        f_out.write("\n".join(errors_list))
+                    if isinstance(warnings, list):
+                        f_out.write("\n \n first pass \n \n")
+                        f_out.write("\n".join(warnings["first_pass"]))
+                        f_out.write("\n \n second pass \n \n")
+                        f_out.write("\n".join(warnings["second_pass"]))
+                    else:
+                        f_out.write("\n\n" + warnings)
+                if os.path.isfile(path[0]):
+                    alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
+                    alert.setText("log saved to" + path[0])
+                    alert.exec()
+
+    def download_interva_log(self):
+        log = self.interva_log
+        if log is None:
+            alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
+            alert.setText(
+                "No results available.  Please load data in the expected "
+                "format and/or run a VA algorithm.")
+            alert.exec()
+        else:
+            log_file_name = "interva_log.txt"
+            path = QFileDialog.getSaveFileName(self,
+                                               "Save log (txt)",
+                                               log_file_name,
+                                               "Text Files (*.txt)")
+            if path != ("", ""):
+                tmp_log = os.path.join(self.interva_tmp_dir.name,
+                                       "errorlogV5.txt")
+                shutil.copyfile(tmp_log, log_file_name)
+                if os.path.isfile(path[0]):
+                    alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
+                    alert.setText("log saved to" + path[0])
+                    alert.exec()
 
     def print_insilicova(self):
         print(self.n_iterations)
