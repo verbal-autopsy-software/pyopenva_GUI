@@ -10,23 +10,81 @@ import os
 import shutil
 import tempfile
 from insilicova.api import InSilicoVA
+from insilicova.structures import InSilico
+from insilicova.exceptions import HaltGUIException, InSilicoVAException
 from interva.interva5 import InterVA5
 from pyopenva.data import COUNTRIES
 from pandas import read_csv, DataFrame
+from pandas.errors import EmptyDataError, ParserError
 from pycrossva.transform import transform
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
                              QHBoxLayout, QMessageBox, QLabel, QProgressBar,
                              QPushButton, QSpinBox, QStackedLayout,
                              QVBoxLayout, QWidget)
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal
 from pyopenva.output import PlotDialog, TableDialog, save_plot
+
+
+class InSilicoVAWorker(QObject):
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+    state = pyqtSignal(str)
+    insilicova_results = pyqtSignal(InSilico)
+    insilicova_errors = pyqtSignal(dict)
+    insilicova_warnings = pyqtSignal(dict)
+
+    def __init__(self, data, data_type, n_sim, burnin, thin, auto_length,
+                 seed, gui_ctrl):
+        super().__init__()
+        self.input = data
+        self.data_type = data_type
+        self.n_sim = n_sim
+        self.burnin = burnin
+        self.thin = thin
+        self.auto_length = auto_length
+        self.seed = seed
+        self.gui_ctrl = gui_ctrl
+
+    def run(self):
+        try:
+            insilicova_out = InSilicoVA(self.input,
+                                        data_type=self.data_type,
+                                        n_sim=self.n_sim,
+                                        thin=self.thin,
+                                        burnin=self.burnin,
+                                        auto_length=self.auto_length,
+                                        seed=self.seed,
+                                        openva_app=self.progress,
+                                        state=self.state,
+                                        gui_ctrl=self.gui_ctrl)
+            try:
+                results = insilicova_out.get_results()
+                self.insilicova_results.emit(results)
+                self.insilicova_errors.emit(results.errors)
+                self.insilicova_warnings.emit(results.warnings)
+                self.state.emit("InSilicoVA results are ready")
+                self.finished.emit()
+            except InSilicoVAException:
+                self.insilicova_errors.emit(insilicova_out._error_log)
+                self.insilicova_warnings.emit(insilicova_out._warning)
+                if hasattr(insilicova_out, "_data_check") is False:
+                    self.insilicova_warnings.emit(
+                        {"msg": "No valid records for data consistency check"})
+                self.state.emit(
+                    "Data do not have any valid VA records (no results "
+                    "available).\nPlease reload data in the expected format.")
+                self.finished.emit()
+        except HaltGUIException:
+            self.state.emit("InSilicoVA stopped (no results).")
+            self.progress.emit(0)
+            self.finished.emit()
 
 
 class Efficient(QWidget):
 
     def __init__(self):
         super().__init__()
-        #self.setGeometry(400, 400, 500, 400)
+        # self.setGeometry(400, 400, 500, 400)
         self.data_page = QWidget()
         self.data = None
         self.data_loaded = False
@@ -46,6 +104,7 @@ class Efficient(QWidget):
         self.insilicova_include_probs = False
         self.insilicova_pbar = QProgressBar()
         self.label_insilicova_progress = QLabel("(no results)")
+        self.insilicova_ctrl = {"break": False}
         self.insilicova_ui()
         self.interva_results = None
         self.interva_log = None
@@ -54,6 +113,7 @@ class Efficient(QWidget):
         self.interva_malaria = "low"
         self.interva_pbar = QProgressBar()
         self.label_interva_progress = QLabel("(no results)")
+        self.interva_ctrl = {"break": False}
         self.interva_ui()
         self.smartva_page = QWidget()
         self.smartva_country = "Unknown"
@@ -216,6 +276,10 @@ class Efficient(QWidget):
         self.btn_insilicova_run = QPushButton("Run InSilicoVA")
         self.btn_insilicova_run.setMaximumWidth(300)
         self.btn_insilicova_run.clicked.connect(self.run_insilicova)
+        self.btn_insilicova_stop = QPushButton("Stop")
+        self.btn_insilicova_stop.setMaximumWidth(150)
+        self.btn_insilicova_stop.setEnabled(False)
+        self.btn_insilicova_stop.clicked.connect(self.stop_insilicova)
         self.btn_download_insilicova_log = QPushButton(
             "Download log from data checks")
         self.btn_download_insilicova_log.clicked.connect(self.download_log)
@@ -241,6 +305,7 @@ class Efficient(QWidget):
         layout.addWidget(self.btn_insilicova_run)
         layout.addWidget(self.insilicova_pbar)
         layout.addWidget(self.label_insilicova_progress)
+        layout.addWidget(self.btn_insilicova_stop)
         layout.addStretch(1)
         layout.addWidget(self.btn_download_insilicova_log)
         layout.addStretch(1)
@@ -271,7 +336,12 @@ class Efficient(QWidget):
         self.interva_combo_malaria.currentTextChanged.connect(
             self.set_interva_malaria)
         self.btn_interva_run = QPushButton("Run InterVA")
+        self.btn_interva_run.setMaximumWidth(300)
         self.btn_interva_run.clicked.connect(self.run_interva)
+        self.btn_interva_stop = QPushButton("Stop")
+        self.btn_interva_stop.setEnabled(False)
+        self.btn_interva_stop.setMaximumWidth(150)
+        self.btn_interva_stop.clicked.connect(self.stop_interva)
         self.btn_download_interva_log = QPushButton(
             "Download Log from data checks")
         self.btn_download_interva_log.clicked.connect(self.download_log)
@@ -292,6 +362,7 @@ class Efficient(QWidget):
         layout.addWidget(self.btn_interva_run)
         layout.addWidget(self.interva_pbar)
         layout.addWidget(self.label_interva_progress)
+        layout.addWidget(self.btn_interva_stop)
         layout.addStretch(1)
         layout.addWidget(self.btn_download_interva_log)
         layout.addStretch(1)
@@ -436,39 +507,64 @@ class Efficient(QWidget):
         path = QFileDialog.getOpenFileName(self,
                                            "Open a CSV file",
                                            "",
-                                           "All Files(*.*)")
+                                           "csv(*.csv)")
         if path != ("", ""):
-            self.data = read_csv(path[0])
-            f_name = path[0].split("/")[-1]
-            n_records = self.data.shape[0]
-            self.label_data.setAlignment(Qt.AlignLeft)
-            self.label_data.setText("Data loaded:")
-            self.label_data_fname.setAlignment(Qt.AlignCenter)
-            self.label_data_fname.setText(f"{f_name}")
-            self.label_data_n_records.setAlignment(Qt.AlignCenter)
-            self.label_data_n_records.setText(f"({n_records} records)")
-            self.data_loaded = True
-            self.combo_data_id_col.blockSignals(True)
-            self.combo_data_id_col.clear()
-            self.combo_data_id_col.addItems(
-                ["no ID column"] + list(self.data)
-            )
-            self.combo_data_id_col.blockSignals(False)
-            self.combo_data_id_col.setCurrentIndex(0)
-            # reset app
-            # TODO: create method for clearing results
-            self.label_insilicova_progress.setText(
-                "(no results)")
-            self.insilicova_warnings = None
-            self.insilicova_errors = None
-            self.insilicova_results = None
-            self.label_interva_progress.setText(
-                "(no results)")
-            self.insilicova_pbar.setValue(0)
-            self.interva_log = None
-            self.interva_results = None
-            self.interva_pbar.setValue(0)
-            self.pycrossva_data = None
+            try:
+                self.data = read_csv(path[0])
+                f_name = path[0].split("/")[-1]
+                n_records = self.data.shape[0]
+                self.label_data.setAlignment(Qt.AlignLeft)
+                self.label_data.setText("Data loaded:")
+                self.label_data_fname.setAlignment(Qt.AlignCenter)
+                self.label_data_fname.setText(f"{f_name}")
+                self.label_data_n_records.setAlignment(Qt.AlignCenter)
+                self.label_data_n_records.setText(f"({n_records} records)")
+                self.data_loaded = True
+                self.combo_data_id_col.blockSignals(True)
+                self.combo_data_id_col.clear()
+                self.combo_data_id_col.addItems(
+                    ["no ID column"] + list(self.data)
+                )
+                self.combo_data_id_col.blockSignals(False)
+                self.combo_data_id_col.setCurrentIndex(0)
+                # reset app
+                # TODO: create method for clearing results
+                self.label_insilicova_progress.setText(
+                    "(no results)")
+                self.insilicova_warnings = None
+                self.insilicova_errors = None
+                self.insilicova_results = None
+                self.label_interva_progress.setText(
+                    "(no results)")
+                self.insilicova_pbar.setValue(0)
+                self.interva_log = None
+                self.interva_results = None
+                self.interva_pbar.setValue(0)
+                self.pycrossva_data = None
+            except (ParserError, UnicodeDecodeError):
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setIcon(QMessageBox.Warning)
+                alert.setText(
+                    f"Unable to read in CSV file {path[0]}.\n" +
+                    "Please check it is formatted as an ODK export.")
+                alert.exec()
+            except EmptyDataError:
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setIcon(QMessageBox.Warning)
+                alert.setText(
+                    f"Unable to read in CSV file {path[0]}.\n" +
+                    "File appears to be empty.")
+                alert.exec()
+            except PermissionError:
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setIcon(QMessageBox.Warning)
+                alert.setText(
+                    f"Unable to read in CSV file {path[0]}.\n" +
+                    "User does not have permission to access the file.")
+                alert.exec()
 
     def set_data_id_col(self, id_col):
         self.data_id_col = id_col
@@ -572,7 +668,49 @@ class Efficient(QWidget):
             self.chbox_insilicova_include_probs.hide()
         self.stacked_layout.setCurrentIndex(5)
 
+    # def run_insilicova(self):
+    #     self.btn_insilicova_run.setEnabled(False)
+    #     self.insilicova_warnings = None
+    #     self.insilicova_errors = None
+    #     if self.data_loaded is False:
+    #         alert = QMessageBox()
+    #         alert.setWindowTitle("openVA App")
+    #         alert.setText("Please load data first.")
+    #         alert.exec()
+    #     else:
+    #         self.run_pycrossva()
+    #         auto_extend = False
+    #         if self.insilicova_auto == "True":
+    #             auto_extend = True
+    #         burnin = max(int(self.insilicova_n_sim/2), 1)
+    #         thin = 10
+    #         insilicova_out = InSilicoVA(self.pycrossva_data,
+    #                                     data_type="WHO2016",
+    #                                     n_sim=self.insilicova_n_sim,
+    #                                     thin=thin,
+    #                                     burnin=burnin,
+    #                                     auto_length=auto_extend,
+    #                                     seed=self.insilicova_seed,
+    #                                     openva_app=self)
+    #         try:
+    #             self.insilicova_results = insilicova_out.get_results()
+    #             self.insilicova_errors = self.insilicova_results.errors
+    #             self.insilicova_warnings = self.insilicova_results.warnings
+    #             self.label_insilicova_progress.setText(
+    #                 "InSilicoVA results are ready")
+    #         except AttributeError:
+    #             self.insilicova_errors = insilicova_out._error_log
+    #             self.insilicova_warnings = insilicova_out._warning
+    #             if hasattr(insilicova_out, "_data_check") is False:
+    #                 self.insilicova_warnings = (
+    #                     "No valid records for data consistency check")
+    #             self.label_insilicova_progress.setText(
+    #                 "Data do not have any valid VA records (no results "
+    #                 "available).\nPlease reload data in the expected format.")
+    #     self.btn_insilicova_run.setEnabled(True)
+
     def run_insilicova(self):
+        self.insilicova_ctrl["break"] = False
         self.btn_insilicova_run.setEnabled(False)
         self.insilicova_warnings = None
         self.insilicova_errors = None
@@ -588,30 +726,77 @@ class Efficient(QWidget):
                 auto_extend = True
             burnin = max(int(self.insilicova_n_sim/2), 1)
             thin = 10
-            insilicova_out = InSilicoVA(self.pycrossva_data,
-                                        data_type="WHO2016",
-                                        n_sim=self.insilicova_n_sim,
-                                        thin=thin,
-                                        burnin=burnin,
-                                        auto_length=auto_extend,
-                                        seed=self.insilicova_seed,
-                                        openva_app=self)
-            try:
-                self.insilicova_results = insilicova_out.get_results()
-                self.insilicova_errors = self.insilicova_results.errors
-                self.insilicova_warnings = self.insilicova_results.warnings
-                self.label_insilicova_progress.setText(
-                    "InSilicoVA results are ready")
-            except AttributeError:
-                self.insilicova_errors = insilicova_out._error_log
-                self.insilicova_warnings = insilicova_out._warning
-                if hasattr(insilicova_out, "_data_check") is False:
-                    self.insilicova_warnings = (
-                        "No valid records for data consistency check")
-                self.label_insilicova_progress.setText(
-                    "Data do not have any valid VA records (no results "
-                    "available).\nPlease reload data in the expected format.")
-        self.btn_insilicova_run.setEnabled(True)
+            self.insilicova_thread = QThread()
+            self.insilicova_worker = InSilicoVAWorker(
+                data=self.pycrossva_data,
+                data_type="WHO2016",
+                n_sim=self.insilicova_n_sim,
+                thin=thin,
+                burnin=burnin,
+                auto_length=auto_extend,
+                seed=self.insilicova_seed,
+                gui_ctrl=self.insilicova_ctrl)
+            self.insilicova_worker.moveToThread(self.insilicova_thread)
+            self.insilicova_thread.started.connect(self.insilicova_worker.run)
+            self.insilicova_worker.finished.connect(
+                self.insilicova_thread.quit)
+            self.insilicova_worker.finished.connect(
+                self.insilicova_worker.deleteLater)
+            self.insilicova_thread.finished.connect(
+                self.insilicova_thread.deleteLater)
+            self.insilicova_worker.progress.connect(
+                self.update_insilicova_progress)
+            self.insilicova_worker.state.connect(
+                self.update_insilicova_progress_label)
+            self.insilicova_worker.insilicova_errors.connect(
+                self.update_insilicova_errors)
+            self.insilicova_worker.insilicova_warnings.connect(
+                self.update_insilicova_warnings)
+            self.insilicova_worker.insilicova_results.connect(
+                self.update_insilicova_results)
+            self.insilicova_thread.start()
+            self.btn_insilicova_stop.setEnabled(True)
+
+            self.btn_insilicova_run.setEnabled(False)
+            self.insilicova_thread.finished.connect(
+                lambda: self.btn_insilicova_run.setEnabled(True))
+            self.insilicova_thread.finished.connect(
+                lambda: self.btn_insilicova_stop.setEnabled(False))
+            # insilicova_out = self.insilicova_worker.insilicova_out
+            # try:
+            #     self.insilicova_results = insilicova_out.get_results()
+            #     self.insilicova_errors = self.insilicova_results.errors
+            #     self.insilicova_warnings = self.insilicova_results.warnings
+            #     self.label_insilicova_progress.setText(
+            #         "InSilicoVA results are ready")
+            # except AttributeError:
+            #     self.insilicova_errors = insilicova_out._error_log
+            #     self.insilicova_warnings = insilicova_out._warning
+            #     if hasattr(insilicova_out, "_data_check") is False:
+            #         self.insilicova_warnings = (
+            #             "No valid records for data consistency check")
+            #     self.label_insilicova_progress.setText(
+            #         "Data do not have any valid VA records (no results "
+            #         "available).\nPlease reload data in the expected format.")
+
+    def update_insilicova_progress(self, n):
+        self.insilicova_pbar.setValue(n)
+
+    def update_insilicova_progress_label(self, msg):
+        self.label_insilicova_progress.setText(msg)
+
+    def update_insilicova_warnings(self, msg):
+        self.insilicova_warnings = msg
+
+    def update_insilicova_errors(self, msg):
+        self.insilicova_errors = msg
+
+    def update_insilicova_results(self, results):
+        self.insilicova_results = results
+
+    def stop_insilicova(self):
+        self.insilicova_ctrl["break"] = True
+        self.btn_insilicova_stop.setEnabled(False)
 
     def run_interva(self):
         self.btn_interva_run.setEnabled(False)
@@ -642,6 +827,16 @@ class Efficient(QWidget):
                 self.label_interva_progress.setText(
                     "InterVA5 results are ready")
         self.btn_interva_run.setEnabled(True)
+
+    def update_interva_progress(self, n):
+        self.interva_pbar.setValue(n)
+
+    def update_interva_progress_label(self, msg):
+        self.label_interva_progress.setText(msg)
+
+    def stop_interva(self):
+        self.interva_ctrl["break"] = True
+        self.btn_interva_stop.setEnabled(False)
 
     def run_plot_dialog(self):
         if self.chosen_algorithm == "insilicova":
@@ -819,9 +1014,11 @@ class Efficient(QWidget):
                 if self.chosen_algorithm == "interva":
                     tmp_log = os.path.join(self.interva_tmp_dir.name,
                                            "errorlogV5.txt")
-                    shutil.copyfile(tmp_log, log_file_name)
+                    # shutil.copyfile(tmp_log, log_file_name)
+                    shutil.copyfile(tmp_log, path[0])
                 else:
-                    with open(log_file_name, "w") as f_out:
+                    # with open(log_file_name, "w") as f_out:
+                    with open(path[0], "w") as f_out:
                         f_out.write(f"Log file from {self.chosen_algorithm}")
                         if len(errors) > 0:
                             f_out.write(
@@ -830,13 +1027,14 @@ class Efficient(QWidget):
                             errors_list = [str(k) + " - " + i for k, v in
                                            errors.items() for i in v]
                             f_out.write("\n".join(errors_list))
-                        if isinstance(warnings, list):
+                        # if isinstance(warnings, dict):
+                        if len(warnings) > 1:
                             f_out.write("\n \n first pass \n \n")
                             f_out.write("\n".join(warnings["first_pass"]))
                             f_out.write("\n \n second pass \n \n")
                             f_out.write("\n".join(warnings["second_pass"]))
                         else:
-                            f_out.write("\n\n" + warnings)
+                            f_out.write("\n\n" + warnings["msg"])
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")

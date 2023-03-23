@@ -13,13 +13,15 @@ from pyopenva.efficient import Efficient
 from pyopenva.mode import Mode
 from pyopenva.command_center import CommandCenter
 from pyopenva.results import Results
+from pyopenva.__version__ import (__description__, __license__, __url__,
+                                  __version__)
 
 
 class WindowManager(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        #self.setGeometry(200, 200, 500, 300)
+        # self.setGeometry(200, 200, 500, 300)
         self.setWindowTitle("Select Mode")
         self.efficient = Efficient()
         self.mode = Mode()
@@ -40,6 +42,7 @@ class WindowManager(QMainWindow):
         self.mode.btn_efficient.clicked.connect(self.show_efficient)
         self.mode.btn_advanced.clicked.connect(self.show_command_center)
         self.mode.btn_exit.clicked.connect(self.close)
+        self.mode.btn_about.clicked.connect(self.show_about)
 
         self.command_center.btn_user_mode.clicked.connect(self.show_mode)
         self.command_center.btn_algorithm_results.clicked.connect(
@@ -197,17 +200,15 @@ class WindowManager(QMainWindow):
         else:
             event.ignore()
 
-    # def btn_close_gui(self):
-    #     close = QMessageBox()
-    #     close.setWindowTitle("openVA App")
-    #     close.setIcon(QMessageBox.Question)
-    #     close.setText("Close openVA App?")
-    #     close.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
-    #     close = close.exec()
-    #     if close == QMessageBox.Yes:
-    #         QCoreApplication.instance().quit()
-    #     else:
-    #         event.ignore()
+    def show_about(self):
+        info = QMessageBox()
+        info.setWindowTitle("openVA App")
+        info.setIcon(QMessageBox.Information)
+        info.setText(f"{__description__}\n" +
+        f"Version: {__version__}\n" +
+        f"License: {__license__}\n" +
+        f"Website: {__url__}")
+        info.exec()
 
 
 if __name__ == '__main__':
