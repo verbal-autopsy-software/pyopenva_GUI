@@ -13,6 +13,14 @@ subdirectory that contains the files needed to run the application
 
 import sys
 from cx_Freeze import Executable, setup
+import os
+
+here = os.path.abspath(os.path.dirname(__file__))
+
+about = {}
+with open(
+        os.path.join(here, "pyopenva", "__version__.py"), "r", "utf-8") as f:
+    exec(f.read(), about)
 
 try:
     from cx_Freeze.hooks import get_qt_plugins_paths
@@ -95,8 +103,8 @@ executables = [
 
 setup(
     name="pyopenva",
-    version="0.1",
-    description="openVA App for analyzing Verbal Autopsy data",
+    version=about["__version__"],
+    description=about["__description__"],
     options={
         "build_exe": build_exe_options,
         "bdist_msi": bdist_msi_options,

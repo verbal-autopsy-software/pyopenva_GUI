@@ -1,0 +1,7 @@
+__title__ = "openVA App"
+__description__ = "openVA GUI for analyzing verbal autopsy data."
+__url__ = "https://github.com/verbal-autopsy-software/pyopenva_GUI"
+__version__ = "0.0.1"
+__author__ = "Jason Thomas & Sherry Zhao"
+__author_email__ = "jarathomas@gmail.com"
+__license__ = "GPLv3"

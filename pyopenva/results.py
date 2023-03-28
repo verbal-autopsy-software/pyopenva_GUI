@@ -203,7 +203,7 @@ class Results(QWidget):
             alert.exec()
         else:
             self.interva_table = TableDialog(results=self.interva_results,
-                                             algorithm="interva",
+                                             # algorithm="interva",
                                              parent=self,
                                              top=self.n_top_causes)
             self.interva_table.resize(self.interva_table.table.width(),
@@ -469,8 +469,14 @@ class Results(QWidget):
                       "based on Python 3 is released.")
         alert.exec()
 
-    def update_interva(self, new_interva_results, tmp_dir):
+    # def update_interva(self, new_interva_results, tmp_dir):
+    #     self.interva_results = new_interva_results
+    #     self.interva_tmp_dir = tmp_dir
+
+    def update_interva_results(self, new_interva_results):
         self.interva_results = new_interva_results
+
+    def update_interva_tmp_dir(self, tmp_dir):
         self.interva_tmp_dir = tmp_dir
 
     def update_insilicova(self, new_insilicova_results):
