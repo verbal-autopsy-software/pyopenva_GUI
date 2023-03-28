@@ -41,9 +41,10 @@ class Mode(QWidget):
             vital_strategies_pixmap.scaled(128, 128,
                                            Qt.KeepAspectRatio,
                                            Qt.SmoothTransformation))
-        self.btn_efficient = QPushButton("Start")
+        self.btn_efficient = QPushButton("Start One-Click (Wizard)")
         self.btn_efficient.setMaximumWidth(250)
-        self.btn_advanced = QPushButton("Advanced Mode")
+        # self.btn_advanced = QPushButton("Advanced Mode")
+        self.btn_advanced = QPushButton("Customizable")
         self.btn_advanced.setMaximumWidth(250)
         self.btn_exit = QPushButton("Exit")
         self.btn_exit.setMaximumWidth(125)

@@ -722,11 +722,14 @@ class Efficient(QWidget):
         self.btn_load_data.setEnabled(False)
         self.insilicova_warnings = None
         self.insilicova_errors = None
+        self.insilicova_results = None
         if self.data_loaded is False:
             alert = QMessageBox()
             alert.setWindowTitle("openVA App")
             alert.setText("Please load data first.")
             alert.exec()
+            self.btn_insilicova_run.setEnabled(True)
+            self.btn_load_data.setEnabled(True)
         else:
             self.run_pycrossva()
             auto_extend = False
@@ -809,8 +812,19 @@ class Efficient(QWidget):
             alert.setWindowTitle("openVA App")
             alert.setText("Please load data first.")
             alert.exec()
+            self.btn_interva_run.setEnabled(True)
+            self.btn_load_data.setEnabled(True)
+            self.interva_combo_hiv.setEnabled(True)
+            self.interva_combo_malaria.setEnabled(True)
+            self.label_interva_chosen_options.setText(
+                "Latest InterVA results run with:")
+            self.label_interva_chosen_malaria.setText(
+                f"Malaria set to {self.interva_malaria}")
+            self.label_interva_chosen_hiv.setText(
+                f"HIV set to {self.interva_hiv}")
         else:
             self.interva_log = None
+            self.interva_results = None
             # TODO: clear old error log if it exists?
             self.interva_tmp_dir = tempfile.TemporaryDirectory()
             self.run_pycrossva()

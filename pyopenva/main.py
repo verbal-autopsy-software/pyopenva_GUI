@@ -25,7 +25,8 @@ class WindowManager(QMainWindow):
         self.setWindowTitle("Select Mode")
         self.efficient = Efficient()
         self.mode = Mode()
-        self.command_center = CommandCenter()
+        # self.command_center = CommandCenter()
+        self.command_center = CommandCenter(self)
         self.results = Results()
 
         self.stacked_layout = QStackedLayout()
@@ -104,14 +105,14 @@ class WindowManager(QMainWindow):
         self.efficient.btn_results_ui_exit.clicked.connect(self.close)
 
         # update results
-        self.command_center.btn_interva_run.clicked.connect(
-            lambda: self.update_interva_results(
-                self.command_center.interva_results,
-                self.command_center.interva_tmp_dir))
+        # self.command_center.btn_interva_run.clicked.connect(
+        #     lambda: self.update_interva_results(
+        #         self.command_center.interva_results,
+        #         self.command_center.interva_tmp_dir))
 
-        self.command_center.btn_insilicova_run.clicked.connect(
-            lambda: self.update_insilicova_results(
-                self.command_center.insilicova_results))
+        # self.command_center.btn_insilicova_run.clicked.connect(
+        #     lambda: self.update_insilicova_results(
+        #         self.command_center.insilicova_results))
 
         self.command_center.btn_smartva_run.clicked.connect(
             lambda: self.update_smartva_results(
@@ -179,8 +180,14 @@ class WindowManager(QMainWindow):
         self.efficient.show_results_page()
         self.setWindowTitle("openVA App: results")
 
-    def update_interva_results(self, new_results, tmp_dir):
-        self.results.update_interva(new_results, tmp_dir)
+    # def update_interva_results(self, new_results, tmp_dir):
+    #     self.results.update_interva(new_results, tmp_dir)
+
+    def update_interva_results(self, new_results):
+        self.results.update_interva_results(new_results)
+
+    def update_interva_tmp_dir(self, tmp_dir):
+        self.results.update_interva_tmp_dir(tmp_dir)
 
     def update_insilicova_results(self, new_results):
         self.results.update_insilicova(new_results)
