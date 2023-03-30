@@ -168,6 +168,7 @@ class CommandCenter(QWidget):
             self.combo_data_id_col.blockSignals(False)
             self.combo_data_id_col.setCurrentIndex(0)
 
+            self.pycrossva_data = None
             self.insilicova_results = None
             self.label_insilicova_progress.setText("")
             self.insilicova_pbar.setValue(0)
@@ -680,6 +681,7 @@ class CommandCenter(QWidget):
         self.btn_insilicova_stop.clicked.connect(self.stop_insilicova)
         self.btn_download_insilicova_log = QPushButton(
             "Download log file from data checks")
+        self.btn_download_insilicova_log.setEnabled(False)
         self.btn_download_insilicova_log.clicked.connect(
             self.download_insilicova_log)
         insilicova_vbox.setAlignment(Qt.AlignCenter)
@@ -693,19 +695,6 @@ class CommandCenter(QWidget):
     def create_interva_box(self):
         """Set up box of widgets for InterVA."""
 
-        # self.interva_box = QVBoxLayout()
-        # interva_label = QLabel("InterVA")
-        # interva_hbox = QHBoxLayout()
-        # self.btn_interva_options = QPushButton("Set Options")
-        # self.btn_interva_run = QPushButton("Run InterVA5")
-        # interva_hbox.addWidget(self.btn_interva_options)
-        # interva_hbox.addWidget(self.btn_interva_run)
-        # self.interva_pbar = QProgressBar(self)
-        # self.label_interva_progress = QLabel("")
-        # self.interva_box.addWidget(interva_label)
-        # self.interva_box.addLayout(interva_hbox)
-        # self.interva_box.addWidget(self.interva_pbar)
-        # self.interva_box.addWidget(self.label_interva_progress)
         self.interva_box = QGroupBox("InterVA")
         interva_vbox = QVBoxLayout()
         interva_hbox = QHBoxLayout()
@@ -717,6 +706,7 @@ class CommandCenter(QWidget):
         self.label_interva_progress = QLabel("")
         self.btn_interva_stop = QPushButton("Stop")
         self.btn_interva_stop.setMaximumWidth(125)
+        self.btn_interva_stop.setEnabled(False)
         self.btn_interva_stop.clicked.connect(self.stop_interva)
         interva_vbox.setAlignment(Qt.AlignCenter)
         interva_vbox.addLayout(interva_hbox)
@@ -725,7 +715,9 @@ class CommandCenter(QWidget):
         interva_vbox.addWidget(self.btn_interva_stop)
         self.btn_download_interva_log = QPushButton(
             "Download log file from data checks")
-        self.btn_download_interva_log.clicked.connect(self.download_interva_log)
+        self.btn_download_interva_log.setEnabled(False)
+        self.btn_download_interva_log.clicked.connect(
+            self.download_interva_log)
         interva_vbox.addWidget(self.btn_download_interva_log)
         self.interva_box.setLayout(interva_vbox)
 

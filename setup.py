@@ -55,16 +55,17 @@ if get_qt_plugins_paths:
 base = "Win32GUI" if sys.platform == "win32" else None
 
 build_exe_options = {
-    "excludes": ["tkinter"],
+    "excludes": ["tkinter", "scipy.special", "scipy.spatial", "PyQt5.QtSql"],
     "include_files": include_files,
 }
 
 bdist_mac_options = {
-    "bundle_name": "Test",
+    "bundle_name": "pyopenVA",
+    "iconfile": "pyopenva/icons/openva-logo.ico",
 }
 
 bdist_dmg_options = {
-    "volume_label": "TEST",
+    "volume_label": "pyopenVA",
 }
 
 directory_table = [
@@ -109,7 +110,7 @@ setup(
     description=about["__description__"],
     options={
         "build_exe": build_exe_options,
-        "bdist_msi": bdist_msi_options,
+        #"bdist_msi": bdist_msi_options,
         "bdist_mac": bdist_mac_options,
         "bdist_dmg": bdist_dmg_options,
     },

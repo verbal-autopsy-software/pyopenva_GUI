@@ -228,6 +228,7 @@ class Efficient(QWidget):
         self.btn_insilicova_stop.clicked.connect(self.stop_insilicova)
         self.btn_download_insilicova_log = QPushButton(
             "Download log from data checks")
+        self.btn_download_insilicova_log.setEnabled(False)
         self.btn_download_insilicova_log.clicked.connect(self.download_log)
 
         self.btn_insilicova_to_select_algorithm = QPushButton("Back")
@@ -293,6 +294,7 @@ class Efficient(QWidget):
         self.btn_interva_stop.clicked.connect(self.stop_interva)
         self.btn_download_interva_log = QPushButton(
             "Download Log from data checks")
+        self.btn_download_interva_log.setEnabled(False)
         self.btn_download_interva_log.clicked.connect(self.download_log)
         self.btn_interva_to_select_algorithm = QPushButton("Back")
         self.btn_go_to_results_page = QPushButton("Show Results")
@@ -626,6 +628,7 @@ class Efficient(QWidget):
         self.insilicova_ctrl["break"] = False
         self.btn_insilicova_run.setEnabled(False)
         self.btn_load_data.setEnabled(False)
+        self.btn_download_insilicova_log.setEnabled(False)
         self.insilicova_warnings = None
         self.insilicova_errors = None
         self.insilicova_results = None
@@ -636,6 +639,7 @@ class Efficient(QWidget):
             alert.exec()
             self.btn_insilicova_run.setEnabled(True)
             self.btn_load_data.setEnabled(True)
+            self.btn_download_insilicova_log.setEnabled(True)
         else:
             self.run_pycrossva()
             auto_extend = False
@@ -681,6 +685,8 @@ class Efficient(QWidget):
                 lambda: self.btn_insilicova_stop.setEnabled(False))
             self.insilicova_thread.finished.connect(
                 lambda: self.btn_load_data.setEnabled(True))
+            self.insilicova_thread.finished.connect(
+                lambda: self.btn_download_insilicova_log.setEnabled(True))
 
     def update_insilicova_progress(self, n):
         self.insilicova_pbar.setValue(n)
@@ -705,6 +711,7 @@ class Efficient(QWidget):
         self.interva_ctrl["break"] = False
         self.btn_interva_run.setEnabled(False)
         self.btn_load_data.setEnabled(False)
+        self.btn_download_interva_log.setEnabled(False)
         self.interva_combo_hiv.setEnabled(False)
         self.interva_combo_malaria.setEnabled(False)
         self.label_interva_chosen_options.setText(
@@ -720,6 +727,7 @@ class Efficient(QWidget):
             alert.exec()
             self.btn_interva_run.setEnabled(True)
             self.btn_load_data.setEnabled(True)
+            self.btn_download_interva_log.setEnabled(True)
             self.interva_combo_hiv.setEnabled(True)
             self.interva_combo_malaria.setEnabled(True)
             self.label_interva_chosen_options.setText(
@@ -767,11 +775,11 @@ class Efficient(QWidget):
             self.interva_thread.finished.connect(
                 lambda: self.btn_load_data.setEnabled(True))
             self.interva_thread.finished.connect(
-                lambda: self.interva_combo_hiv.setEnabled(True)
-            )
+                lambda: self.interva_combo_hiv.setEnabled(True))
             self.interva_thread.finished.connect(
-                lambda: self.interva_combo_malaria.setEnabled(True)
-            )
+                lambda: self.interva_combo_malaria.setEnabled(True))
+            self.interva_thread.finished.connect(
+                lambda: self.btn_download_interva_log.setEnabled(True))
 
     def update_interva_progress(self, n):
         self.interva_pbar.setValue(n)
