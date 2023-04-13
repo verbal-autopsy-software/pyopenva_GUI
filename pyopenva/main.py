@@ -207,7 +207,8 @@ class WindowManager(QMainWindow):
         else:
             event.ignore()
 
-    def show_about(self):
+    @staticmethod
+    def show_about():
         info = QMessageBox()
         info.setWindowTitle("openVA App")
         info.setIcon(QMessageBox.Information)

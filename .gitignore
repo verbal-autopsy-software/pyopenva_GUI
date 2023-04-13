@@ -4,3 +4,4 @@ dist
 venv
 pyopenva/__pycache__
 pyopenva/.idea
+tests/__pycache__
