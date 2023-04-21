@@ -110,9 +110,9 @@ class CommandCenter(QWidget):
         # TODO: use format in argument for pycrossva (need a setter function
         #       with a dictionary for mapping options to pycrossva parameters)
         self.btn_data_format = QComboBox()
-        self.btn_data_format.addItems(("WHO 2016 (v151)",
-                                       "WHO 2012",
-                                       "PHMRC"))
+        self.btn_data_format.addItems(("WHO 2016",))
+                                       # "WHO 2012",
+                                       # "PHMRC"))
         label_pycrossva_info = QLabel("Convert data: ODK -> openVA format")
         self.btn_pycrossva = QPushButton("Run pyCrossVA")
         self.label_pycrossva_status = QLabel("(no data loaded)")
@@ -1105,7 +1105,7 @@ class CommandCenter(QWidget):
             if path != ("", ""):
                 tmp_log = os.path.join(self.interva_tmp_dir.name,
                                        "errorlogV5.txt")
-                shutil.copyfile(tmp_log, log_file_name)
+                shutil.copyfile(tmp_log, path[0])
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")

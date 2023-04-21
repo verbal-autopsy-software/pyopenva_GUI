@@ -131,9 +131,9 @@ class Efficient(QWidget):
         self.btn_data_format = QComboBox()
         # TODO: use format in argument for pycrossva (need a setter function
         #       with a dictionary for mapping options to pycrossva parameters)
-        self.btn_data_format.addItems(("WHO 2016 (v151)",
-                                       "WHO 2012",
-                                       "PHMRC"))
+        self.btn_data_format.addItems(("WHO 2016",))
+                                       # "WHO 2012",
+                                       # "PHMRC"))
         self.btn_data_format.setMaximumWidth(350)
         form_vbox.addWidget(label_data_format)
         form_vbox.addWidget(self.btn_data_format)
@@ -593,7 +593,7 @@ class Efficient(QWidget):
     def set_n_top_causes(self, n):
         self.n_top_causes = n
 
-    # TODO: need to clean these up (window management handled in main
+    # TODO: need to clean these up (window management handled in main)
     def show_data_page(self):
         self.stacked_layout.setCurrentIndex(0)
 
@@ -973,7 +973,6 @@ class Efficient(QWidget):
                 if self.chosen_algorithm == "interva":
                     tmp_log = os.path.join(self.interva_tmp_dir.name,
                                            "errorlogV5.txt")
-                    # shutil.copyfile(tmp_log, log_file_name)
                     shutil.copyfile(tmp_log, path[0])
                 else:
                     # with open(log_file_name, "w") as f_out:

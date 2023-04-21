@@ -55,7 +55,7 @@ if get_qt_plugins_paths:
 base = "Win32GUI" if sys.platform == "win32" else None
 
 build_exe_options = {
-    "excludes": ["tkinter", "scipy.special", "scipy.spatial", "PyQt5.QtSql"],
+    "excludes": ["tkinter"],
     "include_files": include_files,
 }
 
