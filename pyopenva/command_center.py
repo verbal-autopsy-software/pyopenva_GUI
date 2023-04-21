@@ -28,7 +28,7 @@ from pyopenva.edit_window import EditData, EditableHeaderView
 from pyopenva.insilicova_ui import InSilicoVADialog
 from pyopenva.interva_ui import InterVADialog
 from pyopenva.load import LoadData
-from pyopenva.smartva_ui import SmartVADialog
+# from pyopenva.smartva_ui import SmartVADialog
 from pyopenva.workers import InSilicoVAWorker, InterVAWorker
 from pycrossva.transform import transform
 
@@ -85,13 +85,13 @@ class CommandCenter(QWidget):
         self.interva_log = None
         self.interva_ctrl = {"break": False}
 
-        # initialize SmartVA parameters
-        self.smartva_country = "Unknown"
-        self.smartva_hiv = "False"
-        self.smartva_malaria = "False"
-        self.smartva_hce = "True"
-        self.smartva_freetext = "True"
-        self.smartva_results = None
+        # # initialize SmartVA parameters
+        # self.smartva_country = "Unknown"
+        # self.smartva_hiv = "False"
+        # self.smartva_malaria = "False"
+        # self.smartva_hce = "True"
+        # self.smartva_freetext = "True"
+        # self.smartva_results = None
 
     def create_data_panel(self):
         """Set up data panel for loading, editing, and checking the data."""
@@ -178,8 +178,8 @@ class CommandCenter(QWidget):
             self.interva_log = None
             self.label_interva_progress.setText("")
             self.interva_pbar.setValue(0)
-            self.smartva_results = None
-            self.label_smartva_progress.setText("")
+            # self.smartva_results = None
+            # self.label_smartva_progress.setText("")
 
     def update_data(self):
         """Update status of data."""
@@ -640,7 +640,7 @@ class CommandCenter(QWidget):
 
         self.create_insilicova_box()
         self.create_interva_box()
-        self.create_smartva_box()
+        # self.create_smartva_box()
         # self.btn_algorithm_results = QPushButton("Results")
 
         algorithm_panel_v_box.addWidget(self.insilicova_box)
@@ -649,17 +649,17 @@ class CommandCenter(QWidget):
         algorithm_panel_v_box.addWidget(self.interva_box)
         #algorithm_panel_v_box.addStretch(1)
         # algorithm_panel_v_box.addLayout(self.smartva_box)
-        algorithm_panel_v_box.addWidget(self.smartva_box)
+        # algorithm_panel_v_box.addWidget(self.smartva_box)
         #algorithm_panel_v_box.addStretch(1)
         # algorithm_panel_v_box.addWidget(self.btn_algorithm_results)
         self.algorithm_panel = QGroupBox("Algorithms")
         self.algorithm_panel.setLayout(algorithm_panel_v_box)
         self.btn_insilicova_options.clicked.connect(self.run_insilicova_dialog)
         self.btn_interva_options.clicked.connect(self.run_interva_dialog)
-        self.btn_smartva_options.clicked.connect(self.run_smartva_dialog)
+        # self.btn_smartva_options.clicked.connect(self.run_smartva_dialog)
         self.btn_insilicova_run.clicked.connect(self.run_insilicova)
         self.btn_interva_run.clicked.connect(self.run_interva)
-        self.btn_smartva_run.clicked.connect(self.run_smartva)
+        # self.btn_smartva_run.clicked.connect(self.run_smartva)
         # self.btn_interva_options.clicked.connect(self.run_interva_dialog)
         # self.btn_smartva_options.clicked.connect(self.run_smartva_dialog)
 
@@ -721,36 +721,36 @@ class CommandCenter(QWidget):
         interva_vbox.addWidget(self.btn_download_interva_log)
         self.interva_box.setLayout(interva_vbox)
 
-    def create_smartva_box(self):
-        """Set up box of widgets for SmartVA."""
-
-        # self.smartva_box = QVBoxLayout()
-        # smartva_label = QLabel("SmartVA")
-        # smartva_hbox_2 = QHBoxLayout()
-        # self.btn_smartva_options = QPushButton("Set Options")
-        # self.btn_smartva_run = QPushButton("Run SmartVA")
-        # smartva_hbox_2.addWidget(self.btn_smartva_options)
-        # smartva_hbox_2.addWidget(self.btn_smartva_run)
-        # self.smartva_pbar = QProgressBar(self)
-        # self.label_smartva_progress = QLabel("")
-        # self.smartva_box.addWidget(smartva_label)
-        # self.smartva_box.addLayout(smartva_hbox_2)
-        # self.smartva_box.addWidget(self.smartva_pbar)
-        # self.smartva_box.addWidget(self.label_smartva_progress)
-        self.smartva_box = QGroupBox("SmartVA")
-        smartva_vbox = QVBoxLayout()
-        smartva_hbox = QHBoxLayout()
-        self.btn_smartva_options = QPushButton("Set Options")
-        self.btn_smartva_run = QPushButton("Run SmartVA")
-        smartva_hbox.addWidget(self.btn_smartva_options)
-        smartva_hbox.addWidget(self.btn_smartva_run)
-        self.smartva_pbar = QProgressBar(self)
-        self.label_smartva_progress = QLabel("")
-        smartva_vbox.setAlignment(Qt.AlignCenter)
-        smartva_vbox.addLayout(smartva_hbox)
-        smartva_vbox.addWidget(self.smartva_pbar)
-        smartva_vbox.addWidget(self.label_smartva_progress)
-        self.smartva_box.setLayout(smartva_vbox)
+    # def create_smartva_box(self):
+    #     """Set up box of widgets for SmartVA."""
+    #
+    #     # self.smartva_box = QVBoxLayout()
+    #     # smartva_label = QLabel("SmartVA")
+    #     # smartva_hbox_2 = QHBoxLayout()
+    #     # self.btn_smartva_options = QPushButton("Set Options")
+    #     # self.btn_smartva_run = QPushButton("Run SmartVA")
+    #     # smartva_hbox_2.addWidget(self.btn_smartva_options)
+    #     # smartva_hbox_2.addWidget(self.btn_smartva_run)
+    #     # self.smartva_pbar = QProgressBar(self)
+    #     # self.label_smartva_progress = QLabel("")
+    #     # self.smartva_box.addWidget(smartva_label)
+    #     # self.smartva_box.addLayout(smartva_hbox_2)
+    #     # self.smartva_box.addWidget(self.smartva_pbar)
+    #     # self.smartva_box.addWidget(self.label_smartva_progress)
+    #     self.smartva_box = QGroupBox("SmartVA")
+    #     smartva_vbox = QVBoxLayout()
+    #     smartva_hbox = QHBoxLayout()
+    #     self.btn_smartva_options = QPushButton("Set Options")
+    #     self.btn_smartva_run = QPushButton("Run SmartVA")
+    #     smartva_hbox.addWidget(self.btn_smartva_options)
+    #     smartva_hbox.addWidget(self.btn_smartva_run)
+    #     self.smartva_pbar = QProgressBar(self)
+    #     self.label_smartva_progress = QLabel("")
+    #     smartva_vbox.setAlignment(Qt.AlignCenter)
+    #     smartva_vbox.addLayout(smartva_hbox)
+    #     smartva_vbox.addWidget(self.smartva_pbar)
+    #     smartva_vbox.addWidget(self.label_smartva_progress)
+    #     self.smartva_box.setLayout(smartva_vbox)
 
     def run_insilicova_dialog(self):
         self.insilicova_dialog = InSilicoVADialog(self,
@@ -992,45 +992,45 @@ class CommandCenter(QWidget):
         self.interva_ctrl["break"] = True
         self.btn_interva_stop.setEnabled(False)
 
-    def run_smartva_dialog(self):
-        # self.smartva_dialog = SmartVADialog(self,
-        #                                     self.smartva_country,
-        #                                     self.smartva_hiv,
-        #                                     self.smartva_malaria,
-        #                                     self.smartva_hce,
-        #                                     self.smartva_freetext)
-        # self.smartva_dialog.exec()
-        alert = QMessageBox()
-        alert.setWindowTitle("openVA App")
-        alert.setText("SmartVA is not available (it is based on Python 2" +
-                      "which is no longer supported by the Python Software " +
-                      "Foundation).  It will be included when a version " +
-                      "based on Python 3 is released.")
-        alert.exec()
+    # def run_smartva_dialog(self):
+    #     # self.smartva_dialog = SmartVADialog(self,
+    #     #                                     self.smartva_country,
+    #     #                                     self.smartva_hiv,
+    #     #                                     self.smartva_malaria,
+    #     #                                     self.smartva_hce,
+    #     #                                     self.smartva_freetext)
+    #     # self.smartva_dialog.exec()
+    #     alert = QMessageBox()
+    #     alert.setWindowTitle("openVA App")
+    #     alert.setText("SmartVA is not available (it is based on Python 2" +
+    #                   "which is no longer supported by the Python Software " +
+    #                   "Foundation).  It will be included when a version " +
+    #                   "based on Python 3 is released.")
+    #     alert.exec()
         
-    def run_smartva(self):
-        alert = QMessageBox()
-        alert.setWindowTitle("openVA App")
-        alert.setText("SmartVA is not available (it is based on Python 2" +
-                      "which is no longer supported by the Python Software " +
-                      "Foundation).  It will be included when a version " +
-                      "based on Python 3 is released.")
-        alert.exec()
+    # def run_smartva(self):
+    #     alert = QMessageBox()
+    #     alert.setWindowTitle("openVA App")
+    #     alert.setText("SmartVA is not available (it is based on Python 2" +
+    #                   "which is no longer supported by the Python Software " +
+    #                   "Foundation).  It will be included when a version " +
+    #                   "based on Python 3 is released.")
+    #     alert.exec()
 
-    def update_smartva_country(self, updated_country):
-        self.smartva_country = updated_country
-
-    def update_smartva_hiv(self, updated_hiv):
-        self.smartva_hiv = updated_hiv
-
-    def update_smartva_malaria(self, updated_malaria):
-        self.smartva_malaria = updated_malaria
-
-    def update_smartva_hce(self, updated_hce):
-        self.smartva_hce = updated_hce
-
-    def update_smartva_freetext(self, updated_freetext):
-        self.smartva_freetext = updated_freetext
+    # def update_smartva_country(self, updated_country):
+    #     self.smartva_country = updated_country
+    #
+    # def update_smartva_hiv(self, updated_hiv):
+    #     self.smartva_hiv = updated_hiv
+    #
+    # def update_smartva_malaria(self, updated_malaria):
+    #     self.smartva_malaria = updated_malaria
+    #
+    # def update_smartva_hce(self, updated_hce):
+    #     self.smartva_hce = updated_hce
+    #
+    # def update_smartva_freetext(self, updated_freetext):
+    #     self.smartva_freetext = updated_freetext
 
     def set_data_id_col(self, id_col):
         self.data_id_col = id_col
@@ -1122,9 +1122,9 @@ class CommandCenter(QWidget):
         print(self.hiv)
         print(self.malaria)
 
-    def print_smartva(self):
-        print(self.smartva_country)
-        print(self.smartva_hiv)
-        print(self.smartva_malaria)
-        print(self.smartva_hce)
-        print(self.smartva_freetext)
+    # def print_smartva(self):
+    #     print(self.smartva_country)
+    #     print(self.smartva_hiv)
+    #     print(self.smartva_malaria)
+    #     print(self.smartva_hce)
+    #     print(self.smartva_freetext)

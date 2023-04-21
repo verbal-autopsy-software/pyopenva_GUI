@@ -57,7 +57,7 @@ class WindowManager(QMainWindow):
         self.results.btn_results_ui_exit.clicked.connect(self.close)
 
         # TODO: make this more efficient (it works, but probably a lot of
-        #       redundancies!
+        #       redundancies!)
         self.efficient.btn_go_to_mode.clicked.connect(
             self.show_mode)
 
@@ -77,8 +77,8 @@ class WindowManager(QMainWindow):
         self.efficient.btn_interva.clicked.connect(
             self.show_efficient_interva_page)
 
-        self.efficient.btn_smartva.clicked.connect(
-            self.show_efficient_smartva_page)
+        # self.efficient.btn_smartva.clicked.connect(
+        #     self.show_efficient_smartva_page)
 
         self.efficient.btn_insilicova_to_select_algorithm.clicked.connect(
             self.show_efficient_select_algorithm_from_algorithm)
@@ -90,10 +90,10 @@ class WindowManager(QMainWindow):
 
         self.efficient.btn_interva_ui_exit.clicked.connect(self.close)
 
-        self.efficient.btn_smartva_to_select_algorithm.clicked.connect(
-            self.show_efficient_select_algorithm_from_algorithm)
-
-        self.efficient.btn_smartva_ui_exit.clicked.connect(self.close)
+        # self.efficient.btn_smartva_to_select_algorithm.clicked.connect(
+        #     self.show_efficient_select_algorithm_from_algorithm)
+        #
+        # self.efficient.btn_smartva_ui_exit.clicked.connect(self.close)
 
         self.efficient.btn_go_to_results_page.clicked.connect(
             self.show_efficient_results_page)
@@ -105,18 +105,18 @@ class WindowManager(QMainWindow):
         self.efficient.btn_results_ui_exit.clicked.connect(self.close)
 
         # update results
-        # self.command_center.btn_interva_run.clicked.connect(
-        #     lambda: self.update_interva_results(
-        #         self.command_center.interva_results,
-        #         self.command_center.interva_tmp_dir))
+        self.command_center.btn_interva_run.clicked.connect(
+            lambda: self.update_interva_results(
+                self.command_center.interva_results,
+                self.command_center.interva_tmp_dir))
 
-        # self.command_center.btn_insilicova_run.clicked.connect(
-        #     lambda: self.update_insilicova_results(
-        #         self.command_center.insilicova_results))
+        self.command_center.btn_insilicova_run.clicked.connect(
+            lambda: self.update_insilicova_results(
+                self.command_center.insilicova_results))
 
-        self.command_center.btn_smartva_run.clicked.connect(
-            lambda: self.update_smartva_results(
-                self.command_center.smartva_results))
+        # self.command_center.btn_smartva_run.clicked.connect(
+        #     lambda: self.update_smartva_results(
+        #         self.command_center.smartva_results))
 
     def show_efficient(self):
         self.stacked_layout.setCurrentIndex(3)
@@ -151,8 +151,8 @@ class WindowManager(QMainWindow):
             self.show_efficient_insilicova_page()
         elif self.efficient.chosen_algorithm == "interva":
             self.show_efficient_interva_page()
-        else:
-            self.show_efficient_smartva_page()
+        # else:
+        #     self.show_efficient_smartva_page()
 
     def show_efficient_insilicova_page(self):
         self.efficient.show_insilicova_page()
@@ -165,16 +165,16 @@ class WindowManager(QMainWindow):
         self.efficient.show_interva_page()
         self.setWindowTitle("openVA App: InterVA")
 
-    def show_efficient_smartva_page(self):
-        # self.efficient.show_smartva_page()
-        # self.setWindowTitle("openVA App: SmartVA")
-        alert = QMessageBox()
-        alert.setWindowTitle("openVA App")
-        alert.setText("SmartVA is not available (it is based on Python 2" +
-                      "which is no longer supported by the Python Software " +
-                      "Foundation).  It will be included when a verison " +
-                      "based on Python 3 is released.")
-        alert.exec()
+    # def show_efficient_smartva_page(self):
+    #     # self.efficient.show_smartva_page()
+    #     # self.setWindowTitle("openVA App: SmartVA")
+    #     alert = QMessageBox()
+    #     alert.setWindowTitle("openVA App")
+    #     alert.setText("SmartVA is not available (it is based on Python 2" +
+    #                   "which is no longer supported by the Python Software " +
+    #                   "Foundation).  It will be included when a verison " +
+    #                   "based on Python 3 is released.")
+    #     alert.exec()
 
     def show_efficient_results_page(self):
         self.efficient.show_results_page()
@@ -192,8 +192,8 @@ class WindowManager(QMainWindow):
     def update_insilicova_results(self, new_results):
         self.results.update_insilicova(new_results)
 
-    def update_smartva_results(self, new_results):
-        self.results.update_smartva(new_results)
+    # def update_smartva_results(self, new_results):
+    #     self.results.update_smartva(new_results)
 
     def closeEvent(self, event):
         close = QMessageBox()

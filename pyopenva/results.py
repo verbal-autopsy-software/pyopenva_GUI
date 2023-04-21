@@ -26,12 +26,12 @@ class Results(QWidget):
         self.insilicova_results = None
         self.interva_results = None
         self.interva_tmp_dir = None
-        self.smartva_results = None
+        # self.smartva_results = None
         self.n_top_causes = 5
         self.results_v_box = QVBoxLayout()
         self.create_insilicova_panel()
         self.create_interva_panel()
-        self.create_smartva_panel()
+        # self.create_smartva_panel()
 
         self.spinbox_n_causes = QSpinBox()
         self.spinbox_n_causes.setRange(1, 64)
@@ -45,7 +45,7 @@ class Results(QWidget):
         self.results_tabs = QTabWidget()
         self.results_tabs.addTab(self.insilicova_panel, "InSilicoVA")
         self.results_tabs.addTab(self.interva_panel, "InterVA")
-        self.results_tabs.addTab(self.smartva_panel, "SmartVA")
+        # self.results_tabs.addTab(self.smartva_panel, "SmartVA")
         self.results_v_box.addWidget(self.results_tabs)
         hbox_navigate = QHBoxLayout()
         self.btn_go_to_mode = QPushButton("Go Back to User Mode Selection")
@@ -151,35 +151,35 @@ class Results(QWidget):
         self.interva_panel = QWidget()
         self.interva_panel.setLayout(layout)
 
-    def create_smartva_panel(self):
-        layout = QVBoxLayout()
-
-        vbox_table = QVBoxLayout()
-        self.btn_smartva_table = QPushButton("Show \n CSMF Table")
-        self.btn_smartva_table.clicked.connect(self.smartva_table)
-        self.btn_save_smartva_table = QPushButton("Download CSMF Table")
-        self.btn_save_smartva_table.clicked.connect(self.download_smartva_table)
-        vbox_table.addWidget(self.btn_smartva_table)
-        vbox_table.addWidget(self.btn_save_smartva_table)
-
-        vbox_plot = QVBoxLayout()
-        self.btn_smartva_plot = QPushButton("Show \n CSMF Plot")
-        self.btn_smartva_plot.clicked.connect(self.smartva_plot)
-        self.btn_save_smartva_plot = QPushButton("Download CSMF Plot")
-        self.btn_save_smartva_plot.clicked.connect(self.download_smartva_plot)
-        vbox_plot.addWidget(self.btn_smartva_plot)
-        vbox_plot.addWidget(self.btn_save_smartva_plot)
-
-        hbox = QHBoxLayout()
-        hbox.addLayout(vbox_table)
-        hbox.addLayout(vbox_plot)
-        layout.addLayout(hbox)
-        self.btn_save_smartva_indiv = QPushButton(
-            "Download \n Individual Cause Assignments")
-        self.btn_save_smartva_indiv.clicked.connect(self.download_smartva_indiv)
-        layout.addWidget(self.btn_save_smartva_indiv)
-        self.smartva_panel = QWidget()
-        self.smartva_panel.setLayout(layout)
+    # def create_smartva_panel(self):
+    #     layout = QVBoxLayout()
+    #
+    #     vbox_table = QVBoxLayout()
+    #     self.btn_smartva_table = QPushButton("Show \n CSMF Table")
+    #     self.btn_smartva_table.clicked.connect(self.smartva_table)
+    #     self.btn_save_smartva_table = QPushButton("Download CSMF Table")
+    #     self.btn_save_smartva_table.clicked.connect(self.download_smartva_table)
+    #     vbox_table.addWidget(self.btn_smartva_table)
+    #     vbox_table.addWidget(self.btn_save_smartva_table)
+    #
+    #     vbox_plot = QVBoxLayout()
+    #     self.btn_smartva_plot = QPushButton("Show \n CSMF Plot")
+    #     self.btn_smartva_plot.clicked.connect(self.smartva_plot)
+    #     self.btn_save_smartva_plot = QPushButton("Download CSMF Plot")
+    #     self.btn_save_smartva_plot.clicked.connect(self.download_smartva_plot)
+    #     vbox_plot.addWidget(self.btn_smartva_plot)
+    #     vbox_plot.addWidget(self.btn_save_smartva_plot)
+    #
+    #     hbox = QHBoxLayout()
+    #     hbox.addLayout(vbox_table)
+    #     hbox.addLayout(vbox_plot)
+    #     layout.addLayout(hbox)
+    #     self.btn_save_smartva_indiv = QPushButton(
+    #         "Download \n Individual Cause Assignments")
+    #     self.btn_save_smartva_indiv.clicked.connect(self.download_smartva_indiv)
+    #     layout.addWidget(self.btn_save_smartva_indiv)
+    #     self.smartva_panel = QWidget()
+    #     self.smartva_panel.setLayout(layout)
 
     def interva_plot(self):
         if self.interva_results is None:
@@ -424,50 +424,50 @@ class Results(QWidget):
         indiv_cod = indiv_cod.reset_index(names="ID")
         return indiv_cod
 
-    def smartva_plot(self):
-        alert = QMessageBox()
-        alert.setWindowTitle("openVA App")
-        alert.setText("SmartVA is not available (it is based on Python 2" +
-                      "which is no longer supported by the Python Software " +
-                      "Foundation).  It will be included when a version " +
-                      "based on Python 3 is released.")
-        alert.exec()
+    # def smartva_plot(self):
+    #     alert = QMessageBox()
+    #     alert.setWindowTitle("openVA App")
+    #     alert.setText("SmartVA is not available (it is based on Python 2" +
+    #                   "which is no longer supported by the Python Software " +
+    #                   "Foundation).  It will be included when a version " +
+    #                   "based on Python 3 is released.")
+    #     alert.exec()
 
-    def smartva_table(self):
-        alert = QMessageBox()
-        alert.setWindowTitle("openVA App")
-        alert.setText("SmartVA is not available (it is based on Python 2" +
-                      "which is no longer supported by the Python Software " +
-                      "Foundation).  It will be included when a version " +
-                      "based on Python 3 is released.")
-        alert.exec()
+    # def smartva_table(self):
+    #     alert = QMessageBox()
+    #     alert.setWindowTitle("openVA App")
+    #     alert.setText("SmartVA is not available (it is based on Python 2" +
+    #                   "which is no longer supported by the Python Software " +
+    #                   "Foundation).  It will be included when a version " +
+    #                   "based on Python 3 is released.")
+    #     alert.exec()
 
-    def download_smartva_plot(self):
-        alert = QMessageBox()
-        alert.setWindowTitle("openVA App")
-        alert.setText("SmartVA is not available (it is based on Python 2" +
-                      "which is no longer supported by the Python Software " +
-                      "Foundation).  It will be included when a version " +
-                      "based on Python 3 is released.")
-        alert.exec()
+    # def download_smartva_plot(self):
+    #     alert = QMessageBox()
+    #     alert.setWindowTitle("openVA App")
+    #     alert.setText("SmartVA is not available (it is based on Python 2" +
+    #                   "which is no longer supported by the Python Software " +
+    #                   "Foundation).  It will be included when a version " +
+    #                   "based on Python 3 is released.")
+    #     alert.exec()
+    #
+    # def download_smartva_table(self):
+    #     alert = QMessageBox()
+    #     alert.setWindowTitle("openVA App")
+    #     alert.setText("SmartVA is not available (it is based on Python 2" +
+    #                   "which is no longer supported by the Python Software " +
+    #                   "Foundation).  It will be included when a version " +
+    #                   "based on Python 3 is released.")
+    #     alert.exec()
 
-    def download_smartva_table(self):
-        alert = QMessageBox()
-        alert.setWindowTitle("openVA App")
-        alert.setText("SmartVA is not available (it is based on Python 2" +
-                      "which is no longer supported by the Python Software " +
-                      "Foundation).  It will be included when a version " +
-                      "based on Python 3 is released.")
-        alert.exec()
-
-    def download_smartva_indiv(self):
-        alert = QMessageBox()
-        alert.setWindowTitle("openVA App")
-        alert.setText("SmartVA is not available (it is based on Python 2" +
-                      "which is no longer supported by the Python Software " +
-                      "Foundation).  It will be included when a version " +
-                      "based on Python 3 is released.")
-        alert.exec()
+    # def download_smartva_indiv(self):
+    #     alert = QMessageBox()
+    #     alert.setWindowTitle("openVA App")
+    #     alert.setText("SmartVA is not available (it is based on Python 2" +
+    #                   "which is no longer supported by the Python Software " +
+    #                   "Foundation).  It will be included when a version " +
+    #                   "based on Python 3 is released.")
+    #     alert.exec()
 
     # def update_interva(self, new_interva_results, tmp_dir):
     #     self.interva_results = new_interva_results
@@ -482,8 +482,8 @@ class Results(QWidget):
     def update_insilicova(self, new_insilicova_results):
         self.insilicova_results = new_insilicova_results
 
-    def update_smartva(self, new_smartva_results):
-        self.smartva_results = new_smartva_results
+    # def update_smartva(self, new_smartva_results):
+    #     self.smartva_results = new_smartva_results
 
     def set_n_top_causes(self, n):
         self.n_top_causes = n

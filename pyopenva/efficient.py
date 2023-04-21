@@ -61,13 +61,13 @@ class Efficient(QWidget):
         self.label_interva_progress = QLabel("(no results)")
         self.interva_ctrl = {"break": False}
         self.interva_ui()
-        self.smartva_page = QWidget()
-        self.smartva_country = "Unknown"
-        self.smartva_hiv = "True"
-        self.smartva_malaria = "True"
-        self.smartva_hce = "True"
-        self.smartva_freetext = "True"
-        self.smartva_ui()
+        # self.smartva_page = QWidget()
+        # self.smartva_country = "Unknown"
+        # self.smartva_hiv = "True"
+        # self.smartva_malaria = "True"
+        # self.smartva_hce = "True"
+        # self.smartva_freetext = "True"
+        # self.smartva_ui()
         self.results_page = QWidget()
         self.btn_show_plot = None
         self.btn_show_table = None
@@ -82,7 +82,7 @@ class Efficient(QWidget):
         self.stacked_layout.addWidget(self.select_algorithm_page)
         self.stacked_layout.addWidget(self.insilicova_page)
         self.stacked_layout.addWidget(self.interva_page)
-        self.stacked_layout.addWidget(self.smartva_page)
+        # self.stacked_layout.addWidget(self.smartva_page)
         self.stacked_layout.addWidget(self.results_page)
 
         self.main_layout = QVBoxLayout()
@@ -165,17 +165,17 @@ class Efficient(QWidget):
         self.btn_interva.setMaximumWidth(400)
         self.btn_interva.pressed.connect(
             lambda: self.set_chosen_algorithm("interva"))
-        self.btn_smartva = QPushButton("SmartVA")
-        self.btn_smartva.setMaximumWidth(400)
-        self.btn_smartva.pressed.connect(
-            lambda: self.set_chosen_algorithm("smartva"))
+        # self.btn_smartva = QPushButton("SmartVA")
+        # self.btn_smartva.setMaximumWidth(400)
+        # self.btn_smartva.pressed.connect(
+        #     lambda: self.set_chosen_algorithm("smartva"))
         layout.addWidget(label_select_algorithm)
         layout.addWidget(self.btn_insilicova)
         layout.addStretch(1)
         layout.addWidget(self.btn_interva)
         layout.addStretch(1)
-        layout.addWidget(self.btn_smartva)
-        layout.addStretch(1)
+        # layout.addWidget(self.btn_smartva)
+        # layout.addStretch(1)
         hbox = QHBoxLayout()
         self.btn_go_to_data_page = QPushButton("Back")
         self.btn_algorithm_ui_exit = QPushButton("Exit")
@@ -329,69 +329,69 @@ class Efficient(QWidget):
         layout.addLayout(h_box)
         self.interva_page.setLayout(layout)
 
-    def smartva_ui(self):
-        layout = QVBoxLayout()
-        label_country = QLabel("Data origin country")
-        self.smartva_combo_country = QComboBox()
-        self.smartva_combo_country.addItems(COUNTRIES)
-        self.smartva_combo_country.setCurrentIndex(
-            COUNTRIES.index(self.smartva_country))
-        self.smartva_combo_country.currentTextChanged.connect(
-            self.set_smartva_country)
-        option_set = ["True", "False"]
-        label_hiv = QLabel("Data is from an HIV region")
-        self.smartva_combo_hiv = QComboBox()
-        self.smartva_combo_hiv.addItems(option_set)
-        self.smartva_combo_hiv.setCurrentIndex(
-            option_set.index(self.smartva_hiv))
-        self.smartva_combo_hiv.currentTextChanged.connect(
-            self.set_smartva_hiv)
-        label_malaria = QLabel("Data is from a Malaria region")
-        self.smartva_combo_malaria = QComboBox()
-        self.smartva_combo_malaria.addItems(option_set)
-        self.smartva_combo_malaria.setCurrentIndex(
-            option_set.index(self.smartva_malaria))
-        self.smartva_combo_malaria.currentTextChanged.connect(
-            self.set_smartva_malaria)
-        label_hce = QLabel("Use Health Care Experience (HCE) variables")
-        self.smartva_combo_hce = QComboBox()
-        self.smartva_combo_hce.addItems(option_set)
-        self.smartva_combo_hce.setCurrentIndex(
-            option_set.index(self.smartva_hce))
-        self.smartva_combo_hce.currentTextChanged.connect(
-            self.set_smartva_hce)
-        label_freetext = QLabel("Use 'free text' variables")
-        self.smartva_combo_freetext = QComboBox()
-        self.smartva_combo_freetext.addItems(option_set)
-        self.smartva_combo_freetext.setCurrentIndex(
-            option_set.index(self.smartva_freetext))
-        self.smartva_combo_freetext.currentTextChanged.connect(
-            self.set_smartva_freetext)
-        self.btn_smartva_run = QPushButton("Run SmartVA")
-        self.btn_smartva_to_select_algorithm = QPushButton("Back")
-        self.btn_go_to_results_page = QPushButton("Show Results")
-        self.btn_go_to_results_page.pressed.connect(
-            self.show_results_page)
-        self.btn_smartva_ui_exit = QPushButton("Exit")
-
-        layout.addWidget(label_country)
-        layout.addWidget(self.smartva_combo_country)
-        layout.addWidget(label_hiv)
-        layout.addWidget(self.smartva_combo_hiv)
-        layout.addWidget(label_malaria)
-        layout.addWidget(self.smartva_combo_malaria)
-        layout.addWidget(label_hce)
-        layout.addWidget(self.smartva_combo_hce)
-        layout.addWidget(label_freetext)
-        layout.addWidget(self.smartva_combo_freetext)
-        layout.addWidget(self.btn_smartva_run)
-        layout.addStretch(1)
-        h_box = QHBoxLayout()
-        h_box.addWidget(self.btn_smartva_to_select_algorithm)
-        h_box.addWidget(self.btn_go_to_results_page)
-        h_box.addWidget(self.btn_smartva_ui_exit)
-        layout.addLayout(h_box)
-        self.smartva_page.setLayout(layout)
+    # def smartva_ui(self):
+    #     layout = QVBoxLayout()
+    #     label_country = QLabel("Data origin country")
+    #     self.smartva_combo_country = QComboBox()
+    #     self.smartva_combo_country.addItems(COUNTRIES)
+    #     self.smartva_combo_country.setCurrentIndex(
+    #         COUNTRIES.index(self.smartva_country))
+    #     self.smartva_combo_country.currentTextChanged.connect(
+    #         self.set_smartva_country)
+    #     option_set = ["True", "False"]
+    #     label_hiv = QLabel("Data is from an HIV region")
+    #     self.smartva_combo_hiv = QComboBox()
+    #     self.smartva_combo_hiv.addItems(option_set)
+    #     self.smartva_combo_hiv.setCurrentIndex(
+    #         option_set.index(self.smartva_hiv))
+    #     self.smartva_combo_hiv.currentTextChanged.connect(
+    #         self.set_smartva_hiv)
+    #     label_malaria = QLabel("Data is from a Malaria region")
+    #     self.smartva_combo_malaria = QComboBox()
+    #     self.smartva_combo_malaria.addItems(option_set)
+    #     self.smartva_combo_malaria.setCurrentIndex(
+    #         option_set.index(self.smartva_malaria))
+    #     self.smartva_combo_malaria.currentTextChanged.connect(
+    #         self.set_smartva_malaria)
+    #     label_hce = QLabel("Use Health Care Experience (HCE) variables")
+    #     self.smartva_combo_hce = QComboBox()
+    #     self.smartva_combo_hce.addItems(option_set)
+    #     self.smartva_combo_hce.setCurrentIndex(
+    #         option_set.index(self.smartva_hce))
+    #     self.smartva_combo_hce.currentTextChanged.connect(
+    #         self.set_smartva_hce)
+    #     label_freetext = QLabel("Use 'free text' variables")
+    #     self.smartva_combo_freetext = QComboBox()
+    #     self.smartva_combo_freetext.addItems(option_set)
+    #     self.smartva_combo_freetext.setCurrentIndex(
+    #         option_set.index(self.smartva_freetext))
+    #     self.smartva_combo_freetext.currentTextChanged.connect(
+    #         self.set_smartva_freetext)
+    #     self.btn_smartva_run = QPushButton("Run SmartVA")
+    #     self.btn_smartva_to_select_algorithm = QPushButton("Back")
+    #     self.btn_go_to_results_page = QPushButton("Show Results")
+    #     self.btn_go_to_results_page.pressed.connect(
+    #         self.show_results_page)
+    #     self.btn_smartva_ui_exit = QPushButton("Exit")
+    #
+    #     layout.addWidget(label_country)
+    #     layout.addWidget(self.smartva_combo_country)
+    #     layout.addWidget(label_hiv)
+    #     layout.addWidget(self.smartva_combo_hiv)
+    #     layout.addWidget(label_malaria)
+    #     layout.addWidget(self.smartva_combo_malaria)
+    #     layout.addWidget(label_hce)
+    #     layout.addWidget(self.smartva_combo_hce)
+    #     layout.addWidget(label_freetext)
+    #     layout.addWidget(self.smartva_combo_freetext)
+    #     layout.addWidget(self.btn_smartva_run)
+    #     layout.addStretch(1)
+    #     h_box = QHBoxLayout()
+    #     h_box.addWidget(self.btn_smartva_to_select_algorithm)
+    #     h_box.addWidget(self.btn_go_to_results_page)
+    #     h_box.addWidget(self.btn_smartva_ui_exit)
+    #     layout.addLayout(h_box)
+    #     self.smartva_page.setLayout(layout)
 
     def results_ui(self):
         layout = QVBoxLayout()
@@ -572,21 +572,21 @@ class Efficient(QWidget):
     def set_interva_malaria(self, updated_malaria):
         self.interva_malaria = updated_malaria
 
-    def set_smartva_country(self, updated_country):
-        self.smartva_country = updated_country
-
-    def set_smartva_hiv(self, updated_hiv):
-        self.smartva_hiv = updated_hiv
-
-    def set_smartva_malaria(self, updated_malaria):
-        self.smartva_malaria = updated_malaria
-
-    def set_smartva_hce(self, updated_hce):
-        self.smartva_hce = updated_hce
-
-    def set_smartva_freetext(self, updated_freetext):
-        self.smartva_freetext = updated_freetext
-
+    # def set_smartva_country(self, updated_country):
+    #     self.smartva_country = updated_country
+    #
+    # def set_smartva_hiv(self, updated_hiv):
+    #     self.smartva_hiv = updated_hiv
+    #
+    # def set_smartva_malaria(self, updated_malaria):
+    #     self.smartva_malaria = updated_malaria
+    #
+    # def set_smartva_hce(self, updated_hce):
+    #     self.smartva_hce = updated_hce
+    #
+    # def set_smartva_freetext(self, updated_freetext):
+    #     self.smartva_freetext = updated_freetext
+    #
     def set_chosen_algorithm(self, updated_choice):
         self.chosen_algorithm = updated_choice
 
@@ -602,8 +602,8 @@ class Efficient(QWidget):
             self.show_insilicova_page()
         elif self.chosen_algorithm == "interva":
             self.show_interva_page()
-        else:
-            self.show_smartva_page()
+        # else:
+        #     self.show_smartva_page()
 
     def show_select_algorithm_page(self):
         self.stacked_layout.setCurrentIndex(1)
@@ -614,15 +614,16 @@ class Efficient(QWidget):
     def show_interva_page(self):
         self.stacked_layout.setCurrentIndex(3)
 
-    def show_smartva_page(self):
-        self.stacked_layout.setCurrentIndex(4)
+    # def show_smartva_page(self):
+    #     self.stacked_layout.setCurrentIndex(4)
 
     def show_results_page(self):
         if self.chosen_algorithm == "insilicova":
             self.chbox_insilicova_include_probs.show()
         else:
             self.chbox_insilicova_include_probs.hide()
-        self.stacked_layout.setCurrentIndex(5)
+        # self.stacked_layout.setCurrentIndex(5)
+        self.stacked_layout.setCurrentIndex(4)
 
     def run_insilicova(self):
         self.insilicova_ctrl["break"] = False
