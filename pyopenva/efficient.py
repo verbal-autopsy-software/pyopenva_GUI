@@ -169,6 +169,7 @@ class Efficient(QWidget):
         # self.btn_smartva.setMaximumWidth(400)
         # self.btn_smartva.pressed.connect(
         #     lambda: self.set_chosen_algorithm("smartva"))
+        layout.addStretch(1)
         layout.addWidget(label_select_algorithm)
         layout.addWidget(self.btn_insilicova)
         layout.addStretch(1)
@@ -187,38 +188,38 @@ class Efficient(QWidget):
 
     def insilicova_ui(self):
         layout = QVBoxLayout()
-        gbox_options = QGroupBox("Set Options")
-        layout_options = QVBoxLayout()
-        layout_n_iter = QHBoxLayout()
-        layout_auto = QHBoxLayout()
-        layout_seed = QHBoxLayout()
-        label_n_iter = QLabel("Number of Iterations (range: 400 - 8000):")
-        spinbox_n_iter = QSpinBox()
-        spinbox_n_iter.setRange(400, 8000)
-        spinbox_n_iter.setSingleStep(100)
-        spinbox_n_iter.setAlignment(Qt.AlignCenter)
-        spinbox_n_iter.setValue(self.insilicova_n_sim)
-        spinbox_n_iter.valueChanged.connect(self.set_insilicova_n_sim)
-        spinbox_n_iter.setMaximumWidth(150)
-        label_auto_length = QLabel("Automatically increase chain length")
-        option_set = ["True", "False"]
-        self.insilicova_combo_auto = QComboBox()
-        self.insilicova_combo_auto.addItems(option_set)
-        self.insilicova_combo_auto.setEditable(True)
-        self.insilicova_combo_auto.lineEdit().setReadOnly(True)
-        self.insilicova_combo_auto.lineEdit().setAlignment(Qt.AlignCenter)
-        self.insilicova_combo_auto.setMaximumWidth(150)
-        self.insilicova_combo_auto.setCurrentIndex(
-            option_set.index(self.insilicova_auto))
-        self.insilicova_combo_auto.currentTextChanged.connect(
-            self.set_insilicova_auto)
-        label_seed = QLabel("Set Seed:")
-        spinbox_seed = QSpinBox()
-        spinbox_seed.setRange(1, 10000)
-        spinbox_seed.setAlignment(Qt.AlignCenter)
-        spinbox_seed.setValue(self.insilicova_seed)
-        spinbox_seed.valueChanged.connect(self.set_insilicova_seed)
-        spinbox_seed.setMaximumWidth(150)
+        # gbox_options = QGroupBox("Set Options")
+        # layout_options = QVBoxLayout()
+        # layout_n_iter = QHBoxLayout()
+        # layout_auto = QHBoxLayout()
+        # layout_seed = QHBoxLayout()
+        # label_n_iter = QLabel("Number of Iterations (range: 400 - 8000):")
+        # spinbox_n_iter = QSpinBox()
+        # spinbox_n_iter.setRange(400, 8000)
+        # spinbox_n_iter.setSingleStep(100)
+        # spinbox_n_iter.setAlignment(Qt.AlignCenter)
+        # spinbox_n_iter.setValue(self.insilicova_n_sim)
+        # spinbox_n_iter.valueChanged.connect(self.set_insilicova_n_sim)
+        # spinbox_n_iter.setMaximumWidth(150)
+        # label_auto_length = QLabel("Automatically increase chain length")
+        # option_set = ["True", "False"]
+        # self.insilicova_combo_auto = QComboBox()
+        # self.insilicova_combo_auto.addItems(option_set)
+        # self.insilicova_combo_auto.setEditable(True)
+        # self.insilicova_combo_auto.lineEdit().setReadOnly(True)
+        # self.insilicova_combo_auto.lineEdit().setAlignment(Qt.AlignCenter)
+        # self.insilicova_combo_auto.setMaximumWidth(150)
+        # self.insilicova_combo_auto.setCurrentIndex(
+        #     option_set.index(self.insilicova_auto))
+        # self.insilicova_combo_auto.currentTextChanged.connect(
+        #     self.set_insilicova_auto)
+        # label_seed = QLabel("Set Seed:")
+        # spinbox_seed = QSpinBox()
+        # spinbox_seed.setRange(1, 10000)
+        # spinbox_seed.setAlignment(Qt.AlignCenter)
+        # spinbox_seed.setValue(self.insilicova_seed)
+        # spinbox_seed.valueChanged.connect(self.set_insilicova_seed)
+        # spinbox_seed.setMaximumWidth(150)
         self.btn_insilicova_run = QPushButton("Run InSilicoVA")
         self.btn_insilicova_run.setMaximumWidth(300)
         self.btn_insilicova_run.clicked.connect(self.run_insilicova)
@@ -237,17 +238,17 @@ class Efficient(QWidget):
             self.show_results_page)
         self.btn_insilicova_ui_exit = QPushButton("Exit")
 
-        layout_n_iter.addWidget(label_n_iter)
-        layout_n_iter.addWidget(spinbox_n_iter)
-        layout_auto.addWidget(label_auto_length)
-        layout_auto.addWidget(self.insilicova_combo_auto)
-        layout_seed.addWidget(label_seed)
-        layout_seed.addWidget(spinbox_seed)
-        layout_options.addLayout(layout_n_iter)
-        layout_options.addLayout(layout_auto)
-        layout_options.addLayout(layout_seed)
-        gbox_options.setLayout(layout_options)
-        layout.addWidget(gbox_options)
+        # layout_n_iter.addWidget(label_n_iter)
+        # layout_n_iter.addWidget(spinbox_n_iter)
+        # layout_auto.addWidget(label_auto_length)
+        # layout_auto.addWidget(self.insilicova_combo_auto)
+        # layout_seed.addWidget(label_seed)
+        # layout_seed.addWidget(spinbox_seed)
+        # layout_options.addLayout(layout_n_iter)
+        # layout_options.addLayout(layout_auto)
+        # layout_options.addLayout(layout_seed)
+        # gbox_options.setLayout(layout_options)
+        # layout.addWidget(gbox_options)
         layout.addStretch(1)
         layout.addWidget(self.btn_insilicova_run)
         layout.addWidget(self.insilicova_pbar)
@@ -557,14 +558,14 @@ class Efficient(QWidget):
                 "processed.  Please reload data in the expected format.")
             alert.exec()
 
-    def set_insilicova_n_sim(self, n_sim: int):
-        self.insilicova_n_sim = n_sim
-
-    def set_insilicova_auto(self, auto: str):
-        self.insilicova_auto = auto
-
-    def set_insilicova_seed(self, seed: int):
-        self.insilicova_seed = seed
+    # def set_insilicova_n_sim(self, n_sim: int):
+    #     self.insilicova_n_sim = n_sim
+    #
+    # def set_insilicova_auto(self, auto: str):
+    #     self.insilicova_auto = auto
+    #
+    # def set_insilicova_seed(self, seed: int):
+    #     self.insilicova_seed = seed
 
     def set_interva_hiv(self, updated_hiv):
         self.interva_hiv = updated_hiv
