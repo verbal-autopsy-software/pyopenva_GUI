@@ -107,7 +107,9 @@ class WindowManager(QMainWindow):
         # update results
         self.command_center.btn_interva_run.clicked.connect(
             lambda: self.update_interva_results(
-                self.command_center.interva_results,
+                self.command_center.interva_results))
+        self.command_center.btn_interva_run.clicked.connect(
+            lambda: self.update_interva_tmp_dir(
                 self.command_center.interva_tmp_dir))
 
         self.command_center.btn_insilicova_run.clicked.connect(
