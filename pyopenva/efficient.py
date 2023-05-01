@@ -932,7 +932,7 @@ class Efficient(QWidget):
                         out = self.prepare_insilico_indiv_cod(results)
                         out.to_csv(f, index=False)
                     else:
-                        out = results.out["VA5"]
+                        out = results.out["VA5"].copy()
                         out.drop("WHOLEPROB", axis=1, inplace=True)
                         out.to_csv(f, index=False)
                 if os.path.isfile(path[0]):

@@ -279,7 +279,7 @@ class Results(QWidget):
                                                "CSV Files (*.csv)")
             if path != ("", ""):
                 with open(path[0], "w", newline="") as f:
-                    out = self.interva_results.out["VA5"]
+                    out = self.interva_results.out["VA5"].copy()
                     out.drop("WHOLEPROB", axis=1, inplace=True)
                     out.to_csv(f, index=False)
                 if os.path.isfile(path[0]):
