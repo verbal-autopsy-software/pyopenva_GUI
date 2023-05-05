@@ -125,12 +125,14 @@ class WindowManager(QMainWindow):
         #         self.command_center.smartva_results))
 
         # actions for menu bar
+        act_about = QAction("About openVA App", self)
+        act_about.triggered.connect(self.show_about)
+        act_close = QAction("Exit", self)
+        act_close.triggered.connect(self.close)
         act_goto_eff = QAction("Wizard mode", self)
         act_goto_eff.triggered.connect(self.show_efficient)
         act_goto_cc = QAction("Customizable mode", self)
         act_goto_cc.triggered.connect(self.show_command_center)
-        act_about = QAction("About openVA App", self)
-        act_about.triggered.connect(self.show_about)
         act_load_ex_data_efficient = QAction("Wizard mode", self)
         act_load_ex_data_efficient.triggered.connect(
             self.load_example_data_efficient)
@@ -166,10 +168,12 @@ class WindowManager(QMainWindow):
 
         # setup menu bar
         menu = self.menuBar()
+        menu_file = menu.addMenu("&File")
         menu_nav = menu.addMenu("&Navigate")
         menu_data = menu.addMenu("&Data")
         menu_plot = menu.addMenu("&Plot")
-        menu.addAction(act_about)
+        menu_file.addAction(act_about)
+        menu_file.addAction(act_close)
         menu_nav_go = menu_nav.addMenu("Go to... ")
         menu_nav_go.addAction(act_goto_eff)
         menu_nav_go.addSeparator()
