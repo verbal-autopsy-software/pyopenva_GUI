@@ -5,14 +5,18 @@ pyopenva.main
 ~~~~~~~~~~~~~~
 This module creates user interface for the app.
 """
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QMessageBox,
+from PyQt5.QtWidgets import (QAction, QApplication, QMainWindow, QMessageBox,
                              QStackedLayout, QWidget)
 from PyQt5.QtCore import QCoreApplication
+from PyQt5.QtCore import Qt
+import os
 import sys
+from pandas import read_csv
 from pyopenva.efficient import Efficient
 from pyopenva.mode import Mode
 from pyopenva.command_center import CommandCenter
 from pyopenva.results import Results
+from pyopenva.load import LoadData
 from pyopenva.__version__ import (__description__, __license__, __url__,
                                   __version__)
 
@@ -120,6 +124,73 @@ class WindowManager(QMainWindow):
         #     lambda: self.update_smartva_results(
         #         self.command_center.smartva_results))
 
+        # actions for menu bar
+        act_goto_eff = QAction("Wizard mode", self)
+        act_goto_eff.triggered.connect(self.show_efficient)
+        act_goto_cc = QAction("Customizable mode", self)
+        act_goto_cc.triggered.connect(self.show_command_center)
+        act_about = QAction("About openVA App", self)
+        act_about.triggered.connect(self.show_about)
+        act_load_ex_data_efficient = QAction("Wizard mode", self)
+        act_load_ex_data_efficient.triggered.connect(
+            self.load_example_data_efficient)
+        act_load_ex_data_command_center = QAction("Customizable mode", self)
+        act_load_ex_data_command_center.triggered.connect(
+            self.load_example_data_command_center)
+        # color_list = ["Greys", "Blues", "Greens", "Oranges", "Reds",
+        #               "viridis", "plasma", "inferno"]
+        act_color_greys = QAction("Greys", self)
+        act_color_greys.triggered.connect(
+            lambda: self.set_plot_color("Greys"))
+        act_color_blues = QAction("Blues", self)
+        act_color_blues.triggered.connect(
+            lambda: self.set_plot_color("Blues"))
+        act_color_greens = QAction("Greens", self)
+        act_color_greens.triggered.connect(
+            lambda: self.set_plot_color("Greens"))
+        act_color_oranges = QAction("Oranges", self)
+        act_color_oranges.triggered.connect(
+            lambda: self.set_plot_color("Oranges"))
+        act_color_reds = QAction("Reds", self)
+        act_color_reds.triggered.connect(
+            lambda: self.set_plot_color("Reds"))
+        act_color_viridis = QAction("viridis", self)
+        act_color_viridis.triggered.connect(
+            lambda: self.set_plot_color("viridis"))
+        act_color_plasma = QAction("plasma", self)
+        act_color_plasma.triggered.connect(
+            lambda: self.set_plot_color("plasma"))
+        act_color_inferno = QAction("inferno", self)
+        act_color_inferno.triggered.connect(
+            lambda: self.set_plot_color("inferno"))
+
+        # setup menu bar
+        menu = self.menuBar()
+        menu_nav = menu.addMenu("&Navigate")
+        menu_data = menu.addMenu("&Data")
+        menu_plot = menu.addMenu("&Plot")
+        menu.addAction(act_about)
+        menu_nav_go = menu_nav.addMenu("Go to... ")
+        menu_nav_go.addAction(act_goto_eff)
+        menu_nav_go.addSeparator()
+        menu_nav_go.addAction(act_goto_cc)
+        menu_data_load = menu_data.addMenu("Load example data in...")
+        menu_data_load.addAction(act_load_ex_data_efficient)
+        menu_data_load.addSeparator()
+        menu_data_load.addAction(act_load_ex_data_command_center)
+        menu_plot_color = menu_plot.addMenu("Choose plot color...")
+        menu_plot_color_blind = menu_plot_color.addMenu("Colorblind-Friendly")
+        menu_plot_color.addSeparator()
+        menu_plot_color_alt = menu_plot_color.addMenu("Alternates")
+        menu_plot_color_blind.addAction(act_color_greys)
+        menu_plot_color_blind.addAction(act_color_blues)
+        menu_plot_color_blind.addAction(act_color_greens)
+        menu_plot_color_blind.addAction(act_color_oranges)
+        menu_plot_color_blind.addAction(act_color_reds)
+        menu_plot_color_alt.addAction(act_color_viridis)
+        menu_plot_color_alt.addAction(act_color_plasma)
+        menu_plot_color_alt.addAction(act_color_inferno)
+
     def show_efficient(self):
         self.stacked_layout.setCurrentIndex(3)
         self.setWindowTitle("openVA App: load and prepare data")
@@ -196,6 +267,90 @@ class WindowManager(QMainWindow):
 
     # def update_smartva_results(self, new_results):
     #     self.results.update_smartva(new_results)
+    
+    def load_example_data_efficient(self):
+        path = self.find_data_file("data/who151_odk_export.csv")
+        self.efficient.data = read_csv(path)
+        f_name = "example data set"
+        n_records = self.efficient.data.shape[0]
+        self.efficient.label_data.setAlignment(Qt.AlignLeft)
+        self.efficient.label_data.setText("Data loaded:")
+        self.efficient.label_data_fname.setAlignment(Qt.AlignCenter)
+        self.efficient.label_data_fname.setText(f"{f_name}")
+        self.efficient.label_data_n_records.setAlignment(Qt.AlignCenter)
+        self.efficient.label_data_n_records.setText(f"({n_records} records)")
+        self.efficient.data_loaded = True
+        self.efficient.combo_data_id_col.blockSignals(True)
+        self.efficient.combo_data_id_col.clear()
+        self.efficient.combo_data_id_col.addItems(
+            ["no ID column"] + list(self.efficient.data)
+        )
+        self.efficient.combo_data_id_col.blockSignals(False)
+        self.efficient.combo_data_id_col.setCurrentIndex(0)
+        # reset app
+        # TODO: create method for clearing results
+        self.efficient.label_insilicova_progress.setText(
+            "(no results)")
+        self.efficient.insilicova_warnings = None
+        self.efficient.insilicova_errors = None
+        self.efficient.insilicova_results = None
+        self.efficient.label_interva_progress.setText(
+            "(no results)")
+        self.efficient.insilicova_pbar.setValue(0)
+        self.efficient.interva_log = None
+        self.efficient.interva_results = None
+        self.efficient.interva_pbar.setValue(0)
+        self.efficient.pycrossva_data = None
+        self.show_efficient()
+    
+    def load_example_data_command_center(self):
+        path = self.find_data_file("data/who151_odk_export.csv")
+        self.command_center.load_window = LoadData(input_fname=path)
+        self.command_center.btn_edit_data.setEnabled(True)
+        n_records = len(self.command_center.load_window.data) - 1
+        f_name = self.command_center.load_window.fname.split("/")[-1]
+        self.command_center.label_data.setAlignment(Qt.AlignLeft)
+        self.command_center.label_data.setText("Data loaded:")
+        self.command_center.label_data_fname.setAlignment(Qt.AlignCenter)
+        self.command_center.label_data_fname.setText(f"{f_name}")
+        self.command_center.label_data_n_records.setAlignment(Qt.AlignCenter)
+        self.command_center.label_data_n_records.setText(
+            f"({n_records} records)")
+        self.command_center.label_pycrossva_status.setText(
+            "(need to run pyCrossVA)")
+        self.command_center.combo_data_id_col.blockSignals(True)
+        self.command_center.combo_data_id_col.clear()
+        self.command_center.combo_data_id_col.addItems(
+            ["no ID column"] + self.command_center.load_window.header[0])
+        self.command_center.combo_data_id_col.blockSignals(False)
+        self.command_center.combo_data_id_col.setCurrentIndex(0)
+
+        self.command_center.pycrossva_data = None
+        self.command_center.insilicova_results = None
+        self.command_center.label_insilicova_progress.setText("")
+        self.command_center.insilicova_pbar.setValue(0)
+        self.command_center.insilicova_warnings = None
+        self.command_center.insilicova_errors = None
+        self.command_center.interva_results = None
+        self.command_center.interva_log = None
+        self.command_center.label_interva_progress.setText("")
+        self.command_center.interva_pbar.setValue(0)
+        self.show_command_center()
+
+    def set_plot_color(self, plt_color):
+        self.efficient.set_plot_color(plt_color)
+        self.results.set_plot_color(plt_color)
+
+    @staticmethod
+    def find_data_file(file_name):
+        if getattr(sys, "frozen", False):
+            # The application is frozen
+            datadir = os.path.dirname(sys.executable)
+        else:
+            # The application is not frozen
+            # Change this bit to match where you store your data files:
+            datadir = os.path.dirname(__file__)
+        return os.path.join(datadir, file_name)
 
     def closeEvent(self, event):
         close = QMessageBox()
@@ -209,14 +364,15 @@ class WindowManager(QMainWindow):
         else:
             event.ignore()
 
-    def show_about(self):
+    @staticmethod
+    def show_about():
         info = QMessageBox()
         info.setWindowTitle("openVA App")
         info.setIcon(QMessageBox.Information)
         info.setText(f"{__description__}\n" +
-        f"Version: {__version__}\n" +
-        f"License: {__license__}\n" +
-        f"Website: {__url__}")
+                     f"Version: {__version__}\n" +
+                     f"License: {__license__}\n" +
+                     f"Website: {__url__}")
         info.exec()
 
 

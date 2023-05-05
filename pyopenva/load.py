@@ -12,13 +12,16 @@ import csv
 
 class LoadData(QWidget):
 
-    def __init__(self):
+    def __init__(self, input_fname=None):
         super().__init__()
-        
-        file_name = QFileDialog.getOpenFileName(self,
-                                                "Open csv file",
-                                                "",
-                                                "csv Files (*.csv)")
+
+        if input_fname:
+            file_name = (input_fname, "")
+        else:
+            file_name = QFileDialog.getOpenFileName(self,
+                                                    "Open csv file",
+                                                    "",
+                                                    "csv Files (*.csv)")
         self.fname = file_name[0]
         if file_name is not None and file_name[0] != "":
             header = []

@@ -7,8 +7,8 @@ This module creates displays for the algorithm results.
 """
 import pandas as pd
 from PyQt5.QtCore import QAbstractTableModel, Qt
-from PyQt5.QtWidgets import (QApplication, QDialog, QPushButton, QTableView,
-                             QVBoxLayout)
+from PyQt5.QtWidgets import (QApplication, QDialog, QMessageBox, QPushButton,
+                             QTableView, QVBoxLayout)
 from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg,
                                                 NavigationToolbar2QT)
 from matplotlib.figure import Figure
@@ -20,7 +20,7 @@ from numpy import linspace
 class PlotDialog(QDialog):
 
     def __init__(self, results, algorithm, parent=None, top=5, save=False,
-                 file_name=None):
+                 file_name=None, colors="Greys"):
         super(PlotDialog, self).__init__(parent=parent)
         self.setWindowTitle("Cause-Specific Mortality Fraction")
         self.results = results
@@ -30,6 +30,7 @@ class PlotDialog(QDialog):
         self.ax = self.figure.add_subplot(111)
         self.canvas = FigureCanvasQTAgg(self.figure)
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
+        self.colors = colors
 
         vbox_csmf = QVBoxLayout()
         vbox_csmf.addWidget(self.toolbar)
@@ -40,7 +41,16 @@ class PlotDialog(QDialog):
         else:
             self.plot()
         if save:
-            self.figure.savefig(file_name)
+            try:
+                self.figure.savefig(file_name)
+            except (OSError, PermissionError):
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setIcon(QMessageBox.Warning)
+                alert.setText(
+                    f"Unable to save {file_name}.\n" +
+                    "(don't have permission or read-only file system)")
+                alert.exec()
         else:
             self.canvas.draw()
 
@@ -58,9 +68,9 @@ class PlotDialog(QDialog):
     def plot(self):
         plt_series = self.results.get_csmf(top=self.n_top_causes)
         plt_series.sort_values(ascending=True, inplace=True)
-        cm_greys = get_cmap("Greys")
-        linspace_greys = linspace(0.5, 0.9, self.n_top_causes)
-        colors = cm_greys(linspace_greys)
+        cm_colors = get_cmap(self.colors)
+        linspace_colors = linspace(0.5, 0.9, self.n_top_causes)
+        colors = cm_colors(linspace_colors)
         self.ax.barh(plt_series.index.to_list(),
                      plt_series.to_list(),
                      color=colors)
@@ -70,13 +80,18 @@ class PlotDialog(QDialog):
         plt_df = self.results.get_csmf(top=self.n_top_causes).copy()
         plt_df.sort_values(by="Median", ascending=True, inplace=True)
         errors = [plt_df["Lower"].to_list(), plt_df["Upper"].to_list()]
-        self.ax.errorbar(x=plt_df["Median"].to_list(),
-                         y=plt_df.index.to_list(),
-                         xerr=errors,
-                         ecolor="black",
-                         markerfacecolor="black", markeredgecolor="black",
-                         fmt="o",
-                         capsize=5)
+        cm_colors = get_cmap(self.colors)
+        linspace_colors = linspace(0.5, 0.9, self.n_top_causes)
+        colors = cm_colors(linspace_colors)
+        for i in range(self.n_top_causes):
+            clr = colors[i].tolist()
+            self.ax.errorbar(x=plt_df["Median"].to_list()[i],
+                             y=plt_df.index.to_list()[i],
+                             xerr=[[errors[0][i]], [errors[1][i]]],
+                             ecolor=clr,
+                             markerfacecolor=clr, markeredgecolor=clr,
+                             fmt="o",
+                             capsize=5)
         self.ax.grid(alpha=0.5, linestyle=":")
         self.ax.set(title="Top CSMF Distribution")
         self.ax.set_xlabel("CSMF")
@@ -148,7 +163,7 @@ class TableModel(QAbstractTableModel):
             #     return str(self._data.index[section])
 
 
-def save_plot(results, algorithm, top=5, file_name=None):
+def save_plot(results, algorithm, top=5, file_name=None, plot_colors="Greys"):
 
         style.use("ggplot")
         figure = Figure(figsize=(7, 5), dpi=100, constrained_layout=True)
@@ -171,11 +186,20 @@ def save_plot(results, algorithm, top=5, file_name=None):
         else:
             plt_series = results.get_csmf(top=top)
             plt_series.sort_values(ascending=True, inplace=True)
-            cm_greys = get_cmap("Greys")
-            linspace_greys = linspace(0.5, 0.9, top)
-            colors = cm_greys(linspace_greys)
+            cm_colors = get_cmap(plot_colors)
+            linspace_colors = linspace(0.5, 0.9, top)
+            colors = cm_colors(linspace_colors)
             ax.barh(plt_series.index.to_list(),
                     plt_series.to_list(),
                     color=colors)
             ax.set(title="CSMF")
-        figure.savefig(file_name)
+        try:
+            figure.savefig(file_name)
+        except (OSError, PermissionError):
+            alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
+            alert.setIcon(QMessageBox.Warning)
+            alert.setText(
+                f"Unable to save {file_name}.\n" +
+                "(don't have permission or read-only file system)")
+            alert.exec()

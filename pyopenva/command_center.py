@@ -679,17 +679,17 @@ class CommandCenter(QWidget):
         self.btn_insilicova_stop.setMaximumWidth(125)
         self.btn_insilicova_stop.setEnabled(False)
         self.btn_insilicova_stop.clicked.connect(self.stop_insilicova)
-        self.btn_download_insilicova_log = QPushButton(
-            "Download log file from data checks")
-        self.btn_download_insilicova_log.setEnabled(False)
-        self.btn_download_insilicova_log.clicked.connect(
-            self.download_insilicova_log)
+        self.btn_save_insilicova_log = QPushButton(
+            "Save log file from data checks")
+        self.btn_save_insilicova_log.setEnabled(False)
+        self.btn_save_insilicova_log.clicked.connect(
+            self.save_insilicova_log)
         insilicova_vbox.setAlignment(Qt.AlignCenter)
         insilicova_vbox.addLayout(insilicova_hbox)
         insilicova_vbox.addWidget(self.insilicova_pbar)
         insilicova_vbox.addWidget(self.label_insilicova_progress)
         insilicova_vbox.addWidget(self.btn_insilicova_stop)
-        insilicova_vbox.addWidget(self.btn_download_insilicova_log)
+        insilicova_vbox.addWidget(self.btn_save_insilicova_log)
         self.insilicova_box.setLayout(insilicova_vbox)
 
     def create_interva_box(self):
@@ -713,12 +713,12 @@ class CommandCenter(QWidget):
         interva_vbox.addWidget(self.interva_pbar)
         interva_vbox.addWidget(self.label_interva_progress)
         interva_vbox.addWidget(self.btn_interva_stop)
-        self.btn_download_interva_log = QPushButton(
-            "Download log file from data checks")
-        self.btn_download_interva_log.setEnabled(False)
-        self.btn_download_interva_log.clicked.connect(
-            self.download_interva_log)
-        interva_vbox.addWidget(self.btn_download_interva_log)
+        self.btn_save_interva_log = QPushButton(
+            "Save log file from data checks")
+        self.btn_save_interva_log.setEnabled(False)
+        self.btn_save_interva_log.clicked.connect(
+            self.save_interva_log)
+        interva_vbox.addWidget(self.btn_save_interva_log)
         self.interva_box.setLayout(interva_vbox)
 
     # def create_smartva_box(self):
@@ -780,7 +780,7 @@ class CommandCenter(QWidget):
         self.combo_data_id_col.setEnabled(False)
         self.btn_data_format.setEnabled(False)
         self.btn_edit_data.setEnabled(False)
-        self.btn_download_insilicova_log.setEnabled(False)
+        self.btn_save_insilicova_log.setEnabled(False)
         self.btn_insilicova_options.setEnabled(False)
         if self.pycrossva_data is None:
             alert = QMessageBox()
@@ -794,7 +794,7 @@ class CommandCenter(QWidget):
             self.combo_data_id_col.setEnabled(True)
             self.btn_data_format.setEnabled(True)
             self.btn_edit_data.setEnabled(True)
-            self.btn_download_insilicova_log.setEnabled(True)
+            self.btn_save_insilicova_log.setEnabled(True)
             self.btn_insilicova_options.setEnabled(True)
         else:
             self.insilicova_warnings = None
@@ -847,7 +847,7 @@ class CommandCenter(QWidget):
             self.insilicova_thread.finished.connect(
                 lambda: self.btn_edit_data.setEnabled(True))
             self.insilicova_thread.finished.connect(
-                lambda: self.btn_download_insilicova_log.setEnabled(True))
+                lambda: self.btn_save_insilicova_log.setEnabled(True))
             self.insilicova_thread.finished.connect(
                 lambda: self.btn_insilicova_options.setEnabled(True))
         #     except InSilicoVAException as exc:
@@ -907,7 +907,7 @@ class CommandCenter(QWidget):
         self.combo_data_id_col.setEnabled(False)
         self.btn_data_format.setEnabled(False)
         self.btn_edit_data.setEnabled(False)
-        self.btn_download_interva_log.setEnabled(False)
+        self.btn_save_interva_log.setEnabled(False)
         self.btn_interva_run.setEnabled(False)
         self.btn_interva_options.setEnabled(False)
         if self.pycrossva_data is None:
@@ -922,7 +922,7 @@ class CommandCenter(QWidget):
             self.combo_data_id_col.setEnabled(True)
             self.btn_data_format.setEnabled(True)
             self.btn_edit_data.setEnabled(True)
-            self.btn_download_interva_log.setEnabled(True)
+            self.btn_save_interva_log.setEnabled(True)
             self.btn_interva_options.setEnabled(True)
         else:
             self.interva_log = None
@@ -966,7 +966,7 @@ class CommandCenter(QWidget):
             self.interva_thread.finished.connect(
                 lambda: self.btn_interva_options.setEnabled(True))
             self.interva_thread.finished.connect(
-                lambda: self.btn_download_interva_log.setEnabled(True))
+                lambda: self.btn_save_interva_log.setEnabled(True))
         #     iv5out.run()
         #     self.interva_log = "ready"
         #     if iv5out.out["VA5"] is None:
@@ -1045,7 +1045,7 @@ class CommandCenter(QWidget):
                     "ID column does not have a unique value for every row")
                 alert.exec()
 
-    def download_insilicova_log(self):
+    def save_insilicova_log(self):
         errors = self.insilicova_errors
         log = self.insilicova_errors
         warnings = self.insilicova_warnings
@@ -1063,31 +1063,46 @@ class CommandCenter(QWidget):
                                                log_file_name,
                                                "Text Files (*.txt)")
             if path != ("", ""):
-                with open(path[0], "w") as f_out:
-                    f_out.write(
-                        "Log file from InSilicoVA")
-                    if len(errors) > 0:
+                try:
+                    with open(path[0], "w") as f_out:
                         f_out.write(
-                            "\n\nThe following records are incomplete "
-                            "and excluded from further processing\n\n")
-                        errors_list = [str(k) + " - " + i for k, v in
-                                       errors.items() for i in v]
-                        f_out.write("\n".join(errors_list))
-                    # if isinstance(warnings, list):
-                    if len(warnings) > 1:
-                        f_out.write("\n \n first pass \n \n")
-                        f_out.write("\n".join(warnings["first_pass"]))
-                        f_out.write("\n \n second pass \n \n")
-                        f_out.write("\n".join(warnings["second_pass"]))
+                            "Log file from InSilicoVA")
+                        if len(errors) > 0:
+                            f_out.write(
+                                "\n\nThe following records are incomplete "
+                                "and excluded from further processing\n\n")
+                            errors_list = [str(k) + " - " + i for k, v in
+                                           errors.items() for i in v]
+                            f_out.write("\n".join(errors_list))
+                        # if isinstance(warnings, list):
+                        if len(warnings) > 1:
+                            f_out.write("\n \n first pass \n \n")
+                            f_out.write("\n".join(warnings["first_pass"]))
+                            f_out.write("\n \n second pass \n \n")
+                            f_out.write("\n".join(warnings["second_pass"]))
+                        else:
+                            f_out.write("\n\n" + warnings)
+                    if os.path.isfile(path[0]):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText("log saved to" + path[0])
+                        alert.exec()
                     else:
-                        f_out.write("\n\n" + warnings)
-                if os.path.isfile(path[0]):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText(
+                            "ERROR: unable to save log to" + path[0])
+                        alert.exec()
+                except (OSError, PermissionError):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
-                    alert.setText("log saved to" + path[0])
+                    alert.setIcon(QMessageBox.Warning)
+                    alert.setText(
+                        f"Unable to save {path[0]}.\n" +
+                        "(don't have permission or read-only file system)")
                     alert.exec()
 
-    def download_interva_log(self):
+    def save_interva_log(self):
         log = self.interva_log
         if log is None:
             alert = QMessageBox()
@@ -1103,13 +1118,28 @@ class CommandCenter(QWidget):
                                                log_file_name,
                                                "Text Files (*.txt)")
             if path != ("", ""):
-                tmp_log = os.path.join(self.interva_tmp_dir.name,
-                                       "errorlogV5.txt")
-                shutil.copyfile(tmp_log, path[0])
-                if os.path.isfile(path[0]):
+                try:
+                    tmp_log = os.path.join(self.interva_tmp_dir.name,
+                                           "errorlogV5.txt")
+                    shutil.copyfile(tmp_log, path[0])
+                    if os.path.isfile(path[0]):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText("log saved to" + path[0])
+                        alert.exec()
+                    else:
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText(
+                            "ERROR: unable to save log to" + path[0])
+                        alert.exec()
+                except (OSError, PermissionError):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
-                    alert.setText("log saved to" + path[0])
+                    alert.setIcon(QMessageBox.Warning)
+                    alert.setText(
+                        f"Unable to save {path[0]}.\n" +
+                        "(don't have permission or read-only file system)")
                     alert.exec()
 
     def print_insilicova(self):

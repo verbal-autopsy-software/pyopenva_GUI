@@ -72,11 +72,12 @@ class Efficient(QWidget):
         self.btn_show_plot = None
         self.btn_show_table = None
         self.results_figure = None
-        self.btn_download_plot = None
-        self.btn_download_table = None
-        self.btn_download_individual_results = None
+        self.btn_save_plot = None
+        self.btn_save_table = None
+        self.btn_save_individual_results = None
         self.n_top_causes = 5
         self.results_ui()
+        self.plot_color = "Greys"
         self.stacked_layout = QStackedLayout()
         self.stacked_layout.addWidget(self.data_page)
         self.stacked_layout.addWidget(self.select_algorithm_page)
@@ -227,10 +228,10 @@ class Efficient(QWidget):
         self.btn_insilicova_stop.setMaximumWidth(150)
         self.btn_insilicova_stop.setEnabled(False)
         self.btn_insilicova_stop.clicked.connect(self.stop_insilicova)
-        self.btn_download_insilicova_log = QPushButton(
-            "Download log from data checks")
-        self.btn_download_insilicova_log.setEnabled(False)
-        self.btn_download_insilicova_log.clicked.connect(self.download_log)
+        self.btn_save_insilicova_log = QPushButton(
+            "Save log from data checks")
+        self.btn_save_insilicova_log.setEnabled(False)
+        self.btn_save_insilicova_log.clicked.connect(self.save_log)
 
         self.btn_insilicova_to_select_algorithm = QPushButton("Back")
         self.btn_go_to_results_page = QPushButton("Show Results")
@@ -255,7 +256,7 @@ class Efficient(QWidget):
         layout.addWidget(self.label_insilicova_progress)
         layout.addWidget(self.btn_insilicova_stop)
         layout.addStretch(1)
-        layout.addWidget(self.btn_download_insilicova_log)
+        layout.addWidget(self.btn_save_insilicova_log)
         layout.addStretch(1)
         h_box = QHBoxLayout()
         h_box.addWidget(self.btn_insilicova_to_select_algorithm)
@@ -293,10 +294,10 @@ class Efficient(QWidget):
         self.btn_interva_stop.setEnabled(False)
         self.btn_interva_stop.setMaximumWidth(150)
         self.btn_interva_stop.clicked.connect(self.stop_interva)
-        self.btn_download_interva_log = QPushButton(
-            "Download Log from data checks")
-        self.btn_download_interva_log.setEnabled(False)
-        self.btn_download_interva_log.clicked.connect(self.download_log)
+        self.btn_save_interva_log = QPushButton(
+            "Save Log from data checks")
+        self.btn_save_interva_log.setEnabled(False)
+        self.btn_save_interva_log.clicked.connect(self.save_log)
         self.btn_interva_to_select_algorithm = QPushButton("Back")
         self.btn_go_to_results_page = QPushButton("Show Results")
         self.btn_go_to_results_page.clicked.connect(
@@ -321,7 +322,7 @@ class Efficient(QWidget):
         layout.addWidget(self.label_interva_progress)
         layout.addWidget(self.btn_interva_stop)
         layout.addStretch(1)
-        layout.addWidget(self.btn_download_interva_log)
+        layout.addWidget(self.btn_save_interva_log)
         layout.addStretch(1)
         h_box = QHBoxLayout()
         h_box.addWidget(self.btn_interva_to_select_algorithm)
@@ -418,32 +419,32 @@ class Efficient(QWidget):
         hbox_show.addWidget(self.btn_show_plot)
         gbox_show.setLayout(hbox_show)
 
-        gbox_download = QGroupBox("Download Results")
-        vbox_download = QVBoxLayout()
-        hbox_download = QHBoxLayout()
-        self.btn_download_table = QPushButton("Download Table")
-        self.btn_download_table.clicked.connect(self.download_csmf_table)
-        self.btn_download_plot = QPushButton("Download Plot")
-        self.btn_download_plot.clicked.connect(self.download_csmf_plot)
-        self.btn_download_individual_results = QPushButton(
-            "Download \n Individual Cause Assignments")
-        self.btn_download_individual_results.clicked.connect(
-            self.download_indiv_cod
+        gbox_save = QGroupBox("Save Results")
+        vbox_save = QVBoxLayout()
+        hbox_save = QHBoxLayout()
+        self.btn_save_table = QPushButton("Save Table")
+        self.btn_save_table.clicked.connect(self.save_csmf_table)
+        self.btn_save_plot = QPushButton("Save Plot")
+        self.btn_save_plot.clicked.connect(self.save_csmf_plot)
+        self.btn_save_individual_results = QPushButton(
+            "Save \n Individual Cause Assignments")
+        self.btn_save_individual_results.clicked.connect(
+            self.save_indiv_cod
         )
         self.chbox_insilicova_include_probs = QCheckBox(
             "Include probability of top cause (with individual CODs)")
         self.chbox_insilicova_include_probs.toggled.connect(
             self.set_insilicova_include_probs)
-        # self.btn_download_log = QPushButton("Download log from data checks")
-        # self.btn_download_log.clicked.connect(self.download_log)
-        hbox_download.addWidget(self.btn_download_table)
-        hbox_download.addWidget(self.btn_download_plot)
-        vbox_download.addLayout(hbox_download)
-        vbox_download.addWidget(self.btn_download_individual_results)
+        # self.btn_save_log = QPushButton("Save log from data checks")
+        # self.btn_save_log.clicked.connect(self.save_log)
+        hbox_save.addWidget(self.btn_save_table)
+        hbox_save.addWidget(self.btn_save_plot)
+        vbox_save.addLayout(hbox_save)
+        vbox_save.addWidget(self.btn_save_individual_results)
         if self.chosen_algorithm == "insilicova":
-            vbox_download.addWidget(self.chbox_insilicova_include_probs)
-        # vbox_download.addWidget(self.btn_download_log)
-        gbox_download.setLayout(vbox_download)
+            vbox_save.addWidget(self.chbox_insilicova_include_probs)
+        # vbox_save.addWidget(self.btn_save_log)
+        gbox_save.setLayout(vbox_save)
 
         hbox_navigate = QHBoxLayout()
         self.btn_results_to_algorithm = QPushButton("Back")
@@ -454,7 +455,7 @@ class Efficient(QWidget):
         layout.addStretch(1)
         layout.addWidget(gbox_show)
         layout.addStretch(1)
-        layout.addWidget(gbox_download)
+        layout.addWidget(gbox_save)
         layout.addStretch(1)
         # layout.addWidget(self.btn_results_to_algorithm)
         layout.addLayout(hbox_navigate)
@@ -594,6 +595,9 @@ class Efficient(QWidget):
     def set_n_top_causes(self, n):
         self.n_top_causes = n
 
+    def set_plot_color(self, color):
+        self.plot_color = color
+
     # TODO: need to clean these up (window management handled in main)
     def show_data_page(self):
         self.stacked_layout.setCurrentIndex(0)
@@ -630,7 +634,7 @@ class Efficient(QWidget):
         self.insilicova_ctrl["break"] = False
         self.btn_insilicova_run.setEnabled(False)
         self.btn_load_data.setEnabled(False)
-        self.btn_download_insilicova_log.setEnabled(False)
+        self.btn_save_insilicova_log.setEnabled(False)
         self.insilicova_warnings = None
         self.insilicova_errors = None
         self.insilicova_results = None
@@ -641,7 +645,7 @@ class Efficient(QWidget):
             alert.exec()
             self.btn_insilicova_run.setEnabled(True)
             self.btn_load_data.setEnabled(True)
-            self.btn_download_insilicova_log.setEnabled(True)
+            self.btn_save_insilicova_log.setEnabled(True)
         else:
             self.run_pycrossva()
             auto_extend = False
@@ -688,7 +692,7 @@ class Efficient(QWidget):
             self.insilicova_thread.finished.connect(
                 lambda: self.btn_load_data.setEnabled(True))
             self.insilicova_thread.finished.connect(
-                lambda: self.btn_download_insilicova_log.setEnabled(True))
+                lambda: self.btn_save_insilicova_log.setEnabled(True))
 
     def update_insilicova_progress(self, n):
         self.insilicova_pbar.setValue(n)
@@ -713,7 +717,7 @@ class Efficient(QWidget):
         self.interva_ctrl["break"] = False
         self.btn_interva_run.setEnabled(False)
         self.btn_load_data.setEnabled(False)
-        self.btn_download_interva_log.setEnabled(False)
+        self.btn_save_interva_log.setEnabled(False)
         self.interva_combo_hiv.setEnabled(False)
         self.interva_combo_malaria.setEnabled(False)
         self.label_interva_chosen_options.setText(
@@ -729,7 +733,7 @@ class Efficient(QWidget):
             alert.exec()
             self.btn_interva_run.setEnabled(True)
             self.btn_load_data.setEnabled(True)
-            self.btn_download_interva_log.setEnabled(True)
+            self.btn_save_interva_log.setEnabled(True)
             self.interva_combo_hiv.setEnabled(True)
             self.interva_combo_malaria.setEnabled(True)
             self.label_interva_chosen_options.setText(
@@ -781,7 +785,7 @@ class Efficient(QWidget):
             self.interva_thread.finished.connect(
                 lambda: self.interva_combo_malaria.setEnabled(True))
             self.interva_thread.finished.connect(
-                lambda: self.btn_download_interva_log.setEnabled(True))
+                lambda: self.btn_save_interva_log.setEnabled(True))
 
     def update_interva_progress(self, n):
         self.interva_pbar.setValue(n)
@@ -815,7 +819,8 @@ class Efficient(QWidget):
             self.plot_dialog = PlotDialog(results=results,
                                           algorithm=self.chosen_algorithm,
                                           parent=self,
-                                          top=self.n_top_causes)
+                                          top=self.n_top_causes,
+                                          colors=self.plot_color)
             self.plot_dialog.exec()
 
     def run_table_dialog(self):
@@ -838,7 +843,7 @@ class Efficient(QWidget):
                                      self.table_dialog.table.height())
             self.table_dialog.exec()
 
-    def download_csmf_table(self):
+    def save_csmf_table(self):
         if self.chosen_algorithm == "insilicova":
             results = self.insilicova_results
         else:
@@ -857,29 +862,44 @@ class Efficient(QWidget):
                                                results_file_name,
                                                "CSV Files (*.csv)")
             if path != ("", ""):
-                with open(path[0], "w", newline="") as f:
-                    n_top_causes = self.n_top_causes
-                    csmf = results.get_csmf(top=n_top_causes)
-                    if isinstance(csmf, DataFrame):
-                        csmf_df = csmf.sort_values(
-                            by="Mean", ascending=False).copy()
-                        csmf_df = csmf_df.reset_index()
-                        csmf_df.rename(columns={"index": "Cause",
-                                                "Mean": "CSMF (Mean)"},
-                                       inplace=True)
+                try:
+                    with open(path[0], "w", newline="") as f:
+                        n_top_causes = self.n_top_causes
+                        csmf = results.get_csmf(top=n_top_causes)
+                        if isinstance(csmf, DataFrame):
+                            csmf_df = csmf.sort_values(
+                                by="Mean", ascending=False).copy()
+                            csmf_df = csmf_df.reset_index()
+                            csmf_df.rename(columns={"index": "Cause",
+                                                    "Mean": "CSMF (Mean)"},
+                                           inplace=True)
+                        else:
+                            csmf.sort_values(ascending=False, inplace=True)
+                            csmf_df = csmf.reset_index()[0:n_top_causes]
+                            csmf_df.rename(columns={"index": "Cause", 0: "CSMF"},
+                                           inplace=True)
+                        csmf_df.to_csv(f, index=False)
+                    if os.path.isfile(path[0]):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText("results saved to" + path[0])
+                        alert.exec()
                     else:
-                        csmf.sort_values(ascending=False, inplace=True)
-                        csmf_df = csmf.reset_index()[0:n_top_causes]
-                        csmf_df.rename(columns={"index": "Cause", 0: "CSMF"},
-                                       inplace=True)
-                    csmf_df.to_csv(f, index=False)
-                if os.path.isfile(path[0]):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText(
+                            "ERROR: unable to save results to" + path[0])
+                        alert.exec()
+                except (OSError, PermissionError):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
-                    alert.setText("results saved to" + path[0])
+                    alert.setIcon(QMessageBox.Warning)
+                    alert.setText(
+                        f"Unable to save {path[0]}.\n" +
+                        "(don't have permission or read-only file system)")
                     alert.exec()
 
-    def download_csmf_plot(self):
+    def save_csmf_plot(self):
         if self.chosen_algorithm == "insilicova":
             results = self.insilicova_results
         else:
@@ -898,17 +918,26 @@ class Efficient(QWidget):
                                                results_file_name,
                                                "PDF Files (*.pdf)")
             if path != ("", ""):
+                # save_plot has try/except for OS & Permission errors
                 save_plot(results=results,
                           algorithm=self.chosen_algorithm,
                           top=self.n_top_causes,
-                          file_name=path[0])
+                          file_name=path[0],
+                          plot_colors=self.plot_color)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
                     alert.setText("results saved to" + path[0])
                     alert.exec()
+                else:
+                    alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
+                    alert.setText(
+                        "ERROR: unable to save results to" + path[0])
+                    alert.exec()
 
-    def download_indiv_cod(self):
+
+    def save_indiv_cod(self):
         if self.chosen_algorithm == "insilicova":
             results = self.insilicova_results
         else:
@@ -927,18 +956,33 @@ class Efficient(QWidget):
                                                results_file_name,
                                                "CSV Files (*.csv)")
             if path != ("", ""):
-                with open(path[0], "w", newline="") as f:
-                    if self.chosen_algorithm == "insilicova":
-                        out = self.prepare_insilico_indiv_cod(results)
-                        out.to_csv(f, index=False)
+                try:
+                    with open(path[0], "w", newline="") as f:
+                        if self.chosen_algorithm == "insilicova":
+                            out = self.prepare_insilico_indiv_cod(results)
+                            out.to_csv(f, index=False)
+                        else:
+                            out = results.out["VA5"].copy()
+                            out.drop("WHOLEPROB", axis=1, inplace=True)
+                            out.to_csv(f, index=False)
+                    if os.path.isfile(path[0]):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText("results saved to" + path[0])
+                        alert.exec()
                     else:
-                        out = results.out["VA5"].copy()
-                        out.drop("WHOLEPROB", axis=1, inplace=True)
-                        out.to_csv(f, index=False)
-                if os.path.isfile(path[0]):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText(
+                            "ERROR: unable to save results " + path[0])
+                        alert.exec()
+                except (OSError, PermissionError):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
-                    alert.setText("results saved to" + path[0])
+                    alert.setIcon(QMessageBox.Warning)
+                    alert.setText(
+                        f"Unable to save {path[0]}.\n" +
+                        "(don't have permission or read-only file system)")
                     alert.exec()
 
     def prepare_insilico_indiv_cod(self, results):
@@ -951,7 +995,7 @@ class Efficient(QWidget):
             indiv_cod["Probability"] = top_prob
         return indiv_cod
 
-    def download_log(self):
+    def save_log(self):
         if self.chosen_algorithm == "insilicova":
             errors = self.insilicova_errors
             log = self.insilicova_errors
@@ -972,31 +1016,46 @@ class Efficient(QWidget):
                                                log_file_name,
                                                "Text Files (*.txt)")
             if path != ("", ""):
-                if self.chosen_algorithm == "interva":
-                    tmp_log = os.path.join(self.interva_tmp_dir.name,
-                                           "errorlogV5.txt")
-                    shutil.copyfile(tmp_log, path[0])
-                else:
-                    # with open(log_file_name, "w") as f_out:
-                    with open(path[0], "w") as f_out:
-                        f_out.write(f"Log file from {self.chosen_algorithm}")
-                        if len(errors) > 0:
+                try:
+                    if self.chosen_algorithm == "interva":
+                        tmp_log = os.path.join(self.interva_tmp_dir.name,
+                                               "errorlogV5.txt")
+                        shutil.copyfile(tmp_log, path[0])
+                    else:
+                        with open(path[0], "w") as f_out:
                             f_out.write(
-                                "\n\nThe following records are incomplete "
-                                "and excluded from further processing\n\n")
-                            errors_list = [str(k) + " - " + i for k, v in
-                                           errors.items() for i in v]
-                            f_out.write("\n".join(errors_list))
-                        # if isinstance(warnings, dict):
-                        if len(warnings) > 1:
-                            f_out.write("\n \n first pass \n \n")
-                            f_out.write("\n".join(warnings["first_pass"]))
-                            f_out.write("\n \n second pass \n \n")
-                            f_out.write("\n".join(warnings["second_pass"]))
-                        else:
-                            f_out.write("\n\n" + warnings["msg"])
-                if os.path.isfile(path[0]):
+                                f"Log file from {self.chosen_algorithm}")
+                            if len(errors) > 0:
+                                f_out.write(
+                                    "\n\nThe following records are incomplete "
+                                    "and excluded from further processing\n\n")
+                                errors_list = [str(k) + " - " + i for k, v in
+                                               errors.items() for i in v]
+                                f_out.write("\n".join(errors_list))
+                            # if isinstance(warnings, dict):
+                            if len(warnings) > 1:
+                                f_out.write("\n \n first pass \n \n")
+                                f_out.write("\n".join(warnings["first_pass"]))
+                                f_out.write("\n \n second pass \n \n")
+                                f_out.write("\n".join(warnings["second_pass"]))
+                            else:
+                                f_out.write("\n\n" + warnings["msg"])
+                    if os.path.isfile(path[0]):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText("log saved to" + path[0])
+                        alert.exec()
+                    else:
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText(
+                            "ERROR: unable to save log to" + path[0])
+                        alert.exec()
+                except (OSError, PermissionError):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
-                    alert.setText("log saved to" + path[0])
+                    alert.setIcon(QMessageBox.Warning)
+                    alert.setText(
+                        f"Unable to save {path[0]}.\n" +
+                        "(don't have permission or read-only file system)")
                     alert.exec()

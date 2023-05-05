@@ -3,10 +3,10 @@
 """
 pyopenva.results
 ~~~~~~~~~~~~~~
-This module creates the window for displaying and downloading results.
+This module creates the window for displaying and saving results.
 """
 
-from PyQt5.QtWidgets import (QCheckBox, QFileDialog, QGroupBox, QHBoxLayout,
+from PyQt5.QtWidgets import (QCheckBox, QFileDialog, QHBoxLayout,
                              QMessageBox, QPushButton, QSpinBox, QTabWidget,
                              QVBoxLayout, QWidget)
 from pyopenva.output import PlotDialog, TableDialog, save_plot
@@ -28,6 +28,7 @@ class Results(QWidget):
         self.interva_tmp_dir = None
         # self.smartva_results = None
         self.n_top_causes = 5
+        self.plot_color = "Greys"
         self.results_v_box = QVBoxLayout()
         self.create_insilicova_panel()
         self.create_interva_panel()
@@ -67,9 +68,9 @@ class Results(QWidget):
         self.btn_insilicova_table = QPushButton("Show \n CSMF Table")
         self.btn_insilicova_table.clicked.connect(
             self.insilicova_table)
-        self.btn_save_insilicova_table = QPushButton("Download CSMF Table")
+        self.btn_save_insilicova_table = QPushButton("Save CSMF Table")
         self.btn_save_insilicova_table.clicked.connect(
-            self.download_insilicova_table)
+            self.save_insilicova_table)
         vbox_table.addWidget(self.btn_insilicova_table)
         vbox_table.addWidget(self.btn_save_insilicova_table)
 
@@ -77,9 +78,9 @@ class Results(QWidget):
         self.btn_insilicova_plot = QPushButton("Show \n CSMF Plot")
         self.btn_insilicova_plot.clicked.connect(
             self.insilicova_plot)
-        self.btn_save_insilicova_plot = QPushButton("Download CSMF Plot")
+        self.btn_save_insilicova_plot = QPushButton("Save CSMF Plot")
         self.btn_save_insilicova_plot.clicked.connect(
-            self.download_insilicova_plot)
+            self.save_insilicova_plot)
         vbox_plot.addWidget(self.btn_insilicova_plot)
         vbox_plot.addWidget(self.btn_save_insilicova_plot)
 
@@ -88,18 +89,14 @@ class Results(QWidget):
         hbox.addLayout(vbox_plot)
         layout.addLayout(hbox)
         self.btn_save_insilicova_indiv = QPushButton(
-            "Download \n Individual Cause Assignments")
+            "Save \n Individual Cause Assignments")
         self.btn_save_insilicova_indiv.clicked.connect(
-            self.download_insilicova_indiv)
+            self.save_insilicova_indiv)
         self.insilicova_include_probs = False
         self.chbox_insilicova_include_probs = QCheckBox(
             "Include probability of top cause (with individual CODs)")
         self.chbox_insilicova_include_probs.toggled.connect(
             self.set_insilicova_include_probs)
-        # self.btn_save_insilicova_log = QPushButton(
-        #     "Download log file from data checks")
-        # self.btn_save_insilicova_log.clicked.connect(
-        #     self.download_insilicova_log)
         layout.addWidget(self.btn_save_insilicova_indiv)
         layout.addWidget(self.chbox_insilicova_include_probs)
         # layout.addWidget(self.btn_save_insilicova_log)
@@ -112,17 +109,17 @@ class Results(QWidget):
         vbox_table = QVBoxLayout()
         self.btn_interva_table = QPushButton("Show \n CSMF Table")
         self.btn_interva_table.clicked.connect(self.interva_table)
-        self.btn_save_interva_table = QPushButton("Download CSMF Table")
+        self.btn_save_interva_table = QPushButton("Save CSMF Table")
         self.btn_save_interva_table.clicked.connect(
-            self.download_interva_table)
+            self.save_interva_table)
         vbox_table.addWidget(self.btn_interva_table)
         vbox_table.addWidget(self.btn_save_interva_table)
 
         vbox_plot = QVBoxLayout()
         self.btn_interva_plot = QPushButton("Show \n CSMF Plot")
         self.btn_interva_plot.clicked.connect(self.interva_plot)
-        self.btn_save_interva_plot = QPushButton("Download CSMF Plot")
-        self.btn_save_interva_plot.clicked.connect(self.download_interva_plot)
+        self.btn_save_interva_plot = QPushButton("Save CSMF Plot")
+        self.btn_save_interva_plot.clicked.connect(self.save_interva_plot)
         vbox_plot.addWidget(self.btn_interva_plot)
         vbox_plot.addWidget(self.btn_save_interva_plot)
 
@@ -131,23 +128,10 @@ class Results(QWidget):
         hbox.addLayout(vbox_plot)
         layout.addLayout(hbox)
         self.btn_save_interva_indiv = QPushButton(
-            "Download Individual \n Cause Assignments")
+            "Save Individual \n Cause Assignments")
         self.btn_save_interva_indiv.clicked.connect(
-            self.download_interva_indiv)
-        # self.btn_save_interva_log = QPushButton(
-        #     "Download log file from data checks")
-        # self.btn_save_interva_log.clicked.connect(
-        #     self.download_interva_log)
-        # self.spinbox_n_causes = QSpinBox()
-        # self.spinbox_n_causes.setRange(1, 64)
-        # self.spinbox_n_causes.setPrefix("Include ")
-        # self.spinbox_n_causes.setSuffix(" causes in the results")
-        # self.spinbox_n_causes.setValue(self.n_top_causes)
-        # self.spinbox_n_causes.valueChanged.connect(self.set_n_top_causes)
-        # self.spinbox_n_causes.setMaximumWidth(350)
+            self.save_interva_indiv)
         layout.addWidget(self.btn_save_interva_indiv)
-        # layout.addWidget(self.btn_save_interva_log)
-        # layout.addWidget(self.spinbox_n_causes)
         self.interva_panel = QWidget()
         self.interva_panel.setLayout(layout)
 
@@ -157,16 +141,16 @@ class Results(QWidget):
     #     vbox_table = QVBoxLayout()
     #     self.btn_smartva_table = QPushButton("Show \n CSMF Table")
     #     self.btn_smartva_table.clicked.connect(self.smartva_table)
-    #     self.btn_save_smartva_table = QPushButton("Download CSMF Table")
-    #     self.btn_save_smartva_table.clicked.connect(self.download_smartva_table)
+    #     self.btn_save_smartva_table = QPushButton("Save CSMF Table")
+    #     self.btn_save_smartva_table.clicked.connect(self.save_smartva_table)
     #     vbox_table.addWidget(self.btn_smartva_table)
     #     vbox_table.addWidget(self.btn_save_smartva_table)
     #
     #     vbox_plot = QVBoxLayout()
     #     self.btn_smartva_plot = QPushButton("Show \n CSMF Plot")
     #     self.btn_smartva_plot.clicked.connect(self.smartva_plot)
-    #     self.btn_save_smartva_plot = QPushButton("Download CSMF Plot")
-    #     self.btn_save_smartva_plot.clicked.connect(self.download_smartva_plot)
+    #     self.btn_save_smartva_plot = QPushButton("Save CSMF Plot")
+    #     self.btn_save_smartva_plot.clicked.connect(self.save_smartva_plot)
     #     vbox_plot.addWidget(self.btn_smartva_plot)
     #     vbox_plot.addWidget(self.btn_save_smartva_plot)
     #
@@ -175,8 +159,8 @@ class Results(QWidget):
     #     hbox.addLayout(vbox_plot)
     #     layout.addLayout(hbox)
     #     self.btn_save_smartva_indiv = QPushButton(
-    #         "Download \n Individual Cause Assignments")
-    #     self.btn_save_smartva_indiv.clicked.connect(self.download_smartva_indiv)
+    #         "Save \n Individual Cause Assignments")
+    #     self.btn_save_smartva_indiv.clicked.connect(self.save_smartva_indiv)
     #     layout.addWidget(self.btn_save_smartva_indiv)
     #     self.smartva_panel = QWidget()
     #     self.smartva_panel.setLayout(layout)
@@ -191,7 +175,8 @@ class Results(QWidget):
         else:
             self.interva_plot_dialog = PlotDialog(self.interva_results,
                                                   self,
-                                                  top=self.n_top_causes)
+                                                  top=self.n_top_causes,
+                                                  colors=self.plot_color)
             self.interva_plot_dialog.exec()
 
     def interva_table(self):
@@ -210,7 +195,7 @@ class Results(QWidget):
                                       self.interva_table.table.height())
             self.interva_table.exec()
 
-    def download_interva_table(self):
+    def save_interva_table(self):
         if self.interva_results is None:
             alert = QMessageBox()
             alert.setWindowTitle("openVA App")
@@ -232,14 +217,29 @@ class Results(QWidget):
                     csmf_df = csmf.reset_index()[0:n_top_causes]
                     csmf_df.rename(columns={"index": "Cause", 0: "CSMF"},
                                    inplace=True)
-                    csmf_df.round(4).to_csv(f, index=False)
-                if os.path.isfile(path[0]):
-                    alert = QMessageBox()
-                    alert.setWindowTitle("openVA App")
-                    alert.setText("results saved to" + path[0])
-                    alert.exec()
+                    try:
+                        csmf_df.round(4).to_csv(f, index=False)
+                        if os.path.isfile(path[0]):
+                            alert = QMessageBox()
+                            alert.setWindowTitle("openVA App")
+                            alert.setText("results saved to" + path[0])
+                            alert.exec()
+                        else:
+                            alert = QMessageBox()
+                            alert.setWindowTitle("openVA App")
+                            alert.setText(
+                                "ERROR: unable to save results to" + path[0])
+                            alert.exec()
+                    except (OSError, PermissionError):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setIcon(QMessageBox.Warning)
+                        alert.setText(
+                            f"Unable to save {f}.\n" +
+                            "(don't have permission or read-only file system)")
+                        alert.exec()
 
-    def download_interva_plot(self):
+    def save_interva_plot(self):
         if self.interva_results is None:
             alert = QMessageBox()
             alert.setWindowTitle("openVA App")
@@ -254,17 +254,33 @@ class Results(QWidget):
                                                "PDF Files (*.pdf)")
             if path != ("", ""):
                 #os.remove(path[0])
-                save_plot(results=self.interva_results,
-                          algorithm="interva",
-                          top=self.n_top_causes,
-                          file_name=path[0])
-                if os.path.isfile(path[0]):
+                try:
+                    save_plot(results=self.interva_results,
+                              algorithm="interva",
+                              top=self.n_top_causes,
+                              file_name=path[0],
+                              plot_colors=self.plot_color)
+                    if os.path.isfile(path[0]):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText("results saved to" + path[0])
+                        alert.exec()
+                    else:
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText(
+                            "ERROR: unable to save results to" + path[0])
+                        alert.exec()
+                except (OSError, PermissionError):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
-                    alert.setText("results saved to" + path[0])
+                    alert.setIcon(QMessageBox.Warning)
+                    alert.setText(
+                        f"Unable to save {path[0]}.\n" +
+                        "(don't have permission or read-only file system)")
                     alert.exec()
 
-    def download_interva_indiv(self):
+    def save_interva_indiv(self):
         if self.interva_results is None:
             alert = QMessageBox()
             alert.setWindowTitle("openVA App")
@@ -278,14 +294,29 @@ class Results(QWidget):
                                                results_file_name,
                                                "CSV Files (*.csv)")
             if path != ("", ""):
-                with open(path[0], "w", newline="") as f:
-                    out = self.interva_results.out["VA5"].copy()
-                    out.drop("WHOLEPROB", axis=1, inplace=True)
-                    out.to_csv(f, index=False)
-                if os.path.isfile(path[0]):
+                try:
+                    with open(path[0], "w", newline="") as f:
+                        out = self.interva_results.out["VA5"].copy()
+                        out.drop("WHOLEPROB", axis=1, inplace=True)
+                        out.to_csv(f, index=False)
+                    if os.path.isfile(path[0]):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText("results saved to" + path[0])
+                        alert.exec()
+                    else:
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText(
+                            "ERROR: unable to save results to" + path[0])
+                        alert.exec()
+                except (OSError, PermissionError):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
-                    alert.setText("results saved to" + path[0])
+                    alert.setIcon(QMessageBox.Warning)
+                    alert.setText(
+                        f"Unable to save {path[0]}.\n" +
+                        "(don't have permission or read-only file system)")
                     alert.exec()
 
     def insilicova_plot(self):
@@ -296,10 +327,12 @@ class Results(QWidget):
                 "Need to run InSilicoVA first.")
             alert.exec()
         else:
-            self.insilicova_plot_dialog = PlotDialog(results=self.insilicova_results,
-                                                     algorithm="insilicova",
-                                                     parent=self,
-                                                     top=self.n_top_causes)
+            self.insilicova_plot_dialog = PlotDialog(
+                results=self.insilicova_results,
+                algorithm="insilicova",
+                parent=self,
+                top=self.n_top_causes,
+                colors=self.plot_color)
             self.insilicova_plot_dialog.exec()
 
     def insilicova_table(self):
@@ -317,7 +350,7 @@ class Results(QWidget):
                                          self.insilicova_table.table.height())
             self.insilicova_table.exec()
 
-    def download_insilicova_table(self):
+    def save_insilicova_table(self):
         if self.insilicova_results is None:
             alert = QMessageBox()
             alert.setWindowTitle("openVA App")
@@ -332,21 +365,39 @@ class Results(QWidget):
                                                "CSV Files (*.csv)")
             if path != ("", ""):
                 #os.remove(path[0])
-                with open(path[0], "w", newline="") as f:
-                    n_top_causes = self.n_top_causes
-                    csmf = self.insilicova_results.get_csmf(top=n_top_causes)
-                    csmf_df = csmf.sort_values(by="Mean", ascending=False).copy()
-                    csmf_df = csmf_df.reset_index()
-                    csmf_df.rename(columns={"index": "Cause", "Mean": "CSMF (Mean)"},
-                                   inplace=True)
-                    csmf_df.round(4).to_csv(f, index=False)
-                if os.path.isfile(path[0]):
+                try:
+                    with open(path[0], "w", newline="") as f:
+                        n_top_causes = self.n_top_causes
+                        csmf = self.insilicova_results.get_csmf(
+                            top=n_top_causes)
+                        csmf_df = csmf.sort_values(by="Mean",
+                                                   ascending=False).copy()
+                        csmf_df = csmf_df.reset_index()
+                        csmf_df.rename(columns={"index": "Cause",
+                                                "Mean": "CSMF (Mean)"},
+                                       inplace=True)
+                        csmf_df.round(4).to_csv(f, index=False)
+                    if os.path.isfile(path[0]):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText("results saved to" + path[0])
+                        alert.exec()
+                    else:
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText(
+                            "ERROR: unable to save results to" + path[0])
+                        alert.exec()
+                except (OSError, PermissionError):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
-                    alert.setText("results saved to" + path[0])
+                    alert.setIcon(QMessageBox.Warning)
+                    alert.setText(
+                        f"Unable to save {path[0]}.\n" +
+                        "(don't have permission or read-only file system)")
                     alert.exec()
 
-    def download_insilicova_plot(self):
+    def save_insilicova_plot(self):
         if self.insilicova_results is None:
             alert = QMessageBox()
             alert.setWindowTitle("openVA App")
@@ -361,17 +412,33 @@ class Results(QWidget):
                                                "PDF Files (*.pdf)")
             if path != ("", ""):
                 #os.remove(path[0])
-                save_plot(results=self.insilicova_results,
-                          algorithm="insilicova",
-                          top=self.n_top_causes,
-                          file_name=path[0])
-                if os.path.isfile(path[0]):
+                try:
+                    save_plot(results=self.insilicova_results,
+                              algorithm="insilicova",
+                              top=self.n_top_causes,
+                              file_name=path[0],
+                              plot_colors=self.plot_color)
+                    if os.path.isfile(path[0]):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText("results saved to" + path[0])
+                        alert.exec()
+                    else:
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText(
+                            "ERROR: unable to save results to" + path[0])
+                        alert.exec()
+                except (OSError, PermissionError):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
-                    alert.setText("results saved to" + path[0])
+                    alert.setIcon(QMessageBox.Warning)
+                    alert.setText(
+                        f"Unable to save {path[0]}.\n" +
+                        "(don't have permission or read-only file system)")
                     alert.exec()
 
-    def download_insilicova_indiv(self):
+    def save_insilicova_indiv(self):
         if self.insilicova_results is None:
             alert = QMessageBox()
             alert.setWindowTitle("openVA App")
@@ -385,14 +452,29 @@ class Results(QWidget):
                                                results_file_name,
                                                "CSV Files (*.csv)")
             if path != ("", ""):
-                with open(path[0], "w", newline="") as f:
-                    out = self.prepare_insilico_indiv_cod(
-                        self.insilicova_results)
-                    out.to_csv(f, index=False)
-                if os.path.isfile(path[0]):
+                try:
+                    with open(path[0], "w", newline="") as f:
+                        out = self.prepare_insilico_indiv_cod(
+                            self.insilicova_results)
+                        out.to_csv(f, index=False)
+                    if os.path.isfile(path[0]):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText("results saved to" + path[0])
+                        alert.exec()
+                    else:
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText(
+                            "ERROR: unable to save results to" + path[0])
+                        alert.exec()
+                except (OSError, PermissionError):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
-                    alert.setText("results saved to" + path[0])
+                    alert.setIcon(QMessageBox.Warning)
+                    alert.setText(
+                        f"Unable to save {path[0]}.\n" +
+                        "(don't have permission or read-only file system)")
                     alert.exec()
 
     def prepare_insilico_indiv_cod(self, results):
@@ -442,7 +524,7 @@ class Results(QWidget):
     #                   "based on Python 3 is released.")
     #     alert.exec()
 
-    # def download_smartva_plot(self):
+    # def save_smartva_plot(self):
     #     alert = QMessageBox()
     #     alert.setWindowTitle("openVA App")
     #     alert.setText("SmartVA is not available (it is based on Python 2" +
@@ -451,7 +533,7 @@ class Results(QWidget):
     #                   "based on Python 3 is released.")
     #     alert.exec()
     #
-    # def download_smartva_table(self):
+    # def save_smartva_table(self):
     #     alert = QMessageBox()
     #     alert.setWindowTitle("openVA App")
     #     alert.setText("SmartVA is not available (it is based on Python 2" +
@@ -460,7 +542,7 @@ class Results(QWidget):
     #                   "based on Python 3 is released.")
     #     alert.exec()
 
-    # def download_smartva_indiv(self):
+    # def save_smartva_indiv(self):
     #     alert = QMessageBox()
     #     alert.setWindowTitle("openVA App")
     #     alert.setText("SmartVA is not available (it is based on Python 2" +
@@ -487,6 +569,9 @@ class Results(QWidget):
 
     def set_n_top_causes(self, n):
         self.n_top_causes = n
+
+    def set_plot_color(self, color):
+        self.plot_color = color
 
     def set_insilicova_include_probs(self, checked):
         if checked:
