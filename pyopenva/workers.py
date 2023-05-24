@@ -94,7 +94,7 @@ class InterVAWorker(QObject):
                                gui_ctrl=self.gui_ctrl)
             iv5_out.run()
             self.log.emit("ready")
-            if iv5_out.out["VA5"] is None:
+            if iv5_out.results["VA5"] is None:
                 self.state.emit(
                     "Data do not have any valid VA records (no results "
                     "available).\nPlease reload data in the expected format.")

@@ -13,6 +13,7 @@ from insilicova.api import InSilicoVA
 from insilicova.structures import InSilico
 from insilicova.exceptions import HaltGUIException, InSilicoVAException
 from interva.interva5 import InterVA5
+from interva import utils
 from pyopenva.data import COUNTRIES
 from pandas import read_csv, DataFrame
 from pandas.errors import EmptyDataError, ParserError
@@ -22,7 +23,8 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
                              QPushButton, QSpinBox, QStackedLayout,
                              QVBoxLayout, QWidget)
 from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal
-from pyopenva.output import PlotDialog, TableDialog, save_plot
+from PyQt5.QtGui import QPalette, QColor
+from pyopenva.output import PlotDialog, TableDialog, save_plot, _make_title
 from pyopenva.workers import InSilicoVAWorker, InterVAWorker
 
 
@@ -76,6 +78,8 @@ class Efficient(QWidget):
         self.btn_save_table = None
         self.btn_save_individual_results = None
         self.n_top_causes = 5
+        self.options_sex = "all deaths"
+        self.options_age = "all deaths"
         self.results_ui()
         self.plot_color = "Greys"
         self.stacked_layout = QStackedLayout()
@@ -397,8 +401,8 @@ class Efficient(QWidget):
 
     def results_ui(self):
         layout = QVBoxLayout()
-        gbox_top_causes = QGroupBox("Number of top causes")
-        hbox_top = QHBoxLayout()
+        gbox_options = QGroupBox("Options")
+        vbox_options = QVBoxLayout()
         self.spinbox_n_causes = QSpinBox()
         self.spinbox_n_causes.setRange(1, 64)
         self.spinbox_n_causes.setPrefix("Include ")
@@ -406,8 +410,49 @@ class Efficient(QWidget):
         self.spinbox_n_causes.setValue(self.n_top_causes)
         self.spinbox_n_causes.valueChanged.connect(self.set_n_top_causes)
         self.spinbox_n_causes.setMaximumWidth(250)
-        hbox_top.addWidget(self.spinbox_n_causes)
-        gbox_top_causes.setLayout(hbox_top)
+        vbox_options.addWidget(self.spinbox_n_causes)
+        label_dem = QLabel("Select demographic groups")
+        label_dem.setAlignment(Qt.AlignCenter)
+        vbox_options.addWidget(label_dem)
+
+        hbox_demographics = QHBoxLayout()
+        age_option_set = ["all deaths",
+                          "adult",
+                          "child",
+                          "neonate"]
+        label_age = QLabel("age:")
+        label_age.setMaximumWidth(30)
+        self.options_combo_age = QComboBox()
+        self.options_combo_age.addItems(age_option_set)
+        self.options_combo_age.setCurrentIndex(
+            age_option_set.index(self.options_age))
+        self.options_combo_age.currentTextChanged.connect(
+            self.set_options_age)
+        sex_option_set = ["all deaths",
+                          "female",
+                          "male"]
+        label_sex = QLabel("sex:")
+        label_sex.setMaximumWidth(30)
+        self.options_combo_sex = QComboBox()
+        self.options_combo_sex.addItems(sex_option_set)
+        # self.options_combo_sex.setEditable(True)
+        # self.options_combo_sex.lineEdit().setAlignment(Qt.AlignCenter)
+        # self.options_combo_sex.setStyleSheet(
+        #     "QComboBox { background-color: grey; }")
+        self.options_combo_sex.setCurrentIndex(
+            sex_option_set.index(self.options_sex))
+        self.options_combo_sex.currentTextChanged.connect(
+            self.set_options_sex)
+        hbox_demographics.addWidget(label_age)
+        hbox_demographics.addWidget(self.options_combo_age)
+        hbox_demographics.addWidget(label_sex)
+        hbox_demographics.addWidget(self.options_combo_sex)
+        hbox_demographics.insertSpacing(2, 50)
+
+        vbox_options.insertSpacing(1, 25)
+        vbox_options.insertSpacing(3, 15)
+        vbox_options.addLayout(hbox_demographics)
+        gbox_options.setLayout(vbox_options)
 
         gbox_show = QGroupBox("Show Results")
         hbox_show = QHBoxLayout()
@@ -451,7 +496,7 @@ class Efficient(QWidget):
         self.btn_results_ui_exit = QPushButton("Exit")
         hbox_navigate.addWidget(self.btn_results_to_algorithm)
         hbox_navigate.addWidget(self.btn_results_ui_exit)
-        layout.addWidget(gbox_top_causes)
+        layout.addWidget(gbox_options)
         layout.addStretch(1)
         layout.addWidget(gbox_show)
         layout.addStretch(1)
@@ -594,6 +639,12 @@ class Efficient(QWidget):
 
     def set_n_top_causes(self, n):
         self.n_top_causes = n
+
+    def set_options_sex(self, sex):
+        self.options_sex = sex
+
+    def set_options_age(self, age):
+        self.options_age = age
 
     def set_plot_color(self, color):
         self.plot_color = color
@@ -820,7 +871,9 @@ class Efficient(QWidget):
                                           algorithm=self.chosen_algorithm,
                                           parent=self,
                                           top=self.n_top_causes,
-                                          colors=self.plot_color)
+                                          colors=self.plot_color,
+                                          age=self.options_age,
+                                          sex=self.options_sex)
             self.plot_dialog.exec()
 
     def run_table_dialog(self):
@@ -838,7 +891,9 @@ class Efficient(QWidget):
         else:
             self.table_dialog = TableDialog(results,
                                             self,
-                                            top=self.n_top_causes)
+                                            top=self.n_top_causes,
+                                            age=self.options_age,
+                                            sex=self.options_sex)
             self.table_dialog.resize(self.table_dialog.table.width(),
                                      self.table_dialog.table.height())
             self.table_dialog.exec()
@@ -856,6 +911,7 @@ class Efficient(QWidget):
                 "format and/or run a VA algorithm.")
             alert.exec()
         else:
+            # TODO: add age & sex to file name if selected
             results_file_name = f"{self.chosen_algorithm}_csmf.csv"
             path = QFileDialog.getSaveFileName(self,
                                                "Save CSMF (csv)",
@@ -874,9 +930,22 @@ class Efficient(QWidget):
                                                     "Mean": "CSMF (Mean)"},
                                            inplace=True)
                         else:
+                            age = self.options_age
+                            if self.options_age == "all deaths":
+                                age = None
+                            sex = self.options_sex
+                            if self.options_sex == "all deaths":
+                                sex = None
+                            csmf = utils.csmf(results,
+                                              top=n_top_causes,
+                                              age=age,
+                                              sex=sex)
                             csmf.sort_values(ascending=False, inplace=True)
                             csmf_df = csmf.reset_index()[0:n_top_causes]
-                            csmf_df.rename(columns={"index": "Cause", 0: "CSMF"},
+                            title = _make_title(age=self.options_age,
+                                                sex=self.options_sex)
+                            csmf_df.rename(columns={"index": "Cause",
+                                                    0: title},
                                            inplace=True)
                         csmf_df.to_csv(f, index=False)
                     if os.path.isfile(path[0]):
@@ -912,6 +981,7 @@ class Efficient(QWidget):
                 "format and/or run a VA algorithm.")
             alert.exec()
         else:
+            # TODO: add age & sex to file name if selected
             results_file_name = f"{self.chosen_algorithm}_csmf.pdf"
             path = QFileDialog.getSaveFileName(self,
                                                "Save CSMF plot (pdf)",
@@ -923,7 +993,9 @@ class Efficient(QWidget):
                           algorithm=self.chosen_algorithm,
                           top=self.n_top_causes,
                           file_name=path[0],
-                          plot_colors=self.plot_color)
+                          plot_colors=self.plot_color,
+                          age=self.options_age,
+                          sex=self.options_sex)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
@@ -935,7 +1007,6 @@ class Efficient(QWidget):
                     alert.setText(
                         "ERROR: unable to save results to" + path[0])
                     alert.exec()
-
 
     def save_indiv_cod(self):
         if self.chosen_algorithm == "insilicova":
@@ -950,6 +1021,7 @@ class Efficient(QWidget):
                 "format and/or run a VA algorithm.")
             alert.exec()
         else:
+            # TODO: add age & sex to file name if selected
             results_file_name = f"{self.chosen_algorithm}_individual_cod.csv"
             path = QFileDialog.getSaveFileName(self,
                                                "Save CSMF (csv)",
@@ -962,8 +1034,16 @@ class Efficient(QWidget):
                             out = self.prepare_insilico_indiv_cod(results)
                             out.to_csv(f, index=False)
                         else:
-                            out = results.out["VA5"].copy()
-                            out.drop("WHOLEPROB", axis=1, inplace=True)
+                            out = utils._get_cod_with_dem(results)
+                            # TODO: add warning if no valid VA records left
+                            if self.options_age != "all records":
+                                out = out[out["age"] == self.options_age]
+                            if self.options_sex != "all records":
+                                out = out[out["sex"] == self.options_sex]
+                            # out = results.results["VA5"].copy()
+                            # out.drop("WHOLEPROB", axis=1, inplace=True)
+                            out.drop(["WHOLEPROB", "age", "sex"],
+                                     axis=1, inplace=True)
                             out.to_csv(f, index=False)
                     if os.path.isfile(path[0]):
                         alert = QMessageBox()
