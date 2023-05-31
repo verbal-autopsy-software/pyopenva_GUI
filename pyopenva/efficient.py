@@ -15,7 +15,7 @@ from insilicova.exceptions import HaltGUIException, InSilicoVAException
 from interva.interva5 import InterVA5
 from interva import utils
 from pyopenva.data import COUNTRIES
-from pandas import read_csv, DataFrame
+from pandas import read_csv, DataFrame, crosstab
 from pandas.errors import EmptyDataError, ParserError
 from pycrossva.transform import transform
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
@@ -24,7 +24,8 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
                              QVBoxLayout, QWidget)
 from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal
 from PyQt5.QtGui import QPalette, QColor
-from pyopenva.output import PlotDialog, TableDialog, save_plot, _make_title
+from pyopenva.output import (PlotDialog, TableDialog, DemTableDialog,
+                             save_plot, _make_title)
 from pyopenva.workers import InSilicoVAWorker, InterVAWorker
 
 
@@ -166,10 +167,12 @@ class Efficient(QWidget):
         self.btn_insilicova.setMaximumWidth(400)
         self.btn_insilicova.pressed.connect(
             lambda: self.set_chosen_algorithm("insilicova"))
+        self.btn_insilicova.pressed.connect(self.disable_age_options)
         self.btn_interva = QPushButton("InterVA")
         self.btn_interva.setMaximumWidth(400)
         self.btn_interva.pressed.connect(
             lambda: self.set_chosen_algorithm("interva"))
+        self.btn_interva.pressed.connect(self.enable_age_options)
         # self.btn_smartva = QPushButton("SmartVA")
         # self.btn_smartva.setMaximumWidth(400)
         # self.btn_smartva.pressed.connect(
@@ -411,9 +414,9 @@ class Efficient(QWidget):
         self.spinbox_n_causes.valueChanged.connect(self.set_n_top_causes)
         self.spinbox_n_causes.setMaximumWidth(250)
         vbox_options.addWidget(self.spinbox_n_causes)
-        label_dem = QLabel("Select demographic groups")
-        label_dem.setAlignment(Qt.AlignCenter)
-        vbox_options.addWidget(label_dem)
+        self.label_dem_results = QLabel("Select demographic groups")
+        self.label_dem_results.setAlignment(Qt.AlignCenter)
+        vbox_options.addWidget(self.label_dem_results)
 
         hbox_demographics = QHBoxLayout()
         age_option_set = ["all deaths",
@@ -460,8 +463,11 @@ class Efficient(QWidget):
         self.btn_show_table.pressed.connect(self.run_table_dialog)
         self.btn_show_plot = QPushButton("Show \n CSMF plot")
         self.btn_show_plot.pressed.connect(self.run_plot_dialog)
+        self.btn_show_dem = QPushButton("Show \n demographics")
+        self.btn_show_dem.pressed.connect(self.run_table_dialog_dem)
         hbox_show.addWidget(self.btn_show_table)
         hbox_show.addWidget(self.btn_show_plot)
+        hbox_show.addWidget(self.btn_show_dem)
         gbox_show.setLayout(hbox_show)
 
         gbox_save = QGroupBox("Save Results")
@@ -645,6 +651,20 @@ class Efficient(QWidget):
 
     def set_options_age(self, age):
         self.options_age = age
+
+    def disable_age_options(self):
+        # TODO: implement age- and sex-specific results for InSilicoVA
+        self.label_dem_results.setText(
+            "Select demographic groups \n (only available with InterVA)")
+        self.options_combo_age.setEnabled(False)
+        self.options_combo_sex.setEnabled(False)
+        self.btn_show_dem.setEnabled(False)
+
+    def enable_age_options(self):
+        self.label_dem_results.setText("Select demographic groups")
+        self.options_combo_age.setEnabled(True)
+        self.options_combo_sex.setEnabled(True)
+        self.btn_show_dem.setEnabled(True)
 
     def set_plot_color(self, color):
         self.plot_color = color
@@ -867,14 +887,27 @@ class Efficient(QWidget):
                 "format and/or run a VA algorithm.")
             alert.exec()
         else:
-            self.plot_dialog = PlotDialog(results=results,
-                                          algorithm=self.chosen_algorithm,
-                                          parent=self,
-                                          top=self.n_top_causes,
-                                          colors=self.plot_color,
-                                          age=self.options_age,
-                                          sex=self.options_sex)
-            self.plot_dialog.exec()
+            run_plot = True
+            if self.chosen_algorithm == "interva":
+                empty = self._check_empty_results()
+                run_plot = not empty
+            if run_plot:
+                self.plot_dialog = PlotDialog(results=results,
+                                              algorithm=self.chosen_algorithm,
+                                              parent=self,
+                                              top=self.n_top_causes,
+                                              colors=self.plot_color,
+                                              age=self.options_age,
+                                              sex=self.options_sex,
+                                              interva_rule=True)
+                self.plot_dialog.exec()
+            else:
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setText(
+                    "There are no VA records for the selected group:\n"
+                    f"age: {self.options_age},   sex: {self.options_sex}")
+                alert.exec()
 
     def run_table_dialog(self):
         if self.chosen_algorithm == "insilicova":
@@ -889,14 +922,55 @@ class Efficient(QWidget):
                 "format and/or run a VA algorithm.")
             alert.exec()
         else:
-            self.table_dialog = TableDialog(results,
-                                            self,
-                                            top=self.n_top_causes,
-                                            age=self.options_age,
-                                            sex=self.options_sex)
-            self.table_dialog.resize(self.table_dialog.table.width(),
-                                     self.table_dialog.table.height())
-            self.table_dialog.exec()
+            run_table = True
+            if self.chosen_algorithm == "interva":
+                empty = self._check_empty_results()
+                run_table = not empty
+            if run_table:
+                self.table_dialog = TableDialog(results,
+                                                parent=self,
+                                                top=self.n_top_causes,
+                                                age=self.options_age,
+                                                sex=self.options_sex,
+                                                interva_rule=False)
+                self.table_dialog.resize(self.table_dialog.table.width(),
+                                         self.table_dialog.table.height())
+                self.table_dialog.exec()
+            else:
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setText(
+                    "There are no VA records for the selected group:\n"
+                    f"age: {self.options_age},   sex: {self.options_sex}")
+                alert.exec()
+
+    def run_table_dialog_dem(self):
+        if self.chosen_algorithm == "insilicova":
+            results = self.insilicova_results
+        else:
+            results = self.interva_results
+        if results is None:
+            alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
+            alert.setText(
+                "No results available.  Please load data in the expected "
+                "format and/or run a VA algorithm.")
+            alert.exec()
+        elif self.chosen_algorithm == "insilicova":
+            alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
+            alert.setText("Demographics only available with InterVA")
+            alert.exec()
+        else:
+            if self.chosen_algorithm == "interva":
+                dem_results = utils._get_cod_with_dem(results)
+                self.table_dialog = DemTableDialog(dem_results, self)
+                self.table_dialog.resize(self.table_dialog.view.width(),
+                                         self.table_dialog.view.height())
+                self.table_dialog.exec()
+            # TODO: Need to add functionality for InSilicoVA
+            else:
+                pass
 
     def save_csmf_table(self):
         if self.chosen_algorithm == "insilicova":
@@ -910,55 +984,51 @@ class Efficient(QWidget):
                 "No results available.  Please load data in the expected "
                 "format and/or run a VA algorithm.")
             alert.exec()
+        elif self._check_empty_results():
+            alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
+            alert.setText(
+                "There are no VA records for the selected "
+                f"group:\n age: {self.options_age},   "
+                f"sex: {self.options_sex}")
+            alert.exec()
         else:
-            # TODO: add age & sex to file name if selected
-            results_file_name = f"{self.chosen_algorithm}_csmf.csv"
+            # results_file_name = f"{self.chosen_algorithm}_csmf.csv"
+            results_file_name = self._make_results_file_name("table")
             path = QFileDialog.getSaveFileName(self,
                                                "Save CSMF (csv)",
                                                results_file_name,
                                                "CSV Files (*.csv)")
             if path != ("", ""):
+                n_top_causes = self.n_top_causes
+                csmf = results.get_csmf(top=n_top_causes)
+                if isinstance(csmf, DataFrame):
+                    csmf_df = csmf.sort_values(
+                        by="Mean", ascending=False).copy()
+                    csmf_df = csmf_df.reset_index()
+                    csmf_df.rename(columns={"index": "Cause",
+                                            "Mean": "CSMF (Mean)"},
+                                   inplace=True)
+                else:
+                    age = self.options_age
+                    if self.options_age == "all deaths":
+                        age = None
+                    sex = self.options_sex
+                    if self.options_sex == "all deaths":
+                        sex = None
+                    csmf = utils.csmf(results,
+                                      top=n_top_causes,
+                                      age=age,
+                                      sex=sex)
+                    csmf.sort_values(ascending=False, inplace=True)
+                    csmf_df = csmf.reset_index()[0:n_top_causes]
+                    title = _make_title(age=self.options_age,
+                                        sex=self.options_sex)
+                    csmf_df.rename(columns={"index": "Cause",
+                                            0: title},
+                                   inplace=True)
                 try:
-                    with open(path[0], "w", newline="") as f:
-                        n_top_causes = self.n_top_causes
-                        csmf = results.get_csmf(top=n_top_causes)
-                        if isinstance(csmf, DataFrame):
-                            csmf_df = csmf.sort_values(
-                                by="Mean", ascending=False).copy()
-                            csmf_df = csmf_df.reset_index()
-                            csmf_df.rename(columns={"index": "Cause",
-                                                    "Mean": "CSMF (Mean)"},
-                                           inplace=True)
-                        else:
-                            age = self.options_age
-                            if self.options_age == "all deaths":
-                                age = None
-                            sex = self.options_sex
-                            if self.options_sex == "all deaths":
-                                sex = None
-                            csmf = utils.csmf(results,
-                                              top=n_top_causes,
-                                              age=age,
-                                              sex=sex)
-                            csmf.sort_values(ascending=False, inplace=True)
-                            csmf_df = csmf.reset_index()[0:n_top_causes]
-                            title = _make_title(age=self.options_age,
-                                                sex=self.options_sex)
-                            csmf_df.rename(columns={"index": "Cause",
-                                                    0: title},
-                                           inplace=True)
-                        csmf_df.to_csv(f, index=False)
-                    if os.path.isfile(path[0]):
-                        alert = QMessageBox()
-                        alert.setWindowTitle("openVA App")
-                        alert.setText("results saved to" + path[0])
-                        alert.exec()
-                    else:
-                        alert = QMessageBox()
-                        alert.setWindowTitle("openVA App")
-                        alert.setText(
-                            "ERROR: unable to save results to" + path[0])
-                        alert.exec()
+                    csmf_df.to_csv(path[0], index=False)
                 except (OSError, PermissionError):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
@@ -967,6 +1037,24 @@ class Efficient(QWidget):
                         f"Unable to save {path[0]}.\n" +
                         "(don't have permission or read-only file system)")
                     alert.exec()
+                if os.path.isfile(path[0]):
+                    alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
+                    alert.setText("results saved to" + path[0])
+                    alert.exec()
+                else:
+                    alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
+                    alert.setText(
+                        "ERROR: unable to save results to" + path[0])
+                    alert.exec()
+            else:
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setText(
+                    "ERROR: problem creating file for saving results.\n"
+                    "(File name is empty!)")
+                alert.exec()
 
     def save_csmf_plot(self):
         if self.chosen_algorithm == "insilicova":
@@ -980,9 +1068,17 @@ class Efficient(QWidget):
                 "No results available.  Please load data in the expected "
                 "format and/or run a VA algorithm.")
             alert.exec()
+        elif self._check_empty_results():
+            alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
+            alert.setText(
+                "There are no VA records for the selected "
+                f"group:\n age: {self.options_age},   "
+                f"sex: {self.options_sex}")
+            alert.exec()
         else:
-            # TODO: add age & sex to file name if selected
-            results_file_name = f"{self.chosen_algorithm}_csmf.pdf"
+            # results_file_name = f"{self.chosen_algorithm}_csmf.pdf"
+            results_file_name = self._make_results_file_name("plot")
             path = QFileDialog.getSaveFileName(self,
                                                "Save CSMF plot (pdf)",
                                                results_file_name,
@@ -995,7 +1091,8 @@ class Efficient(QWidget):
                           file_name=path[0],
                           plot_colors=self.plot_color,
                           age=self.options_age,
-                          sex=self.options_sex)
+                          sex=self.options_sex,
+                          interva_rule=False)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
@@ -1007,6 +1104,13 @@ class Efficient(QWidget):
                     alert.setText(
                         "ERROR: unable to save results to" + path[0])
                     alert.exec()
+            else:
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setText(
+                    "ERROR: problem creating file for saving results.\n"
+                    "(File name is empty!)")
+                alert.exec()
 
     def save_indiv_cod(self):
         if self.chosen_algorithm == "insilicova":
@@ -1020,42 +1124,35 @@ class Efficient(QWidget):
                 "No results available.  Please load data in the expected "
                 "format and/or run a VA algorithm.")
             alert.exec()
+        elif self._check_empty_results():
+            alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
+            alert.setText(
+                "There are no VA records for the selected "
+                f"group:\n age: {self.options_age},   "
+                f"sex: {self.options_sex}")
+            alert.exec()
         else:
-            # TODO: add age & sex to file name if selected
-            results_file_name = f"{self.chosen_algorithm}_individual_cod.csv"
+            # results_file_name = f"{self.chosen_algorithm}_individual_cod.csv"
+            results_file_name = self._make_results_file_name("indiv")
             path = QFileDialog.getSaveFileName(self,
                                                "Save CSMF (csv)",
                                                results_file_name,
                                                "CSV Files (*.csv)")
             if path != ("", ""):
+                if self.chosen_algorithm == "insilicova":
+                    out = self.prepare_insilico_indiv_cod(results)
+                else:
+                    keep = utils._get_cod_with_dem(results)
+                    if self.options_age != "all deaths":
+                        keep = keep[keep["age"] == self.options_age]
+                    if self.options_sex != "all deaths":
+                        keep = keep[keep["sex"] == self.options_sex]
+                    keep_id = keep["ID"]
+                    out = results.results["VA5"]
+                    out = out[out["ID"].isin(keep_id)]
                 try:
-                    with open(path[0], "w", newline="") as f:
-                        if self.chosen_algorithm == "insilicova":
-                            out = self.prepare_insilico_indiv_cod(results)
-                            out.to_csv(f, index=False)
-                        else:
-                            out = utils._get_cod_with_dem(results)
-                            # TODO: add warning if no valid VA records left
-                            if self.options_age != "all records":
-                                out = out[out["age"] == self.options_age]
-                            if self.options_sex != "all records":
-                                out = out[out["sex"] == self.options_sex]
-                            # out = results.results["VA5"].copy()
-                            # out.drop("WHOLEPROB", axis=1, inplace=True)
-                            out.drop(["WHOLEPROB", "age", "sex"],
-                                     axis=1, inplace=True)
-                            out.to_csv(f, index=False)
-                    if os.path.isfile(path[0]):
-                        alert = QMessageBox()
-                        alert.setWindowTitle("openVA App")
-                        alert.setText("results saved to" + path[0])
-                        alert.exec()
-                    else:
-                        alert = QMessageBox()
-                        alert.setWindowTitle("openVA App")
-                        alert.setText(
-                            "ERROR: unable to save results " + path[0])
-                        alert.exec()
+                    out.to_csv(path[0], index=False)
                 except (OSError, PermissionError):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
@@ -1064,6 +1161,24 @@ class Efficient(QWidget):
                         f"Unable to save {path[0]}.\n" +
                         "(don't have permission or read-only file system)")
                     alert.exec()
+                if os.path.isfile(path[0]):
+                    alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
+                    alert.setText("results saved to" + path[0])
+                    alert.exec()
+                else:
+                    alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
+                    alert.setText(
+                        "ERROR: unable to save results " + path[0])
+                    alert.exec()
+            else:
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setText(
+                    "ERROR: problem creating file for saving results.\n"
+                    "(File name is empty!)")
+                alert.exec()
 
     def prepare_insilico_indiv_cod(self, results):
         top_cause = results.indiv_prob.idxmax(axis=1)
@@ -1139,3 +1254,31 @@ class Efficient(QWidget):
                         f"Unable to save {path[0]}.\n" +
                         "(don't have permission or read-only file system)")
                     alert.exec()
+
+    def _check_empty_results(self):
+        if self.chosen_algorithm == "insilicova":
+            return False
+        else:
+            empty = True
+            if self.interva_results is not None:
+                out = utils._get_cod_with_dem(self.interva_results)
+                if self.options_age != "all deaths":
+                    out = out[out["age"] == self.options_age]
+                if self.options_sex != "all deaths":
+                    out = out[out["sex"] == self.options_sex]
+                empty = out.shape[0] == 0
+            return empty
+
+    def _make_results_file_name(self, fnc):
+        results_file_name = f"{self.chosen_algorithm}"
+        if self.options_age != "all deaths":
+            results_file_name += f"_{self.options_age}"
+        if self.options_sex != "all deaths":
+            results_file_name += f"_{self.options_sex}"
+        if fnc == "plot":
+            results_file_name += "_csmf.pdf"
+        elif fnc == "table":
+            results_file_name += "_csmf.csv"
+        else:
+            results_file_name += "_individual_cod.csv"
+        return results_file_name

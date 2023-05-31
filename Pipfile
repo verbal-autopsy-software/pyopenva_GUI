@@ -7,7 +7,7 @@ name = "pypi"
 pyqt5 = "*"
 pandas = "*"
 pycrossva = "==0.93"
-interva = "==0.0.4"
+interva = "==0.0.5"
 vacheck = "==0.0.2"
 insilicova = {git = "https://github.com/verbal-autopsy-software/pyinsilicova"}
 matplotlib = "==3.6.3"

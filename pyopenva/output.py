@@ -5,16 +5,17 @@ pyopenva.output
 ~~~~~~~~~~~~~~
 This module creates displays for the algorithm results.
 """
-import pandas as pd
 from PyQt5.QtCore import QAbstractTableModel, Qt
-from PyQt5.QtWidgets import (QApplication, QDialog, QMessageBox, QPushButton,
-                             QTableView, QVBoxLayout)
+from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
+                             QLabel, QMessageBox, QPushButton, QTableView,
+                             QHBoxLayout, QVBoxLayout)
 from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg,
                                                 NavigationToolbar2QT)
 from matplotlib.figure import Figure
 from matplotlib import style
 from matplotlib.pyplot import get_cmap
 from numpy import linspace
+from pandas import crosstab, DataFrame
 from interva import utils
 
 
@@ -115,8 +116,8 @@ class PlotDialog(QDialog):
 
 class TableDialog(QDialog):
 
-    def __init__(self, results, parent=None, top=5,
-                 age="all deaths", sex="all deaths", interva_rule=False):
+    def __init__(self, results, parent=None, top=5, age="all deaths",
+                 sex="all deaths", interva_rule=False):
         super(TableDialog, self).__init__(parent=parent)
         self.setWindowTitle("Cause-Specific Mortality Fraction")
         self.results = results
@@ -135,7 +136,7 @@ class TableDialog(QDialog):
         self.table.setShowGrid(False)
 
         csmf = self.results.get_csmf(top=self.n_top_causes)
-        if isinstance(csmf, pd.DataFrame):
+        if isinstance(csmf, DataFrame):
             csmf_df = csmf.sort_values(by="Mean", ascending=False).copy()
             csmf_df = csmf_df.reset_index()
             csmf_df.rename(columns={"index": "Cause", "Mean": "CSMF (Mean)"},
@@ -157,7 +158,6 @@ class TableDialog(QDialog):
         self.table.setColumnWidth(0, column_width_0)
         self.table.setColumnWidth(1, column_width_1)
 
-
         clipboard = QApplication.clipboard()
         self.btn_copy = QPushButton("Copy table to clipboard")
         self.btn_copy.pressed.connect(
@@ -167,6 +167,123 @@ class TableDialog(QDialog):
         vbox_csmf.addWidget(self.table)
         vbox_csmf.addWidget(self.btn_copy)
         self.setLayout(vbox_csmf)
+
+
+class DemTableDialog(QDialog):
+
+    def __init__(self, results: DataFrame, parent=None):
+        super(DemTableDialog, self).__init__(parent=parent)
+        self.setWindowTitle("Demographic Table (age x sex)")
+        self.results = results
+        self.view = QTableView()
+        self.view.setShowGrid(False)
+        self.table_type = "counts"
+        self.proportions = False
+        self.margins = True
+        self.table = self._make_table()
+
+        self.model = TableModel(self.table)
+        self.view.setModel(self.model)
+        column_width_0 = self.view.sizeHintForColumn(0) + 100
+        column_width_1 = self.view.sizeHintForColumn(1) + 100
+        # self.table.resizeColumnToContents(0)
+        self.view.setColumnWidth(0, column_width_0)
+        self.view.setColumnWidth(1, column_width_1)
+
+        options_type = ["counts", "% row", "% col", "% cell"]
+        label_table_type = QLabel("Type of table:")
+        self.table_type_combo = QComboBox()
+        self.table_type_combo.addItems(options_type)
+        self.table_type_combo.setCurrentIndex(
+            options_type.index(self.table_type))
+        self.table_type_combo.currentTextChanged.connect(
+            self.set_table_type)
+        self.table_type_combo.currentTextChanged.connect(
+            lambda: self._make_table()
+        )
+        self.check_margins = QCheckBox()
+        self.check_margins.setChecked(True)
+        self.check_margins.setText("Include margins")
+        self.check_margins.stateChanged.connect(
+            lambda: self.set_margins(self.check_margins))
+        self.check_proportions = QCheckBox()
+        self.check_proportions.setChecked(False)
+        self.check_proportions.setEnabled(False)
+        self.check_proportions.setText("Use proportions")
+        self.check_proportions.stateChanged.connect(
+            lambda: self.set_proportions(self.check_proportions))
+
+        hbox_format = QHBoxLayout()
+        hbox_format.addWidget(label_table_type)
+        hbox_format.addWidget(self.table_type_combo)
+        hbox_format.addWidget(self.check_margins)
+        hbox_format.addWidget(self.check_proportions)
+
+        clipboard = QApplication.clipboard()
+        self.btn_copy = QPushButton("Copy table to clipboard")
+        self.btn_copy.pressed.connect(
+            lambda: clipboard.setText(self.table.to_csv(index=False)))
+
+        vbox_csmf = QVBoxLayout()
+        vbox_csmf.addWidget(self.view)
+        vbox_csmf.addLayout(hbox_format)
+        vbox_csmf.addWidget(self.btn_copy)
+        self.setLayout(vbox_csmf)
+
+    def _make_table(self):
+        pct = 100
+        if self.proportions or self.table_type == "counts":
+            pct = 1
+        normalize_dict = {"counts": False, "% row": "index",
+                          "% col": "columns", "% cell": "all"}
+        normalize = normalize_dict[self.table_type]
+        table = crosstab(self.results["sex"], self.results["age"],
+                         normalize=normalize, margins=self.margins,
+                         margins_name="Total") * pct
+        if self.table_type == "% row" and self.margins:
+            table["Total"] = table.sum(axis=1)
+        elif self.table_type == "% col" and self.margins:
+            table.loc[len(table.index)] = [1.0 * pct] * 4
+            table = table.rename(index={2: "Total"})
+        if self.proportions:
+            table = table.round(3)
+        elif self.proportions is False and self.table_type != "counts":
+            table = table.round(1)
+            table["adult"] = table["adult"].astype(str) + "%"
+            table["child"] = table["child"].astype(str) + "%"
+            table["neonate"] = table["neonate"].astype(str) + "%"
+            if "Total" in table.columns:
+                table["Total"] = table["Total"].astype(str) + "%"
+        table = table.reset_index()
+        return table
+
+    def set_table_type(self, type_of_table):
+        self.table_type = type_of_table
+        if self.table_type == "counts":
+            self.check_proportions.setEnabled(False)
+        else:
+            self.check_proportions.setEnabled(True)
+        self.table = self._make_table()
+        self.model = TableModel(self.table)
+        self.view.setModel(self.model)
+
+    def set_margins(self, check_btn):
+        if check_btn.isChecked():
+            self.margins = True
+        else:
+            self.margins = False
+        self.table = self._make_table()
+        self.model = TableModel(self.table)
+        self.view.setModel(self.model)
+
+    def set_proportions(self, check_btn):
+        if check_btn.isChecked():
+            self.proportions = True
+        else:
+            self.proportions = False
+        self.table = self._make_table()
+        self.model = TableModel(self.table)
+        self.view.setModel(self.model)
 
 
 class TableModel(QAbstractTableModel):
@@ -179,6 +296,8 @@ class TableModel(QAbstractTableModel):
         if role == Qt.DisplayRole:
             value = self._data.iloc[index.row(), index.column()]
             return str(value)
+        elif role == Qt.TextAlignmentRole:
+            return Qt.AlignCenter
 
     def rowCount(self, index):
         return self._data.shape[0]
