@@ -27,7 +27,7 @@ class Mode(QWidget):
         self.label_openva.setFont(QFont("Arial", 36, QFont.Bold))
         d4h_pixmap = QPixmap(
             os.path.join(os.path.dirname(__file__),
-                         "icons/d4h.jpg"))
+                         "icons/d4h.png"))
         self.logo_d4h = QLabel()
         self.logo_d4h.setPixmap(
             d4h_pixmap.scaled(192, 192,
@@ -38,7 +38,7 @@ class Mode(QWidget):
                          "icons/vital_strategies.png"))
         self.logo_vital_strategies = QLabel()
         self.logo_vital_strategies.setPixmap(
-            vital_strategies_pixmap.scaled(128, 128,
+            vital_strategies_pixmap.scaled(140, 140,
                                            Qt.KeepAspectRatio,
                                            Qt.SmoothTransformation))
         self.btn_efficient = QPushButton("Start One-Click (Wizard)")

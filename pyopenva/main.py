@@ -11,6 +11,7 @@ from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtCore import Qt
 import os
 import sys
+import qdarktheme
 from pandas import read_csv
 from pyopenva.efficient import Efficient
 from pyopenva.mode import Mode
@@ -382,6 +383,8 @@ class WindowManager(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    # qdarktheme.setup_theme("auto")
+    # qdarktheme.setup_theme("light")
     gui = WindowManager()
     gui.show()
     sys.exit(app.exec_())
