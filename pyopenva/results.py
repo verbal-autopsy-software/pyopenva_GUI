@@ -323,30 +323,37 @@ class Results(QWidget):
                                                    "CSV Files (*.csv)")
                 if path != ("", ""):
                     # os.remove(path[0])
-                    with open(path[0], "w", newline="") as f:
-                        try:
-                            csmf_df.round(4).to_csv(f, index=False)
-                            if os.path.isfile(path[0]):
-                                alert = QMessageBox()
-                                alert.setWindowTitle("openVA App")
-                                alert.setText("results saved to" + path[0])
-                                alert.exec()
-                            else:
-                                alert = QMessageBox()
-                                alert.setWindowTitle("openVA App")
-                                alert.setText(
-                                    f"ERROR: unable to save results to\n"
-                                    f"{f.name}")
-                                alert.exec()
-                        except (OSError, PermissionError):
+                    try:
+                        csmf_df.round(4).to_csv(path[0], index=False)
+                        # TODO: check when file was written if it existed
+                        # previously
+                        if os.path.isfile(path[0]):
                             alert = QMessageBox()
                             alert.setWindowTitle("openVA App")
-                            alert.setIcon(QMessageBox.Warning)
-                            alert.setText(
-                                f"Unable to save {f.name}.\n" +
-                                "(don't have permission or "
-                                "read-only file system)")
+                            alert.setText("results saved to" + path[0])
                             alert.exec()
+                        else:
+                            alert = QMessageBox()
+                            alert.setWindowTitle("openVA App")
+                            alert.setText(
+                                f"ERROR: unable to save results to\n"
+                                f"{path[0]}")
+                            alert.exec()
+                    except (OSError, PermissionError):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setIcon(QMessageBox.Warning)
+                        alert.setText(
+                            f"Unable to save {path[0]}.\n" +
+                            "(don't have permission or read-only file system)")
+                        alert.exec()
+                else:
+                    alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
+                    alert.setText(
+                        "ERROR: problem creating file for saving results.\n"
+                        "(File name is empty!)")
+                    alert.exec()
 
     def save_interva_plot(self):
         if self.interva_results is None:
@@ -402,6 +409,13 @@ class Results(QWidget):
                             f"Unable to save {path[0]}.\n" +
                             "(don't have permission or read-only file system)")
                         alert.exec()
+                else:
+                    alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
+                    alert.setText(
+                        "ERROR: problem creating file for saving results.\n"
+                        "(File name is empty!)")
+                    alert.exec()
 
     def save_interva_indiv(self):
         if self.interva_results is None:
@@ -428,22 +442,20 @@ class Results(QWidget):
                                                    results_file_name,
                                                    "CSV Files (*.csv)")
                 if path != ("", ""):
+                    keep = utils._get_cod_with_dem(self.interva_results)
+                    if self.options_age != "all deaths":
+                        keep = keep[keep["age"] == self.options_age]
+                    if self.options_sex != "all deaths":
+                        keep = keep[keep["sex"] == self.options_sex]
+                    keep_id = keep["ID"]
+                    out = utils.get_indiv_cod(
+                        iva5=self.interva_results,
+                        top=self.n_top_causes,
+                        interva_rule=self.interva_rule,
+                        include_propensities=self.interva_include_probs)
+                    out = out[out["ID"].isin(keep_id)]
                     try:
-                        with open(path[0], "w", newline="") as f:
-                            keep = utils._get_cod_with_dem(
-                                self.interva_results)
-                            if self.options_age != "all deaths":
-                                keep = keep[keep["age"] == self.options_age]
-                            if self.options_sex != "all deaths":
-                                keep = keep[keep["sex"] == self.options_sex]
-                            keep_id = keep["ID"]
-                            out = utils.get_indiv_cod(
-                                iva5=self.interva_results,
-                                top=self.n_top_causes,
-                                interva_rule=self.interva_rule,
-                                include_propensities=self.interva_include_probs)
-                            out = out[out["ID"].isin(keep_id)]
-                            out.to_csv(f, index=False)
+                        out.to_csv(path[0], index=False)
                         if os.path.isfile(path[0]):
                             alert = QMessageBox()
                             alert.setWindowTitle("openVA App")
@@ -463,6 +475,13 @@ class Results(QWidget):
                             f"Unable to save {path[0]}.\n" +
                             "(don't have permission or read-only file system)")
                         alert.exec()
+                else:
+                    alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
+                    alert.setText(
+                        "ERROR: problem creating file for saving results.\n"
+                        "(File name is empty!)")
+                    alert.exec()
 
     def insilicova_plot(self):
         if self.insilicova_results is None:
@@ -511,17 +530,16 @@ class Results(QWidget):
             if path != ("", ""):
                 # os.remove(path[0])
                 try:
-                    with open(path[0], "w", newline="") as f:
-                        n_top_causes = self.n_top_causes
-                        csmf = self.insilicova_results.get_csmf(
-                            top=n_top_causes)
-                        csmf_df = csmf.sort_values(by="Mean",
-                                                   ascending=False).copy()
-                        csmf_df = csmf_df.reset_index()
-                        csmf_df.rename(columns={"index": "Cause",
-                                                "Mean": "CSMF (Mean)"},
-                                       inplace=True)
-                        csmf_df.round(4).to_csv(f, index=False)
+                    n_top_causes = self.n_top_causes
+                    csmf = self.insilicova_results.get_csmf(
+                        top=n_top_causes)
+                    csmf_df = csmf.sort_values(by="Mean",
+                                               ascending=False).copy()
+                    csmf_df = csmf_df.reset_index()
+                    csmf_df.rename(columns={"index": "Cause",
+                                            "Mean": "CSMF (Mean)"},
+                                   inplace=True)
+                    csmf_df.round(4).to_csv(path[0], index=False)
                     if os.path.isfile(path[0]):
                         alert = QMessageBox()
                         alert.setWindowTitle("openVA App")
@@ -541,6 +559,13 @@ class Results(QWidget):
                         f"Unable to save {path[0]}.\n" +
                         "(don't have permission or read-only file system)")
                     alert.exec()
+            else:
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setText(
+                    "ERROR: problem creating file for saving results.\n"
+                    "(File name is empty!)")
+                alert.exec()
 
     def save_insilicova_plot(self):
         if self.insilicova_results is None:
@@ -582,6 +607,13 @@ class Results(QWidget):
                         f"Unable to save {path[0]}.\n" +
                         "(don't have permission or read-only file system)")
                     alert.exec()
+            else:
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setText(
+                    "ERROR: problem creating file for saving results.\n"
+                    "(File name is empty!)")
+                alert.exec()
 
     def save_insilicova_indiv(self):
         if self.insilicova_results is None:
@@ -598,10 +630,9 @@ class Results(QWidget):
                                                "CSV Files (*.csv)")
             if path != ("", ""):
                 try:
-                    with open(path[0], "w", newline="") as f:
-                        out = self.prepare_insilico_indiv_cod(
-                            self.insilicova_results)
-                        out.to_csv(f, index=False)
+                    out = self.prepare_insilico_indiv_cod(
+                        self.insilicova_results)
+                    out.to_csv(path[0], index=False)
                     if os.path.isfile(path[0]):
                         alert = QMessageBox()
                         alert.setWindowTitle("openVA App")
@@ -621,6 +652,13 @@ class Results(QWidget):
                         f"Unable to save {path[0]}.\n" +
                         "(don't have permission or read-only file system)")
                     alert.exec()
+            else:
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setText(
+                    "ERROR: problem creating file for saving results.\n"
+                    "(File name is empty!)")
+                alert.exec()
 
     def prepare_insilico_indiv_cod(self, results):
         all_results = []

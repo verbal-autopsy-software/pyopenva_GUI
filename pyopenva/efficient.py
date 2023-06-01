@@ -887,11 +887,15 @@ class Efficient(QWidget):
                 "format and/or run a VA algorithm.")
             alert.exec()
         else:
-            run_plot = True
-            if self.chosen_algorithm == "interva":
-                empty = self._check_empty_results()
-                run_plot = not empty
-            if run_plot:
+            empty =  self._check_empty_results()
+            if empty:
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setText(
+                    "There are no VA records for the selected group:\n"
+                    f"age: {self.options_age},   sex: {self.options_sex}")
+                alert.exec()
+            else:
                 self.plot_dialog = PlotDialog(results=results,
                                               algorithm=self.chosen_algorithm,
                                               parent=self,
@@ -901,13 +905,6 @@ class Efficient(QWidget):
                                               sex=self.options_sex,
                                               interva_rule=True)
                 self.plot_dialog.exec()
-            else:
-                alert = QMessageBox()
-                alert.setWindowTitle("openVA App")
-                alert.setText(
-                    "There are no VA records for the selected group:\n"
-                    f"age: {self.options_age},   sex: {self.options_sex}")
-                alert.exec()
 
     def run_table_dialog(self):
         if self.chosen_algorithm == "insilicova":
@@ -922,11 +919,15 @@ class Efficient(QWidget):
                 "format and/or run a VA algorithm.")
             alert.exec()
         else:
-            run_table = True
-            if self.chosen_algorithm == "interva":
-                empty = self._check_empty_results()
-                run_table = not empty
-            if run_table:
+            empty = self._check_empty_results()
+            if empty:
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setText(
+                    "There are no VA records for the selected group:\n"
+                    f"age: {self.options_age},   sex: {self.options_sex}")
+                alert.exec()
+            else:
                 self.table_dialog = TableDialog(results,
                                                 parent=self,
                                                 top=self.n_top_causes,
@@ -936,13 +937,6 @@ class Efficient(QWidget):
                 self.table_dialog.resize(self.table_dialog.table.width(),
                                          self.table_dialog.table.height())
                 self.table_dialog.exec()
-            else:
-                alert = QMessageBox()
-                alert.setWindowTitle("openVA App")
-                alert.setText(
-                    "There are no VA records for the selected group:\n"
-                    f"age: {self.options_age},   sex: {self.options_sex}")
-                alert.exec()
 
     def run_table_dialog_dem(self):
         if self.chosen_algorithm == "insilicova":
@@ -1153,6 +1147,17 @@ class Efficient(QWidget):
                     out = out[out["ID"].isin(keep_id)]
                 try:
                     out.to_csv(path[0], index=False)
+                    if os.path.isfile(path[0]):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText("results saved to" + path[0])
+                        alert.exec()
+                    else:
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText(
+                            "ERROR: unable to save results " + path[0])
+                        alert.exec()
                 except (OSError, PermissionError):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
@@ -1160,17 +1165,6 @@ class Efficient(QWidget):
                     alert.setText(
                         f"Unable to save {path[0]}.\n" +
                         "(don't have permission or read-only file system)")
-                    alert.exec()
-                if os.path.isfile(path[0]):
-                    alert = QMessageBox()
-                    alert.setWindowTitle("openVA App")
-                    alert.setText("results saved to" + path[0])
-                    alert.exec()
-                else:
-                    alert = QMessageBox()
-                    alert.setWindowTitle("openVA App")
-                    alert.setText(
-                        "ERROR: unable to save results " + path[0])
                     alert.exec()
             else:
                 alert = QMessageBox()
