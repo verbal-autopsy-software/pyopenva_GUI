@@ -3,8 +3,12 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
+[dev-packages]
+sphinx  = "*"
+
 [packages]
 pyqt5 = "*"
+pyqtwebengine = "*"
 pandas = "*"
 pycrossva = "==0.93"
 interva = "==0.0.5"

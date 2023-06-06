@@ -8,7 +8,8 @@ This module creates user interface for the app.
 from PyQt5.QtWidgets import (QAction, QApplication, QMainWindow, QMessageBox,
                              QStackedLayout, QWidget)
 from PyQt5.QtCore import QCoreApplication
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtWebEngineWidgets import QWebEngineView
 import os
 import sys
 import qdarktheme
@@ -166,6 +167,8 @@ class WindowManager(QMainWindow):
         act_color_inferno = QAction("inferno", self)
         act_color_inferno.triggered.connect(
             lambda: self.set_plot_color("inferno"))
+        act_help = QAction("Help contents...", self)
+        act_help.triggered.connect(self.show_help)
 
         # setup menu bar
         menu = self.menuBar()
@@ -173,6 +176,8 @@ class WindowManager(QMainWindow):
         menu_nav = menu.addMenu("&Navigate")
         menu_data = menu.addMenu("&Data")
         menu_plot = menu.addMenu("&Plot")
+        menu_help = menu.addMenu("&Help")
+
         menu_file.addAction(act_about)
         menu_file.addAction(act_close)
         menu_nav_go = menu_nav.addMenu("Go to... ")
@@ -195,6 +200,7 @@ class WindowManager(QMainWindow):
         menu_plot_color_alt.addAction(act_color_viridis)
         menu_plot_color_alt.addAction(act_color_plasma)
         menu_plot_color_alt.addAction(act_color_inferno)
+        menu_help.addAction(act_help)
 
     def show_efficient(self):
         self.stacked_layout.setCurrentIndex(3)
@@ -379,6 +385,13 @@ class WindowManager(QMainWindow):
                      f"License: {__license__}\n" +
                      f"Website: {__url__}")
         info.exec()
+
+    def show_help(self):
+        help_path = os.path.join(os.path.dirname(__file__),
+                                 "docs", "index.html")
+        self.browser = QWebEngineView()
+        self.browser.setUrl(QUrl.fromLocalFile(help_path))
+        self.browser.show()
 
 
 if __name__ == '__main__':
