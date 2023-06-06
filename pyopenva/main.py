@@ -386,9 +386,19 @@ class WindowManager(QMainWindow):
                      f"Website: {__url__}")
         info.exec()
 
+    @staticmethod
+    def find_data_file(filename):
+        if getattr(sys, "frozen", False):
+            datadir = os.path.dirname(sys.executable)
+        else:
+            datadir = os.path.dirname(__file__)
+        return os.path.join(datadir, filename)
+
     def show_help(self):
-        help_path = os.path.join(os.path.dirname(__file__),
-                                 "docs", "index.html")
+        # help_path = os.path.join(os.path.dirname(__file__),
+        #                          "docs", "index.html")
+        index_name = os.path.join("docs", "index.html")
+        help_path = self.find_data_file(index_name)
         self.browser = QWebEngineView()
         self.browser.setUrl(QUrl.fromLocalFile(help_path))
         self.browser.show()

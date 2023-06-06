@@ -31,6 +31,7 @@ except ImportError:
 
 include_files = []
 include_files.append("pyopenva/data")
+include_files.append("pyopenva/docs")
 if get_qt_plugins_paths:
     # Inclusion of extra plugins (since cx_Freeze 6.8b2)
     # cx_Freeze imports automatically the following plugins depending of the
