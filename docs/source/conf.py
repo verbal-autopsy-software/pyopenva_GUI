@@ -6,9 +6,9 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'pyopenVA GUI'
-copyright = '2023, openVA Team (Jason Thomas)'
-author = 'openVA Team (Jason Thomas)'
+project = 'openVA App'
+copyright = '2023, openVA Team'
+author = 'openVA Team (Jason Thomas, Sherry Zhao, & Peter Choi)'
 release = '0.0.1'
 
 # -- General configuration ---------------------------------------------------
@@ -19,10 +19,9 @@ extensions = []
 templates_path = ['_templates']
 exclude_patterns = []
 
-
-
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'alabaster'
 html_static_path = ['_static']
+html_logo = '../../pyopenva/icons/openva-logo.png'

@@ -1,8 +1,6 @@
 One-Click Wizard
 ================
 
-.. _wizard:
-
 Steps for analyzing VA data with in the One-Click Wizard mode.
 
 * **Step 1**: load data
@@ -14,4 +12,4 @@ Steps for analyzing VA data with in the One-Click Wizard mode.
 * **Step 4**: access results
 
 
-:ref:`Home <home>`  :ref:`Customizable Mode <custom>`
+:doc:`Home <index>`  :doc:`Customizable Mode <custom>`

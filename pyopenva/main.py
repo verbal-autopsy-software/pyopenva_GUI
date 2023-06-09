@@ -9,7 +9,8 @@ from PyQt5.QtWidgets import (QAction, QApplication, QMainWindow, QMessageBox,
                              QStackedLayout, QWidget)
 from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtCore import Qt, QUrl
-from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage
+from PyQt5.QtGui import QDesktopServices
 import os
 import sys
 import qdarktheme
@@ -21,6 +22,16 @@ from pyopenva.results import Results
 from pyopenva.load import LoadData
 from pyopenva.__version__ import (__description__, __license__, __url__,
                                   __version__)
+
+
+class CustomWebEnginePage(QWebEnginePage):
+
+    def acceptNavigationRequest(self, url, _type, is_main_frame):
+        not_host = url.host() != ""
+        if _type == QWebEnginePage.NavigationTypeLinkClicked and not_host:
+            QDesktopServices.openUrl(url)
+            return False
+        return super().acceptNavigationRequest(url, _type, is_main_frame)
 
 
 class WindowManager(QMainWindow):
@@ -400,7 +411,9 @@ class WindowManager(QMainWindow):
         index_name = os.path.join("docs", "index.html")
         help_path = self.find_data_file(index_name)
         self.browser = QWebEngineView()
+        self.browser.setPage(CustomWebEnginePage(self))
         self.browser.setUrl(QUrl.fromLocalFile(help_path))
+        self.browser.setGeometry(200, 200, 1017, 800)
         self.browser.show()
 
 
