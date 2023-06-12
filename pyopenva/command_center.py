@@ -68,6 +68,7 @@ class CommandCenter(QWidget):
         self.setLayout(layout)
 
         # initialize InSilico parameters
+        self.insilicova_limit = 100
         self.n_iterations = 3000
         self.jump_scale = 0.1
         self.auto_extend = True
@@ -797,81 +798,99 @@ class CommandCenter(QWidget):
             self.btn_save_insilicova_log.setEnabled(True)
             self.btn_insilicova_options.setEnabled(True)
         else:
-            self.insilicova_warnings = None
-            self.insilicova_errors = None
-            self.insilicova_results = None
-            burnin = max(int(self.n_iterations / 2), 1)
-            thin = 10
-            self.insilicova_thread = QThread()
-            self.insilicova_worker = InSilicoVAWorker(
-                self.pycrossva_data,
-                data_type="WHO2016",
-                n_sim=self.n_iterations,
-                thin=thin,
-                burnin=burnin,
-                auto_length=self.auto_extend,
-                seed=self.seed,
-                gui_ctrl=self.insilicova_ctrl)
-            self.insilicova_worker.moveToThread(self.insilicova_thread)
-            self.insilicova_thread.started.connect(self.insilicova_worker.run)
-            self.insilicova_worker.finished.connect(
-                self.insilicova_thread.quit)
-            self.insilicova_worker.finished.connect(
-                self.insilicova_worker.deleteLater)
-            self.insilicova_thread.finished.connect(
-                self.insilicova_thread.deleteLater)
-            self.insilicova_worker.progress.connect(
-                self.update_insilicova_progress)
-            self.insilicova_worker.state.connect(
-                self.update_insilicova_progress_label)
-            self.insilicova_worker.insilicova_errors.connect(
-                self.update_insilicova_errors)
-            self.insilicova_worker.insilicova_warnings.connect(
-                self.update_insilicova_warnings)
-            self.insilicova_worker.insilicova_results.connect(
-                self.parent.update_insilicova_results)
-            self.insilicova_thread.start()
-            self.btn_insilicova_stop.setEnabled(True)
+            n_records = self.pycrossva_data.shape[0]
+            if n_records < self.insilicova_limit:
+                alert = QMessageBox()
+                alert.setText(
+                    "InSilicoVA is unavailable.  At least "
+                    f"{self.insilicova_limit} deaths are needed for reliable "
+                    "results.\n\n(InterVA is available.)")
+                alert.exec()
+                self.btn_insilicova_run.setEnabled(True)
+                self.btn_load_data.setEnabled(True)
+                self.btn_pycrossva.setEnabled(True)
+                self.combo_data_id_col.setEnabled(True)
+                self.btn_data_format.setEnabled(True)
+                self.btn_edit_data.setEnabled(True)
+                self.btn_save_insilicova_log.setEnabled(True)
+                self.btn_insilicova_options.setEnabled(True)
+            else:
+                self.insilicova_warnings = None
+                self.insilicova_errors = None
+                self.insilicova_results = None
+                burnin = max(int(self.n_iterations / 2), 1)
+                thin = 10
+                self.insilicova_thread = QThread()
+                self.insilicova_worker = InSilicoVAWorker(
+                    self.pycrossva_data,
+                    data_type="WHO2016",
+                    n_sim=self.n_iterations,
+                    thin=thin,
+                    burnin=burnin,
+                    auto_length=self.auto_extend,
+                    seed=self.seed,
+                    gui_ctrl=self.insilicova_ctrl)
+                self.insilicova_worker.moveToThread(self.insilicova_thread)
+                self.insilicova_thread.started.connect(
+                    self.insilicova_worker.run)
+                self.insilicova_worker.finished.connect(
+                    self.insilicova_thread.quit)
+                self.insilicova_worker.finished.connect(
+                    self.insilicova_worker.deleteLater)
+                self.insilicova_thread.finished.connect(
+                    self.insilicova_thread.deleteLater)
+                self.insilicova_worker.progress.connect(
+                    self.update_insilicova_progress)
+                self.insilicova_worker.state.connect(
+                    self.update_insilicova_progress_label)
+                self.insilicova_worker.insilicova_errors.connect(
+                    self.update_insilicova_errors)
+                self.insilicova_worker.insilicova_warnings.connect(
+                    self.update_insilicova_warnings)
+                self.insilicova_worker.insilicova_results.connect(
+                    self.parent.update_insilicova_results)
+                self.insilicova_thread.start()
+                self.btn_insilicova_stop.setEnabled(True)
 
-            self.btn_insilicova_run.setEnabled(False)
-            self.insilicova_thread.finished.connect(
-                lambda: self.btn_insilicova_run.setEnabled(True))
-            self.insilicova_thread.finished.connect(
-                lambda: self.btn_insilicova_stop.setEnabled(False))
-            self.insilicova_thread.finished.connect(
-                lambda: self.btn_load_data.setEnabled(True))
-            self.insilicova_thread.finished.connect(
-                lambda: self.combo_data_id_col.setEnabled(True))
-            self.insilicova_thread.finished.connect(
-                lambda: self.btn_data_format.setEnabled(True))
-            self.insilicova_thread.finished.connect(
-                lambda: self.btn_edit_data.setEnabled(True))
-            self.insilicova_thread.finished.connect(
-                lambda: self.btn_save_insilicova_log.setEnabled(True))
-            self.insilicova_thread.finished.connect(
-                lambda: self.btn_insilicova_options.setEnabled(True))
-        #     except InSilicoVAException as exc:
-        #         alert = QMessageBox()
-        #         alert.setWindowTitle("openVA App")
-        #         alert.setText("ERROR: Failed to run InSilicoVA" + exc)
-        #         alert.exec()
-        #     try:
-        #         self.insilicova_results = insilicova_out.get_results()
-        #         self.insilicova_errors = insilicova_out._error_log
-        #         self.insilicova_warnings = insilicova_out._warning
-        #         self.label_insilicova_progress.setText(
-        #             "InSilicoVA results are ready")
-        #     except InSilicoVAException as exc:
-        #         self.insilicova_errors = insilicova_out._error_log
-        #         self.insilicova_warnings = insilicova_out._warning
-        #         if hasattr(insilicova_out, "_data_check") is False:
-        #             self.insilicova_warnings = (
-        #                 "No valid records for data consistency check")
-        #         self.label_insilicova_progress.setText(
-        #             "Data do not have any valid VA records (no results "
-        #             "available).  \nSee log file for more details.\n"
-        #             "Please reload data in the expected format.")
-        # self.btn_insilicova_run.setEnabled(True)
+                self.btn_insilicova_run.setEnabled(False)
+                self.insilicova_thread.finished.connect(
+                    lambda: self.btn_insilicova_run.setEnabled(True))
+                self.insilicova_thread.finished.connect(
+                    lambda: self.btn_insilicova_stop.setEnabled(False))
+                self.insilicova_thread.finished.connect(
+                    lambda: self.btn_load_data.setEnabled(True))
+                self.insilicova_thread.finished.connect(
+                    lambda: self.combo_data_id_col.setEnabled(True))
+                self.insilicova_thread.finished.connect(
+                    lambda: self.btn_data_format.setEnabled(True))
+                self.insilicova_thread.finished.connect(
+                    lambda: self.btn_edit_data.setEnabled(True))
+                self.insilicova_thread.finished.connect(
+                    lambda: self.btn_save_insilicova_log.setEnabled(True))
+                self.insilicova_thread.finished.connect(
+                    lambda: self.btn_insilicova_options.setEnabled(True))
+            #     except InSilicoVAException as exc:
+            #         alert = QMessageBox()
+            #         alert.setWindowTitle("openVA App")
+            #         alert.setText("ERROR: Failed to run InSilicoVA" + exc)
+            #         alert.exec()
+            #     try:
+            #         self.insilicova_results = insilicova_out.get_results()
+            #         self.insilicova_errors = insilicova_out._error_log
+            #         self.insilicova_warnings = insilicova_out._warning
+            #         self.label_insilicova_progress.setText(
+            #             "InSilicoVA results are ready")
+            #     except InSilicoVAException as exc:
+            #         self.insilicova_errors = insilicova_out._error_log
+            #         self.insilicova_warnings = insilicova_out._warning
+            #         if hasattr(insilicova_out, "_data_check") is False:
+            #             self.insilicova_warnings = (
+            #                 "No valid records for data consistency check")
+            #         self.label_insilicova_progress.setText(
+            #             "Data do not have any valid VA records (no results "
+            #             "available).  \nSee log file for more details.\n"
+            #             "Please reload data in the expected format.")
+            # self.btn_insilicova_run.setEnabled(True)
 
     def update_insilicova_progress(self, n):
         self.insilicova_pbar.setValue(n)

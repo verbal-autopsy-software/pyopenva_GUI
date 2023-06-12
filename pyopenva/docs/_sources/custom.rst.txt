@@ -1,8 +1,6 @@
 Customizable Mode
 =================
 
-.. _custom:
-
 Steps for analyzing VA data with in the customizable mode.
 
 * **Step 1**: load data
@@ -13,4 +11,4 @@ Steps for analyzing VA data with in the customizable mode.
 
 * **Step 4**: access results
 
-:ref:`Home <home>`      :ref:`One-Click (Wizard) <wizard>`
+:doc:`Home <index>`      :doc:`One-Click (Wizard) <wizard>`

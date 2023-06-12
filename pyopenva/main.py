@@ -45,6 +45,7 @@ class WindowManager(QMainWindow):
         # self.command_center = CommandCenter()
         self.command_center = CommandCenter(self)
         self.results = Results()
+        self.insilicova_limit = 100
 
         self.stacked_layout = QStackedLayout()
         self.stacked_layout.addWidget(self.mode)
@@ -250,11 +251,21 @@ class WindowManager(QMainWindow):
         #     self.show_efficient_smartva_page()
 
     def show_efficient_insilicova_page(self):
-        self.efficient.show_insilicova_page()
-        self.setWindowTitle("openVA App: InSilicoVA")
-        # alert = QMessageBox()
-        # alert.setText("InSilicoVA currently unavailable, but coming soon!")
-        # alert.exec()
+        sample_size_limit = False
+        if self.efficient.data is not None:
+            n_records = self.efficient.data.shape[0]
+            if n_records < self.insilicova_limit:
+                sample_size_limit = True
+        if sample_size_limit:
+            alert = QMessageBox()
+            alert.setText(
+                f"InSilicoVA is unavailable.  At least {self.insilicova_limit}"
+                " deaths are needed for reliable results.\n\n"
+                "(InterVA is available.)")
+            alert.exec()
+        else:
+            self.efficient.show_insilicova_page()
+            self.setWindowTitle("openVA App: InSilicoVA")
 
     def show_efficient_interva_page(self):
         self.efficient.show_interva_page()
