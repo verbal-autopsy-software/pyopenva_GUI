@@ -11,6 +11,8 @@ Graphical User Interface for the openVA tool implemented in Python.
   + Windows:  `python setup.py bdist_msi`
   + Mac: `python setup.py bdist_dmg`
 
+* Build docs with: `bash sphinx-build -b html docs/source/ pyopenva/docs -a`
+
 ## To Do
 
 * Set up splash screen?
