@@ -63,7 +63,7 @@ mode).  Finally, you can click the Exit button to close the openVA App.
 .. _wiz_step2:
 
 Step 2: Select Algorithm
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 The openVA App displays the "select algorithm" window after you advance from the "load and prepare data" window.  Simply
 click on the InSilicoVA button to run this algorithm.  **Please note that your data file must include at least 100
@@ -97,11 +97,32 @@ each algorithm has its own window, which are described in turn.
 InSilicoVA
 ----------
 
-Not much to say about this, if you need more options then use customizable mode.  Just run the algorithm and it
-also allows you to download the log from the data consistency log.  Note, this report is typically substantial with
-InSilicoVA because of how missing is treated.  In other words, the log file from the data consistency checks produced
-by the InterVA algorithm is much shorter (with the same data set).  Again, note that you need at least 100 deaths for
-this one.
+The InSilicoVA window in the One-Click Wizard mode simply allows users to start (and stop) the algorithm and
+to save the message log from the data consistency check procedure.
+
+
+.. image:: img/wiz_run_insilicova.png
+
+
+Once the data have been loaded (with at least 100 deaths included in the data file), clicking the "Run InSilicoVA"
+button will start the process of assigning CODs.  This procedure includes 3 steps.  First, the app will convert the data
+from the ODK format to the format expected by the algorithm. [#]_ Next, the app will run the data consistency
+checks. [#]_  During these first two steps the openVA App will display a "preparing data" message below the progress bar.
+During the final step, the app will start the process of assigning CODs and the progress bar will start advancing
+(you will also see a message "Running InSilicoVA.." below the progress bar).  Depending on the size of the data set, it
+may take a while for the InSilicoVA algorithm to finish -- a data set with 100 deaths takes around 12 minutes to process
+with InSilicoVA.  The progress bar may reset once or twice, as the InSilicoVA algorithm works towards convergence
+of its sampling procedure for obtaining results.  Finally, there is a "Stop" button that will stop the InSilicoVA
+algorithm -- if stopped, the algorithm will need to run through all of the steps from the beginning when restarted.
+
+Once the results are ready, the message below the progress bar will indicate that the "InSilicoVA results are ready"
+and you will be able to access the results and the log from the data consistency checks.  Clicking on the
+"Save log from data checks" button will produce a new window where you can choose the location for saving the log file
+from the data consistency check.
+
+Clicking on the "Show Results" button will take you to a new window where you will be able to access the cause of death
+results produced by InSilicoVa.  Clicking the "Back" button will return to the window where you can select the
+algorithm, and you can click the "Exit" button to close the openVA App.
 
 
 .. _wiz_step3_2:
@@ -118,12 +139,17 @@ Here ww will include the screenshot of InterVA mode and describe the different o
 Step 4: Access Results
 ~~~~~~~~~~~~~~~~~~~~~~
 
+Only able to show results for one algorithm at a time.[#]_
 
 .. rubric:: Footnotes
 
 .. [#]  While it is possible to run InSilicoVA with fewer deaths, our experience suggests that the results are more
         reliable with larger sample sizes.  In our experimentation with VA data (with external causes assigned), 100
         deaths provided to be a reasonable threshold for obtaining reliable results.
-
+.. [#]  Converting the data from the ODK format to the format expected by the algorithms is carried out using the
+        pyCrossVA tool.  If you are interested in seeing the output from this step, you can use the openVA App's
+        Customizable mode.  We need a user friendly introduction webpage for what pyCrossVA is actually doing.
+.. [#]  For mor information about the data consistency checks, see the :ref:`FAQ page<faq_data_consistency_checks>`.
+.. [#]  The openVA App's Customizable mode allows users to view results from both InterVA and InSilicoVA.
 
 :doc:`Home <index>`  :doc:`Customizable Mode <custom>`

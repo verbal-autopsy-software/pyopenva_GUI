@@ -28,7 +28,7 @@ This documentation also include:
 
 The openVA App was created and is maintained by the `openVA Team <https://openva.net>`_,
 and is graciously supported by the Bloomberg Philanthropies Data for Health Initiative
-and Vital Stratgies.
+and Vital Strategies.
 
 The openVA App is licensed under the `GNU General Public License v3.0 <https://www.gnu.org/licenses/gpl-3.0.en.html>`_.
 
