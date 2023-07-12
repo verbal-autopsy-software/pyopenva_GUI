@@ -9,23 +9,18 @@ This module creates a stacked layout to walk through the analysis step-by-step.
 import os
 import shutil
 import tempfile
-from insilicova.api import InSilicoVA
-from insilicova.structures import InSilico
-from insilicova.exceptions import HaltGUIException, InSilicoVAException
-from interva.interva5 import InterVA5
 from interva import utils
-from pyopenva.data import COUNTRIES
-from pandas import read_csv, DataFrame, crosstab
+# from pyopenva.data import COUNTRIES
+from pandas import concat, DataFrame, read_csv
 from pandas.errors import EmptyDataError, ParserError
 from pycrossva.transform import transform
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
                              QHBoxLayout, QMessageBox, QLabel, QProgressBar,
                              QPushButton, QSpinBox, QStackedLayout,
                              QVBoxLayout, QWidget)
-from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal
-from PyQt5.QtGui import QPalette, QColor
+from PyQt5.QtCore import Qt, QThread
 from pyopenva.output import (PlotDialog, TableDialog, DemTableDialog,
-                             save_plot, _make_title)
+                             save_plot, _insilicova_subpop, _make_title)
 from pyopenva.workers import InSilicoVAWorker, InterVAWorker
 
 
@@ -167,12 +162,12 @@ class Efficient(QWidget):
         self.btn_insilicova.setMaximumWidth(400)
         self.btn_insilicova.pressed.connect(
             lambda: self.set_chosen_algorithm("insilicova"))
-        self.btn_insilicova.pressed.connect(self.disable_age_options)
+        # self.btn_insilicova.pressed.connect(self.disable_age_options)
         self.btn_interva = QPushButton("InterVA")
         self.btn_interva.setMaximumWidth(400)
         self.btn_interva.pressed.connect(
             lambda: self.set_chosen_algorithm("interva"))
-        self.btn_interva.pressed.connect(self.enable_age_options)
+        # self.btn_interva.pressed.connect(self.enable_age_options)
         # self.btn_smartva = QPushButton("SmartVA")
         # self.btn_smartva.setMaximumWidth(400)
         # self.btn_smartva.pressed.connect(
@@ -652,19 +647,18 @@ class Efficient(QWidget):
     def set_options_age(self, age):
         self.options_age = age
 
-    def disable_age_options(self):
-        # TODO: implement age- and sex-specific results for InSilicoVA
-        self.label_dem_results.setText(
-            "Select demographic groups \n (only available with InterVA)")
-        self.options_combo_age.setEnabled(False)
-        self.options_combo_sex.setEnabled(False)
-        self.btn_show_dem.setEnabled(False)
+    # def disable_age_options(self):
+    #     self.label_dem_results.setText(
+    #         "Select demographic groups \n (only available with InterVA)")
+    #     self.options_combo_age.setEnabled(False)
+    #     self.options_combo_sex.setEnabled(False)
+    #     self.btn_show_dem.setEnabled(False)
 
-    def enable_age_options(self):
-        self.label_dem_results.setText("Select demographic groups")
-        self.options_combo_age.setEnabled(True)
-        self.options_combo_sex.setEnabled(True)
-        self.btn_show_dem.setEnabled(True)
+    # def enable_age_options(self):
+    #     self.label_dem_results.setText("Select demographic groups")
+    #     self.options_combo_age.setEnabled(True)
+    #     self.options_combo_sex.setEnabled(True)
+    #     self.btn_show_dem.setEnabled(True)
 
     def set_plot_color(self, color):
         self.plot_color = color
@@ -676,7 +670,8 @@ class Efficient(QWidget):
     def show_algorithm_page(self):
         if self.chosen_algorithm == "insilicova":
             self.show_insilicova_page()
-        elif self.chosen_algorithm == "interva":
+        # elif self.chosen_algorithm == "interva":
+        else:
             self.show_interva_page()
         # else:
         #     self.show_smartva_page()
@@ -887,7 +882,7 @@ class Efficient(QWidget):
                 "format and/or run a VA algorithm.")
             alert.exec()
         else:
-            empty =  self._check_empty_results()
+            empty = self._check_empty_results()
             if empty:
                 alert = QMessageBox()
                 alert.setWindowTitle("openVA App")
@@ -950,11 +945,11 @@ class Efficient(QWidget):
                 "No results available.  Please load data in the expected "
                 "format and/or run a VA algorithm.")
             alert.exec()
-        elif self.chosen_algorithm == "insilicova":
-            alert = QMessageBox()
-            alert.setWindowTitle("openVA App")
-            alert.setText("Demographics only available with InterVA")
-            alert.exec()
+        # elif self.chosen_algorithm == "insilicova":
+        #     alert = QMessageBox()
+        #     alert.setWindowTitle("openVA App")
+        #     alert.setText("Demographics only available with InterVA")
+        #     alert.exec()
         else:
             if self.chosen_algorithm == "interva":
                 dem_results = utils._get_cod_with_dem(results)
@@ -962,13 +957,21 @@ class Efficient(QWidget):
                 self.table_dialog.resize(self.table_dialog.view.width(),
                                          self.table_dialog.view.height())
                 self.table_dialog.exec()
-            # TODO: Need to add functionality for InSilicoVA
             else:
-                pass
+                dem_results = results.data_checked.apply(
+                    utils._get_dem_groups,
+                    axis=1)
+                dem_results = DataFrame(list(dem_results))
+                self.table_dialog = DemTableDialog(dem_results, self)
+                self.table_dialog.resize(self.table_dialog.view.width(),
+                                         self.table_dialog.view.height())
+                self.table_dialog.exec()
 
     def save_csmf_table(self):
         if self.chosen_algorithm == "insilicova":
             results = self.insilicova_results
+            no_subpop = (self.options_age == "all deaths" and
+                         self.options_sex == "all deaths")
         else:
             results = self.interva_results
         if results is None:
@@ -997,8 +1000,16 @@ class Efficient(QWidget):
                 n_top_causes = self.n_top_causes
                 csmf = results.get_csmf(top=n_top_causes)
                 if isinstance(csmf, DataFrame):
-                    csmf_df = csmf.sort_values(
-                        by="Mean", ascending=False).copy()
+                    if no_subpop:
+                        csmf_df = csmf.sort_values(
+                            by="Mean", ascending=False).copy()
+                    else:
+                        csmf_df = _insilicova_subpop(results,
+                                                     self.options_age,
+                                                     self.options_sex,
+                                                     self.n_top_causes)
+                        csmf_df = csmf_df.sort_values(ascending=False)
+                        csmf_df.name = "Mean"
                     csmf_df = csmf_df.reset_index()
                     csmf_df.rename(columns={"index": "Cause",
                                             "Mean": "CSMF (Mean)"},
@@ -1182,6 +1193,30 @@ class Efficient(QWidget):
         if self.insilicova_include_probs is True:
             top_prob = results.indiv_prob.max(axis=1)
             indiv_cod["Probability"] = top_prob
+
+        if (self.options_age != "all deaths" or
+                self.options_sex != "all deaths"):
+
+            age_groups = []
+            sex_groups = []
+            if self.options_age == "all deaths":
+                age_groups = ["neonate", "child", "adult"]
+            else:
+                age_groups.append(self.options_age)
+            if self.options_sex == "all deaths":
+                sex_groups = ["female", "male"]
+            else:
+                sex_groups.append(self.options_sex)
+
+            dem_groups = results.data_checked.apply(utils._get_dem_groups,
+                                                    axis=1)
+            dem_groups = DataFrame(list(dem_groups)).set_index("ID")
+            indiv_cod = concat([indiv_cod, dem_groups], axis=1)
+            subpop_index = (indiv_cod["age"].isin(age_groups)) & (
+                indiv_cod["sex"].isin(sex_groups))
+            indiv_cod = indiv_cod[subpop_index]
+            indiv_cod = indiv_cod.drop(columns=["age", "sex"])
+
         return indiv_cod
 
     def save_log(self):
@@ -1250,18 +1285,22 @@ class Efficient(QWidget):
                     alert.exec()
 
     def _check_empty_results(self):
+        empty = True
         if self.chosen_algorithm == "insilicova":
-            return False
+            if self.insilicova_results is not None:
+                out = self.insilicova_results.data_checked.apply(
+                    utils._get_dem_groups,
+                    axis=1)
+                out = DataFrame(list(out))
         else:
-            empty = True
             if self.interva_results is not None:
                 out = utils._get_cod_with_dem(self.interva_results)
-                if self.options_age != "all deaths":
-                    out = out[out["age"] == self.options_age]
-                if self.options_sex != "all deaths":
-                    out = out[out["sex"] == self.options_sex]
-                empty = out.shape[0] == 0
-            return empty
+        if self.options_age != "all deaths":
+            out = out[out["age"] == self.options_age]
+        if self.options_sex != "all deaths":
+            out = out[out["sex"] == self.options_sex]
+        empty = out.shape[0] == 0
+        return empty
 
     def _make_results_file_name(self, fnc):
         results_file_name = f"{self.chosen_algorithm}"

@@ -15,7 +15,7 @@ from matplotlib.figure import Figure
 from matplotlib import style
 from matplotlib.pyplot import get_cmap
 from numpy import linspace
-from pandas import crosstab, DataFrame
+from pandas import crosstab, DataFrame, concat
 from interva import utils
 
 
@@ -43,7 +43,10 @@ class PlotDialog(QDialog):
         vbox_csmf.addWidget(self.canvas)
         self.setLayout(vbox_csmf)
         if algorithm == "insilicova":
-            self.plot_dot_whisker()
+            if self.age == "all deaths" and self.sex == "all deaths":
+                self.plot_dot_whisker()
+            else:
+                self.plot_subpop()
         else:
             self.plot()
         if save:
@@ -85,6 +88,22 @@ class PlotDialog(QDialog):
         plt_series.sort_values(ascending=True, inplace=True)
         cm_colors = get_cmap(self.colors)
         linspace_colors = linspace(0.5, 0.9, self.n_top_causes)
+        colors = cm_colors(linspace_colors)
+        self.ax.barh(plt_series.index.to_list(),
+                     plt_series.to_list(),
+                     color=colors)
+        title = _make_title(age=self.age, sex=self.sex)
+        self.ax.set(title=title)
+
+    def plot_subpop(self):
+
+        plt_series = _insilicova_subpop(self.results,
+                                        self.age,
+                                        self.sex,
+                                        self.n_top_causes)
+        n_max = len(plt_series)
+        cm_colors = get_cmap(self.colors)
+        linspace_colors = linspace(0.5, 0.9, n_max)
         colors = cm_colors(linspace_colors)
         self.ax.barh(plt_series.index.to_list(),
                      plt_series.to_list(),
@@ -137,9 +156,19 @@ class TableDialog(QDialog):
 
         csmf = self.results.get_csmf(top=self.n_top_causes)
         if isinstance(csmf, DataFrame):
-            csmf_df = csmf.sort_values(by="Mean", ascending=False).copy()
+            if self.age == "all deaths" and self.sex == "all deaths":
+                csmf_df = csmf.sort_values(by="Mean", ascending=False).copy()
+            else:
+                csmf_df = _insilicova_subpop(self.results,
+                                             self.age,
+                                             self.sex,
+                                             self.n_top_causes)
+                csmf_df = csmf_df.sort_values(ascending=False)
+                csmf_df.name = "Mean"
             csmf_df = csmf_df.reset_index()
-            csmf_df.rename(columns={"index": "Cause", "Mean": "CSMF (Mean)"},
+            title = _make_title(age=self.age, sex=self.sex)
+            csmf_df.rename(columns={"index": "Cause",
+                                    "Mean": title},
                            inplace=True)
         else:
             csmf = utils.csmf(self.results, top=self.n_top_causes,
@@ -327,20 +356,33 @@ def save_plot(results, algorithm, top=5, file_name=None, plot_colors="Greys",
     figure = Figure(figsize=(7, 5), dpi=100, constrained_layout=True)
     ax = figure.add_subplot(111)
     if algorithm == "insilicova":
-        plt_df = results.get_csmf(top=top).copy()
-        plt_df.sort_values(by="Median", ascending=True, inplace=True)
-        errors = [plt_df["Lower"].to_list(), plt_df["Upper"].to_list()]
-        ax.errorbar(x=plt_df["Median"].to_list(),
-                    y=plt_df.index.to_list(),
-                    xerr=errors,
-                    ecolor="black",
-                    markerfacecolor="black", markeredgecolor="black",
-                    fmt="o",
-                    capsize=5)
-        ax.grid(alpha=0.5, linestyle=":")
-        ax.set(title="Top CSMF Distribution")
-        ax.set_xlabel("CSMF")
-        ax.set_ylabel("Causes")
+        if age == "age deaths" and sex == "all deaths":
+            plt_df = results.get_csmf(top=top).copy()
+            plt_df.sort_values(by="Median", ascending=True, inplace=True)
+            errors = [plt_df["Lower"].to_list(), plt_df["Upper"].to_list()]
+            ax.errorbar(x=plt_df["Median"].to_list(),
+                        y=plt_df.index.to_list(),
+                        xerr=errors,
+                        ecolor="black",
+                        markerfacecolor="black", markeredgecolor="black",
+                        fmt="o",
+                        capsize=5)
+            ax.grid(alpha=0.5, linestyle=":")
+            ax.set(title="Top CSMF Distribution")
+            ax.set_xlabel("CSMF")
+            ax.set_ylabel("Causes")
+        else:
+            plt_series = _insilicova_subpop(results, age, sex, top)
+            n_max = len(plt_series)
+            cm_colors = get_cmap(plot_colors)
+            linspace_colors = linspace(0.5, 0.9, n_max)
+            colors = cm_colors(linspace_colors)
+            ax.barh(plt_series.index.to_list(),
+                    plt_series.to_list(),
+                    color=colors)
+            title = _make_title(age=age, sex=sex)
+            ax.set(title=title)
+
     else:
         # plt_series = results.get_csmf(top=top)
         plt_series = utils.csmf(results, top=top,
@@ -392,3 +434,34 @@ def _make_title(age, sex):
     if sex == "all deaths" and age == "neonate":
         title = "CSMF for neonates"
     return title
+
+
+def _insilicova_subpop(results, age, sex, n_top):
+    age_groups = []
+    sex_groups = []
+    if age == "all deaths":
+        age_groups = ["neonate", "child", "adult"]
+    else:
+        age_groups.append(age)
+    if sex == "all deaths":
+        sex_groups = ["female", "male"]
+    else:
+        sex_groups.append(sex)
+
+    dem_groups = results.data_checked.apply(utils._get_dem_groups, axis=1)
+    dem_groups = DataFrame(list(dem_groups)).set_index("ID")
+    subpop_results = concat([results.indiv_prob, dem_groups], axis=1)
+    subpop_index = (subpop_results["age"].isin(age_groups)) & (
+        subpop_results["sex"].isin(sex_groups))
+    subpop_results = subpop_results[subpop_index]
+
+    subpop_results = subpop_results.drop(columns=["age", "sex"])
+    csmf = subpop_results.mean(axis=0)
+    csmf.sort_values(ascending=False, inplace=True)
+    n_max = sum(csmf > 1e-5)
+    if n_max > n_top:
+        n_max = n_top
+    csmf = csmf[range(n_max)]
+    csmf.sort_values(ascending=True, inplace=True)
+
+    return csmf
