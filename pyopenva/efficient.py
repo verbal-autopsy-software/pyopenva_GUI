@@ -7,6 +7,9 @@ This module creates a stacked layout to walk through the analysis step-by-step.
 """
 
 import os
+import sys
+from contextlib import contextmanager
+from io import StringIO
 import shutil
 import tempfile
 from interva import utils
@@ -16,7 +19,7 @@ from pandas.errors import EmptyDataError, ParserError
 from pycrossva.transform import transform
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
                              QHBoxLayout, QMessageBox, QLabel, QProgressBar,
-                             QPushButton, QSpinBox, QStackedLayout,
+                             QPushButton, QSpinBox, QStackedLayout, QTextEdit,
                              QVBoxLayout, QWidget)
 from PyQt5.QtCore import Qt, QThread
 from pyopenva.output import (PlotDialog, TableDialog, DemTableDialog,
@@ -191,19 +194,19 @@ class Efficient(QWidget):
 
     def insilicova_ui(self):
         layout = QVBoxLayout()
-        # gbox_options = QGroupBox("Set Options")
-        # layout_options = QVBoxLayout()
-        # layout_n_iter = QHBoxLayout()
+        gbox_options = QGroupBox("Set Options")
+        layout_options = QVBoxLayout()
+        layout_n_iter = QHBoxLayout()
         # layout_auto = QHBoxLayout()
         # layout_seed = QHBoxLayout()
-        # label_n_iter = QLabel("Number of Iterations (range: 400 - 8000):")
-        # spinbox_n_iter = QSpinBox()
-        # spinbox_n_iter.setRange(400, 8000)
-        # spinbox_n_iter.setSingleStep(100)
-        # spinbox_n_iter.setAlignment(Qt.AlignCenter)
-        # spinbox_n_iter.setValue(self.insilicova_n_sim)
-        # spinbox_n_iter.valueChanged.connect(self.set_insilicova_n_sim)
-        # spinbox_n_iter.setMaximumWidth(150)
+        label_n_iter = QLabel("Number of Iterations:")
+        spinbox_n_iter = QSpinBox()
+        spinbox_n_iter.setRange(4000, 40000)
+        spinbox_n_iter.setSingleStep(1000)
+        spinbox_n_iter.setAlignment(Qt.AlignCenter)
+        spinbox_n_iter.setValue(self.insilicova_n_sim)
+        spinbox_n_iter.valueChanged.connect(self.set_insilicova_n_sim)
+        spinbox_n_iter.setMaximumWidth(150)
         # label_auto_length = QLabel("Automatically increase chain length")
         # option_set = ["True", "False"]
         # self.insilicova_combo_auto = QComboBox()
@@ -230,6 +233,10 @@ class Efficient(QWidget):
         self.btn_insilicova_stop.setMaximumWidth(150)
         self.btn_insilicova_stop.setEnabled(False)
         self.btn_insilicova_stop.clicked.connect(self.stop_insilicova)
+        self.pycrossva_log = QTextEdit()
+        self.pycrossva_log.setText("(pyCrossVA messages...)")
+        self.pycrossva_log.setEnabled(False)
+        self.pycrossva_log.setMaximumHeight(100)
         self.btn_save_insilicova_log = QPushButton(
             "Save log from data checks")
         self.btn_save_insilicova_log.setEnabled(False)
@@ -241,22 +248,24 @@ class Efficient(QWidget):
             self.show_results_page)
         self.btn_insilicova_ui_exit = QPushButton("Exit")
 
-        # layout_n_iter.addWidget(label_n_iter)
-        # layout_n_iter.addWidget(spinbox_n_iter)
+        layout_n_iter.addWidget(label_n_iter)
+        layout_n_iter.addWidget(spinbox_n_iter)
         # layout_auto.addWidget(label_auto_length)
         # layout_auto.addWidget(self.insilicova_combo_auto)
         # layout_seed.addWidget(label_seed)
         # layout_seed.addWidget(spinbox_seed)
-        # layout_options.addLayout(layout_n_iter)
+        layout_options.addLayout(layout_n_iter)
         # layout_options.addLayout(layout_auto)
         # layout_options.addLayout(layout_seed)
-        # gbox_options.setLayout(layout_options)
-        # layout.addWidget(gbox_options)
+        gbox_options.setLayout(layout_options)
+        layout.addWidget(gbox_options)
         layout.addStretch(1)
         layout.addWidget(self.btn_insilicova_run)
         layout.addWidget(self.insilicova_pbar)
         layout.addWidget(self.label_insilicova_progress)
         layout.addWidget(self.btn_insilicova_stop)
+        layout.addStretch(1)
+        layout.addWidget(self.pycrossva_log)
         layout.addStretch(1)
         layout.addWidget(self.btn_save_insilicova_log)
         layout.addStretch(1)
@@ -591,10 +600,12 @@ class Efficient(QWidget):
         raw_data_col_id = self.data_id_col
         if self.data_id_col == "no ID column":
             raw_data_col_id = None
-        self.pycrossva_data = transform(
-            mapping=("2016WHOv151", "InterVA5"),
-            raw_data=self.data,
-            raw_data_id=raw_data_col_id)
+        pycrossva_stdout = StringIO()
+        with self._capture_stdout(pycrossva_stdout):
+            self.pycrossva_data = transform(
+                mapping=("2016WHOv151", "InterVA5"),
+                raw_data=self.data,
+                raw_data_id=raw_data_col_id)
         if (self.pycrossva_data.iloc[:, 1:] == ".").all(axis=None):
             alert = QMessageBox()
             alert.setWindowTitle("openVA App")
@@ -604,10 +615,26 @@ class Efficient(QWidget):
                 "\nThe data have an unexpected format and cannot be "
                 "processed.  Please reload data in the expected format.")
             alert.exec()
+        self.pycrossva_log.setEnabled(True)
+        pycrossva_msg = pycrossva_stdout.getvalue()
+        if len(pycrossva_msg) == 0:
+            pycrossva_msg = "All good!"
+        pycrossva_msg = "pyCrossVA finished.\n" + pycrossva_msg
+        self.pycrossva_log.setText(pycrossva_msg)
+        self.pycrossva_log.setReadOnly(True)
 
-    # def set_insilicova_n_sim(self, n_sim: int):
-    #     self.insilicova_n_sim = n_sim
-    #
+    @contextmanager
+    def _capture_stdout(self, output):
+        stdout = sys.stdout
+        sys.stdout = output
+        try:
+            yield
+        finally:
+            sys.stdout = stdout
+
+    def set_insilicova_n_sim(self, n_sim: int):
+        self.insilicova_n_sim = n_sim
+
     # def set_insilicova_auto(self, auto: str):
     #     self.insilicova_auto = auto
     #
