@@ -233,10 +233,10 @@ class Efficient(QWidget):
         self.btn_insilicova_stop.setMaximumWidth(150)
         self.btn_insilicova_stop.setEnabled(False)
         self.btn_insilicova_stop.clicked.connect(self.stop_insilicova)
-        self.pycrossva_log = QTextEdit()
-        self.pycrossva_log.setText("(pyCrossVA messages...)")
-        self.pycrossva_log.setEnabled(False)
-        self.pycrossva_log.setMaximumHeight(100)
+        self.insilicova_pycva_tedit = QTextEdit()
+        self.insilicova_pycva_tedit.setText("(pyCrossVA messages...)")
+        self.insilicova_pycva_tedit.setEnabled(False)
+        self.insilicova_pycva_tedit.setMaximumHeight(100)
         self.btn_save_insilicova_log = QPushButton(
             "Save log from data checks")
         self.btn_save_insilicova_log.setEnabled(False)
@@ -265,7 +265,7 @@ class Efficient(QWidget):
         layout.addWidget(self.label_insilicova_progress)
         layout.addWidget(self.btn_insilicova_stop)
         layout.addStretch(1)
-        layout.addWidget(self.pycrossva_log)
+        layout.addWidget(self.insilicova_pycva_tedit)
         layout.addStretch(1)
         layout.addWidget(self.btn_save_insilicova_log)
         layout.addStretch(1)
@@ -305,6 +305,10 @@ class Efficient(QWidget):
         self.btn_interva_stop.setEnabled(False)
         self.btn_interva_stop.setMaximumWidth(150)
         self.btn_interva_stop.clicked.connect(self.stop_interva)
+        self.interva_pycva_tedit = QTextEdit()
+        self.interva_pycva_tedit.setText("(pyCrossVA messages...)")
+        self.interva_pycva_tedit.setEnabled(False)
+        self.interva_pycva_tedit.setMaximumHeight(100)
         self.btn_save_interva_log = QPushButton(
             "Save Log from data checks")
         self.btn_save_interva_log.setEnabled(False)
@@ -332,6 +336,8 @@ class Efficient(QWidget):
         layout.addWidget(self.interva_pbar)
         layout.addWidget(self.label_interva_progress)
         layout.addWidget(self.btn_interva_stop)
+        layout.addStretch(1)
+        layout.addWidget(self.interva_pycva_tedit)
         layout.addStretch(1)
         layout.addWidget(self.btn_save_interva_log)
         layout.addStretch(1)
@@ -615,13 +621,20 @@ class Efficient(QWidget):
                 "\nThe data have an unexpected format and cannot be "
                 "processed.  Please reload data in the expected format.")
             alert.exec()
-        self.pycrossva_log.setEnabled(True)
+        if self.chosen_algorithm == "insilicova":
+            self.insilicova_pycva_tedit.setEnabled(True)
+        else:
+            self.interva_pycva_tedit.setEnabled(True)
         pycrossva_msg = pycrossva_stdout.getvalue()
         if len(pycrossva_msg) == 0:
             pycrossva_msg = "All good!"
-        pycrossva_msg = "pyCrossVA finished.\n" + pycrossva_msg
-        self.pycrossva_log.setText(pycrossva_msg)
-        self.pycrossva_log.setReadOnly(True)
+        pycrossva_msg = "pyCrossVA finished.\n\n" + pycrossva_msg
+        if self.chosen_algorithm == "insilicova":
+            self.insilicova_pycva_tedit.setText(pycrossva_msg)
+            self.insilicova_pycva_tedit.setReadOnly(True)
+        else:
+            self.interva_pycva_tedit.setText(pycrossva_msg)
+            self.interva_pycva_tedit.setReadOnly(True)
 
     @contextmanager
     def _capture_stdout(self, output):
