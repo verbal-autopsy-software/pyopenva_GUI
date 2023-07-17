@@ -13,6 +13,7 @@ from io import StringIO
 import shutil
 import tempfile
 from interva import utils
+from insilicova.diag import csmf_diag
 # from pyopenva.data import COUNTRIES
 from pandas import concat, DataFrame, read_csv
 from pandas.errors import EmptyDataError, ParserError
@@ -237,6 +238,9 @@ class Efficient(QWidget):
         self.insilicova_pycva_tedit.setText("(pyCrossVA messages...)")
         self.insilicova_pycva_tedit.setEnabled(False)
         self.insilicova_pycva_tedit.setMaximumHeight(100)
+        self.btn_check_convergence = QPushButton("Check convergence")
+        self.btn_check_convergence.setEnabled(False)
+        self.btn_check_convergence.clicked.connect(self.check_convergence)
         self.btn_save_insilicova_log = QPushButton(
             "Save log from data checks")
         self.btn_save_insilicova_log.setEnabled(False)
@@ -267,7 +271,10 @@ class Efficient(QWidget):
         layout.addStretch(1)
         layout.addWidget(self.insilicova_pycva_tedit)
         layout.addStretch(1)
-        layout.addWidget(self.btn_save_insilicova_log)
+        h_box_checks = QHBoxLayout()
+        h_box_checks.addWidget(self.btn_check_convergence)
+        h_box_checks.addWidget(self.btn_save_insilicova_log)
+        layout.addLayout(h_box_checks)
         layout.addStretch(1)
         h_box = QHBoxLayout()
         h_box.addWidget(self.btn_insilicova_to_select_algorithm)
@@ -741,6 +748,7 @@ class Efficient(QWidget):
         self.btn_insilicova_run.setEnabled(False)
         self.btn_load_data.setEnabled(False)
         self.btn_save_insilicova_log.setEnabled(False)
+        self.btn_check_convergence.setEnabled(False)
         self.insilicova_warnings = None
         self.insilicova_errors = None
         self.insilicova_results = None
@@ -751,7 +759,8 @@ class Efficient(QWidget):
             alert.exec()
             self.btn_insilicova_run.setEnabled(True)
             self.btn_load_data.setEnabled(True)
-            self.btn_save_insilicova_log.setEnabled(True)
+            self.btn_save_insilicova_log.setEnabled(False)
+            self.btn_check_convergence.setEnabled(False)
         else:
             self.run_pycrossva()
             auto_extend = False
@@ -763,10 +772,14 @@ class Efficient(QWidget):
             self.insilicova_worker = InSilicoVAWorker(
                 data=self.pycrossva_data,
                 data_type="WHO2016",
-                n_sim=self.insilicova_n_sim,
-                thin=thin,
-                burnin=burnin,
-                auto_length=auto_extend,
+                # n_sim=self.insilicova_n_sim,
+                # thin=thin,
+                # burnin=burnin,
+                # auto_length=auto_extend,
+                n_sim=200,
+                thin=20,
+                burnin=5,
+                auto_length=False,
                 seed=self.insilicova_seed,
                 gui_ctrl=self.insilicova_ctrl)
             self.insilicova_worker.moveToThread(self.insilicova_thread)
@@ -799,6 +812,8 @@ class Efficient(QWidget):
                 lambda: self.btn_load_data.setEnabled(True))
             self.insilicova_thread.finished.connect(
                 lambda: self.btn_save_insilicova_log.setEnabled(True))
+            self.insilicova_thread.finished.connect(
+                lambda: self.btn_check_convergence.setEnabled(True))
 
     def update_insilicova_progress(self, n):
         self.insilicova_pbar.setValue(n)
@@ -1323,6 +1338,19 @@ class Efficient(QWidget):
                         f"Unable to save {path[0]}.\n" +
                         "(don't have permission or read-only file system)")
                     alert.exec()
+
+    def check_convergence(self):
+        conv = csmf_diag(self.insilicova_results)
+        failed_conv = conv[(conv["Halfwidth test"] == "failed") |
+                           (conv["Stationarity test"] == "failed")].index
+        alert = QMessageBox()
+        alert.setWindowTitle("openVA App")
+        alert.setText(
+            "The following causes with CSMF > 0.02 did not converge:\n\n"
+            f"{', '.join(failed_conv.to_list())}"
+            "\n\n (convergence can be achieved by increasing the number of "
+            "simulations")
+        alert.exec()
 
     def _check_empty_results(self):
         empty = True
