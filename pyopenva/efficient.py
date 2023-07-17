@@ -1108,13 +1108,6 @@ class Efficient(QWidget):
                     alert.setText(
                         "ERROR: unable to save results to" + path[0])
                     alert.exec()
-            else:
-                alert = QMessageBox()
-                alert.setWindowTitle("openVA App")
-                alert.setText(
-                    "ERROR: problem creating file for saving results.\n"
-                    "(File name is empty!)")
-                alert.exec()
 
     def save_csmf_plot(self):
         if self.chosen_algorithm == "insilicova":
@@ -1164,13 +1157,6 @@ class Efficient(QWidget):
                     alert.setText(
                         "ERROR: unable to save results to" + path[0])
                     alert.exec()
-            else:
-                alert = QMessageBox()
-                alert.setWindowTitle("openVA App")
-                alert.setText(
-                    "ERROR: problem creating file for saving results.\n"
-                    "(File name is empty!)")
-                alert.exec()
 
     def save_indiv_cod(self):
         if self.chosen_algorithm == "insilicova":
@@ -1232,13 +1218,6 @@ class Efficient(QWidget):
                         f"Unable to save {path[0]}.\n" +
                         "(don't have permission or read-only file system)")
                     alert.exec()
-            else:
-                alert = QMessageBox()
-                alert.setWindowTitle("openVA App")
-                alert.setText(
-                    "ERROR: problem creating file for saving results.\n"
-                    "(File name is empty!)")
-                alert.exec()
 
     def prepare_insilico_indiv_cod(self, results):
         top_cause = results.indiv_prob.idxmax(axis=1)
@@ -1349,7 +1328,7 @@ class Efficient(QWidget):
             "The following causes with CSMF > 0.02 did not converge:\n\n"
             f"{', '.join(failed_conv.to_list())}"
             "\n\n (convergence can be achieved by increasing the number of "
-            "simulations")
+            "simulations)")
         alert.exec()
 
     def _check_empty_results(self):

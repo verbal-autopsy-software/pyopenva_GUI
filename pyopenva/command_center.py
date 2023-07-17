@@ -180,6 +180,7 @@ class CommandCenter(QWidget):
             self.interva_log = None
             self.label_interva_progress.setText("")
             self.interva_pbar.setValue(0)
+            self.btn_pycrossva.setEnabled(True)
             # self.smartva_results = None
             # self.label_smartva_progress.setText("")
 
@@ -1087,7 +1088,7 @@ class CommandCenter(QWidget):
             "The following causes with CSMF > 0.02 did not converge:\n\n"
             f"{', '.join(failed_conv.to_list())}"
             "\n\n (convergence can be achieved by increasing the number of "
-            "simulations")
+            "simulations)")
         alert.exec()
 
     def save_insilicova_log(self):

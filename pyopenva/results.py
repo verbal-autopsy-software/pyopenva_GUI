@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
                              QHBoxLayout, QLabel, QMessageBox, QPushButton,
                              QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 from pyopenva.output import (DemTableDialog, PlotDialog, TableDialog,
-                             save_plot, _make_title)
+                             save_plot, _insilicova_subpop, _make_title)
 import os
 import shutil
 from pandas import DataFrame
@@ -70,81 +70,65 @@ class Results(QWidget):
     # TODO: add option for comparison plot?
     # TODO: add option to group causes into aggregated categories?
     def create_insilicova_panel(self):
-        layout = QVBoxLayout()
 
-        vbox_table = QVBoxLayout()
+        gbox_dem = self.create_demographics_gbox()
+
+        gbox_show = QGroupBox("Show Results")
+        hbox_show = QHBoxLayout()
         self.btn_insilicova_table = QPushButton("Show \n CSMF Table")
         self.btn_insilicova_table.clicked.connect(
             self.insilicova_table)
-        self.btn_save_insilicova_table = QPushButton("Save CSMF Table")
-        self.btn_save_insilicova_table.clicked.connect(
-            self.save_insilicova_table)
-        vbox_table.addWidget(self.btn_insilicova_table)
-        vbox_table.addWidget(self.btn_save_insilicova_table)
-
-        vbox_plot = QVBoxLayout()
         self.btn_insilicova_plot = QPushButton("Show \n CSMF Plot")
         self.btn_insilicova_plot.clicked.connect(
             self.insilicova_plot)
+        self.btn_show_dem = QPushButton("Show \n demographics")
+        self.btn_show_dem.pressed.connect(
+            lambda: self.run_table_dialog_dem("insilicova"))
+        hbox_show.addWidget(self.btn_insilicova_table)
+        hbox_show.addWidget(self.btn_insilicova_plot)
+        hbox_show.addWidget(self.btn_show_dem)
+        gbox_show.setLayout(hbox_show)
+
+        gbox_save = QGroupBox("Save Results")
+        vbox_save = QVBoxLayout()
+        hbox_save = QHBoxLayout()
+        self.btn_save_insilicova_table = QPushButton("Save CSMF Table")
+        self.btn_save_insilicova_table.clicked.connect(
+            self.save_insilicova_table)
         self.btn_save_insilicova_plot = QPushButton("Save CSMF Plot")
         self.btn_save_insilicova_plot.clicked.connect(
             self.save_insilicova_plot)
-        vbox_plot.addWidget(self.btn_insilicova_plot)
-        vbox_plot.addWidget(self.btn_save_insilicova_plot)
-
-        hbox = QHBoxLayout()
-        hbox.addLayout(vbox_table)
-        hbox.addLayout(vbox_plot)
-        layout.addLayout(hbox)
         self.btn_save_insilicova_indiv = QPushButton(
-            "Save \n Individual Cause Assignments")
+            "Save Individual \n Cause Assignments")
         self.btn_save_insilicova_indiv.clicked.connect(
             self.save_insilicova_indiv)
+        hbox_save.addWidget(self.btn_save_insilicova_table)
+        hbox_save.addWidget(self.btn_save_insilicova_plot)
+        vbox_save.addLayout(hbox_save)
+        vbox_save.addWidget(self.btn_save_insilicova_indiv)
+        gbox_save.setLayout(vbox_save)
+
         self.chbox_insilicova_include_probs = QCheckBox(
             "Include probability of top cause (with individual CODs)")
         self.chbox_insilicova_include_probs.setChecked(
             self.insilicova_include_probs)
         self.chbox_insilicova_include_probs.toggled.connect(
             self.set_insilicova_include_probs)
-        layout.addWidget(self.btn_save_insilicova_indiv)
+
+        layout = QVBoxLayout()
+        layout.addWidget(gbox_dem)
+        layout.addWidget(gbox_show)
+        layout.addWidget(gbox_save)
         layout.addWidget(self.chbox_insilicova_include_probs)
-        # layout.addWidget(self.btn_save_insilicova_log)
+        layout.insertSpacing(1, 50)
+        layout.insertSpacing(3, 50)
+        layout.insertSpacing(5, 50)
         self.insilicova_panel = QWidget()
         self.insilicova_panel.setLayout(layout)
 
     def create_interva_panel(self):
-        layout = QVBoxLayout()
 
-        gbox_dem = QGroupBox("Select demographic groups")
-        hbox_demographics = QHBoxLayout()
-        age_option_set = ["all deaths",
-                          "adult",
-                          "child",
-                          "neonate"]
-        label_age = QLabel("age:")
-        label_age.setMaximumWidth(30)
-        self.options_combo_age = QComboBox()
-        self.options_combo_age.addItems(age_option_set)
-        self.options_combo_age.setCurrentIndex(
-            age_option_set.index(self.options_age))
-        self.options_combo_age.currentTextChanged.connect(
-            self.set_options_age)
-        sex_option_set = ["all deaths",
-                          "female",
-                          "male"]
-        label_sex = QLabel("sex:")
-        label_sex.setMaximumWidth(30)
-        self.options_combo_sex = QComboBox()
-        self.options_combo_sex.addItems(sex_option_set)
-        self.options_combo_sex.setCurrentIndex(
-            sex_option_set.index(self.options_sex))
-        self.options_combo_sex.currentTextChanged.connect(
-            self.set_options_sex)
-        hbox_demographics.addWidget(label_age)
-        hbox_demographics.addWidget(self.options_combo_age)
-        hbox_demographics.addWidget(label_sex)
-        hbox_demographics.addWidget(self.options_combo_sex)
-        gbox_dem.setLayout(hbox_demographics)
+        gbox_dem = self.create_demographics_gbox()
 
         gbox_show = QGroupBox("Show Results")
         hbox_show = QHBoxLayout()
@@ -153,7 +137,8 @@ class Results(QWidget):
         self.btn_interva_plot = QPushButton("Show \n CSMF Plot")
         self.btn_interva_plot.clicked.connect(self.interva_plot)
         self.btn_show_dem = QPushButton("Show \n demographics")
-        self.btn_show_dem.pressed.connect(self.run_table_dialog_dem)
+        self.btn_show_dem.pressed.connect(
+            lambda: self.run_table_dialog_dem("interva"))
         hbox_show.addWidget(self.btn_interva_table)
         hbox_show.addWidget(self.btn_interva_plot)
         hbox_show.addWidget(self.btn_show_dem)
@@ -189,6 +174,7 @@ class Results(QWidget):
         self.chbox_interva_include_probs.toggled.connect(
             self.set_interva_include_probs)
 
+        layout = QVBoxLayout()
         layout.addWidget(gbox_dem)
         layout.addWidget(gbox_show)
         layout.addWidget(gbox_save)
@@ -230,6 +216,39 @@ class Results(QWidget):
     #     self.smartva_panel = QWidget()
     #     self.smartva_panel.setLayout(layout)
 
+    def create_demographics_gbox(self):
+        gbox_dem = QGroupBox("Select demographic groups")
+        hbox_demographics = QHBoxLayout()
+        age_option_set = ["all deaths",
+                          "adult",
+                          "child",
+                          "neonate"]
+        label_age = QLabel("age:")
+        label_age.setMaximumWidth(30)
+        self.options_combo_age = QComboBox()
+        self.options_combo_age.addItems(age_option_set)
+        self.options_combo_age.setCurrentIndex(
+            age_option_set.index(self.options_age))
+        self.options_combo_age.currentTextChanged.connect(
+            self.set_options_age)
+        sex_option_set = ["all deaths",
+                          "female",
+                          "male"]
+        label_sex = QLabel("sex:")
+        label_sex.setMaximumWidth(30)
+        self.options_combo_sex = QComboBox()
+        self.options_combo_sex.addItems(sex_option_set)
+        self.options_combo_sex.setCurrentIndex(
+            sex_option_set.index(self.options_sex))
+        self.options_combo_sex.currentTextChanged.connect(
+            self.set_options_sex)
+        hbox_demographics.addWidget(label_age)
+        hbox_demographics.addWidget(self.options_combo_age)
+        hbox_demographics.addWidget(label_sex)
+        hbox_demographics.addWidget(self.options_combo_sex)
+        gbox_dem.setLayout(hbox_demographics)
+        return gbox_dem
+
     def interva_plot(self):
         if self.interva_results is None:
             alert = QMessageBox()
@@ -238,7 +257,7 @@ class Results(QWidget):
                 "Need to run InterVA5 first.")
             alert.exec()
         else:
-            empty = self._check_empty_interva_results()
+            empty = self._check_empty_results("interva")
             if empty:
                 alert = QMessageBox()
                 alert.setWindowTitle("openVA App")
@@ -265,7 +284,7 @@ class Results(QWidget):
                 "Need to run InterVA5 first.")
             alert.exec()
         else:
-            empty = self._check_empty_interva_results()
+            empty = self._check_empty_results("interva")
             if empty:
                 alert = QMessageBox()
                 alert.setWindowTitle("openVA App")
@@ -293,7 +312,7 @@ class Results(QWidget):
                 "Need to run InterVA5 first.")
             alert.exec()
         else:
-            empty = self._check_empty_interva_results()
+            empty = self._check_empty_results("interva")
             if empty:
                 alert = QMessageBox()
                 alert.setWindowTitle("openVA App")
@@ -347,13 +366,6 @@ class Results(QWidget):
                             f"Unable to save {path[0]}.\n" +
                             "(don't have permission or read-only file system)")
                         alert.exec()
-                else:
-                    alert = QMessageBox()
-                    alert.setWindowTitle("openVA App")
-                    alert.setText(
-                        "ERROR: problem creating file for saving results.\n"
-                        "(File name is empty!)")
-                    alert.exec()
 
     def save_interva_plot(self):
         if self.interva_results is None:
@@ -363,7 +375,7 @@ class Results(QWidget):
                 "Need to run InterVA5 first.")
             alert.exec()
         else:
-            empty = self._check_empty_interva_results()
+            empty = self._check_empty_results("interva")
             if empty:
                 alert = QMessageBox()
                 alert.setWindowTitle("openVA App")
@@ -409,13 +421,6 @@ class Results(QWidget):
                             f"Unable to save {path[0]}.\n" +
                             "(don't have permission or read-only file system)")
                         alert.exec()
-                else:
-                    alert = QMessageBox()
-                    alert.setWindowTitle("openVA App")
-                    alert.setText(
-                        "ERROR: problem creating file for saving results.\n"
-                        "(File name is empty!)")
-                    alert.exec()
 
     def save_interva_indiv(self):
         if self.interva_results is None:
@@ -425,7 +430,7 @@ class Results(QWidget):
                 "Need to run InterVA5 first.")
             alert.exec()
         else:
-            empty = self._check_empty_interva_results()
+            empty = self._check_empty_results("interva")
             if empty:
                 alert = QMessageBox()
                 alert.setWindowTitle("openVA App")
@@ -475,13 +480,6 @@ class Results(QWidget):
                             f"Unable to save {path[0]}.\n" +
                             "(don't have permission or read-only file system)")
                         alert.exec()
-                else:
-                    alert = QMessageBox()
-                    alert.setWindowTitle("openVA App")
-                    alert.setText(
-                        "ERROR: problem creating file for saving results.\n"
-                        "(File name is empty!)")
-                    alert.exec()
 
     def insilicova_plot(self):
         if self.insilicova_results is None:
@@ -491,13 +489,24 @@ class Results(QWidget):
                 "Need to run InSilicoVA first.")
             alert.exec()
         else:
-            self.insilicova_plot_dialog = PlotDialog(
-                results=self.insilicova_results,
-                algorithm="insilicova",
-                parent=self,
-                top=self.n_top_causes,
-                colors=self.plot_color)
-            self.insilicova_plot_dialog.exec()
+            empty = self._check_empty_results("insilicova")
+            if empty:
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setText(
+                    "There are no VA records for the selected group:\n"
+                    f"age: {self.options_age},   sex: {self.options_sex}")
+                alert.exec()
+            else:
+                self.insilicova_plot_dialog = PlotDialog(
+                    results=self.insilicova_results,
+                    algorithm="insilicova",
+                    parent=self,
+                    top=self.n_top_causes,
+                    colors=self.plot_color,
+                    age=self.options_age,
+                    sex=self.options_sex)
+                self.insilicova_plot_dialog.exec()
 
     def insilicova_table(self):
         if self.insilicova_results is None:
@@ -507,22 +516,46 @@ class Results(QWidget):
                 "Need to run InSilicoVA first.")
             alert.exec()
         else:
-            self.insilicova_table = TableDialog(self.insilicova_results,
-                                                self,
-                                                top=self.n_top_causes)
-            self.insilicova_table.resize(self.insilicova_table.table.width(),
-                                         self.insilicova_table.table.height())
-            self.insilicova_table.exec()
+            empty = self._check_empty_results("insilicova")
+            if empty:
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setText(
+                    "There are no VA records for the selected group:\n"
+                    f"age: {self.options_age},   sex: {self.options_sex}")
+                alert.exec()
+            else:
+                self.insilicova_table = TableDialog(self.insilicova_results,
+                                                    self,
+                                                    top=self.n_top_causes,
+                                                    age=self.options_age,
+                                                    sex=self.options_sex)
+                self.insilicova_table.resize(
+                    self.insilicova_table.table.width(),
+                    self.insilicova_table.table.height())
+                self.insilicova_table.exec()
 
     def save_insilicova_table(self):
+        no_subpop = (self.options_age == "all deaths" and
+                     self.options_sex == "all deaths")
         if self.insilicova_results is None:
             alert = QMessageBox()
             alert.setWindowTitle("openVA App")
             alert.setText(
                 "Need to run InSilicoVA first.")
             alert.exec()
+        elif self._check_empty_results("insilicova"):
+            alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
+            alert.setText(
+                "There are no VA records for the selected "
+                f"group:\n age: {self.options_age},   "
+                f"sex: {self.options_sex}")
+            alert.exec()
         else:
-            results_file_name = "insilicova_csmf.csv"
+            # results_file_name = "insilicova_csmf.csv"
+            results_file_name = self._make_results_file_name("insilicova",
+                                                             "table")
             path = QFileDialog.getSaveFileName(self,
                                                "Save CSMF (csv)",
                                                results_file_name,
@@ -533,8 +566,16 @@ class Results(QWidget):
                     n_top_causes = self.n_top_causes
                     csmf = self.insilicova_results.get_csmf(
                         top=n_top_causes)
-                    csmf_df = csmf.sort_values(by="Mean",
-                                               ascending=False).copy()
+                    if no_subpop:
+                        csmf_df = csmf.sort_values(by="Mean",
+                                                   ascending=False).copy()
+                    else:
+                        csmf_df = _insilicova_subpop(self.insilicova_results,
+                                                     self.options_age,
+                                                     self.options_sex,
+                                                     self.n_top_causes)
+                        csmf_df = csmf_df.sort_values(ascending=False)
+                        csmf_df.name = "Mean"
                     csmf_df = csmf_df.reset_index()
                     csmf_df.rename(columns={"index": "Cause",
                                             "Mean": "CSMF (Mean)"},
@@ -559,13 +600,6 @@ class Results(QWidget):
                         f"Unable to save {path[0]}.\n" +
                         "(don't have permission or read-only file system)")
                     alert.exec()
-            else:
-                alert = QMessageBox()
-                alert.setWindowTitle("openVA App")
-                alert.setText(
-                    "ERROR: problem creating file for saving results.\n"
-                    "(File name is empty!)")
-                alert.exec()
 
     def save_insilicova_plot(self):
         if self.insilicova_results is None:
@@ -574,46 +608,42 @@ class Results(QWidget):
             alert.setText(
                 "Need to run InSilicoVA first.")
             alert.exec()
+        elif self._check_empty_results("insilicova"):
+            alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
+            alert.setText(
+                "There are no VA records for the selected "
+                f"group:\n age: {self.options_age},   "
+                f"sex: {self.options_sex}")
+            alert.exec()
         else:
-            results_file_name = "insilicova_csmf.pdf"
+            # results_file_name = "insilicova_csmf.pdf"
+            results_file_name = self._make_results_file_name("insilicova",
+                                                             "plot")
             path = QFileDialog.getSaveFileName(self,
                                                "Save CSMF plot (pdf)",
                                                results_file_name,
                                                "PDF Files (*.pdf)")
             if path != ("", ""):
                 # os.remove(path[0])
-                try:
-                    save_plot(results=self.insilicova_results,
-                              algorithm="insilicova",
-                              top=self.n_top_causes,
-                              file_name=path[0],
-                              plot_colors=self.plot_color)
-                    if os.path.isfile(path[0]):
-                        alert = QMessageBox()
-                        alert.setWindowTitle("openVA App")
-                        alert.setText("results saved to" + path[0])
-                        alert.exec()
-                    else:
-                        alert = QMessageBox()
-                        alert.setWindowTitle("openVA App")
-                        alert.setText(
-                            "ERROR: unable to save results to" + path[0])
-                        alert.exec()
-                except (OSError, PermissionError):
+                save_plot(results=self.insilicova_results,
+                          algorithm="insilicova",
+                          top=self.n_top_causes,
+                          file_name=path[0],
+                          plot_colors=self.plot_color,
+                          age=self.options_age,
+                          sex=self.options_sex)
+                if os.path.isfile(path[0]):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
-                    alert.setIcon(QMessageBox.Warning)
-                    alert.setText(
-                        f"Unable to save {path[0]}.\n" +
-                        "(don't have permission or read-only file system)")
+                    alert.setText("results saved to" + path[0])
                     alert.exec()
-            else:
-                alert = QMessageBox()
-                alert.setWindowTitle("openVA App")
-                alert.setText(
-                    "ERROR: problem creating file for saving results.\n"
-                    "(File name is empty!)")
-                alert.exec()
+                else:
+                    alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
+                    alert.setText(
+                        "ERROR: unable to save results to" + path[0])
+                    alert.exec()
 
     def save_insilicova_indiv(self):
         if self.insilicova_results is None:
@@ -622,8 +652,18 @@ class Results(QWidget):
             alert.setText(
                 "Need to run InSilicoVA first.")
             alert.exec()
+        elif self._check_empty_results("insilicova"):
+            alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
+            alert.setText(
+                "There are no VA records for the selected "
+                f"group:\n age: {self.options_age},   "
+                f"sex: {self.options_sex}")
+            alert.exec()
         else:
-            results_file_name = "insilicova_individual_cod.csv"
+            # results_file_name = "insilicova_individual_cod.csv"
+            results_file_name = self._make_results_file_name("insilicova",
+                                                             "indiv")
             path = QFileDialog.getSaveFileName(self,
                                                "Save CSMF (csv)",
                                                results_file_name,
@@ -652,13 +692,6 @@ class Results(QWidget):
                         f"Unable to save {path[0]}.\n" +
                         "(don't have permission or read-only file system)")
                     alert.exec()
-            else:
-                alert = QMessageBox()
-                alert.setWindowTitle("openVA App")
-                alert.setText(
-                    "ERROR: problem creating file for saving results.\n"
-                    "(File name is empty!)")
-                alert.exec()
 
     def prepare_insilico_indiv_cod(self, results):
         all_results = []
@@ -687,6 +720,27 @@ class Results(QWidget):
                               index=[row.name]))
         indiv_cod = pd_concat(all_results)
         indiv_cod = indiv_cod.reset_index(names="ID")
+        if (self.options_age != "all deaths" or
+                self.options_sex != "all deaths"):
+            age_groups = []
+            sex_groups = []
+            if self.options_age == "all deaths":
+                age_groups = ["neonate", "child", "adult"]
+            else:
+                age_groups.append(self.options_age)
+            if self.options_sex == "all deaths":
+                sex_groups = ["female", "male"]
+            else:
+                sex_groups.append(self.options_sex)
+
+            dem_groups = self.insilicova_results.data_checked.apply(
+                utils._get_dem_groups, axis=1)
+            dem_groups = DataFrame(list(dem_groups)).set_index("ID")
+            indiv_cod = pd_concat([indiv_cod, dem_groups], axis=1)
+            subpop_index = (indiv_cod["age"].isin(age_groups)) & (
+                indiv_cod["sex"].isin(sex_groups))
+            indiv_cod = indiv_cod[subpop_index]
+            indiv_cod = indiv_cod.drop(columns=["age", "sex"])
         return indiv_cod
 
     # def smartva_plot(self):
@@ -734,12 +788,12 @@ class Results(QWidget):
     #                   "based on Python 3 is released.")
     #     alert.exec()
 
-    # def update_interva(self, new_interva_results, tmp_dir):
-    #     self.interva_results = new_interva_results
-    #     self.interva_tmp_dir = tmp_dir
+    def run_table_dialog_dem(self, algorithm):
+        if algorithm == "interva":
+            results = self.interva_results
 
-    def run_table_dialog_dem(self):
-        results = self.interva_results
+        else:
+            results = self.insilicova_results
         if results is None:
             alert = QMessageBox()
             alert.setWindowTitle("openVA App")
@@ -748,11 +802,21 @@ class Results(QWidget):
                 "format and/or run a VA algorithm.")
             alert.exec()
         else:
-            dem_results = utils._get_cod_with_dem(results)
-            self.table_dialog = DemTableDialog(dem_results, self)
-            self.table_dialog.resize(self.table_dialog.view.width(),
-                                     self.table_dialog.view.height())
-            self.table_dialog.exec()
+            if algorithm == "interva":
+                dem_results = utils._get_cod_with_dem(results)
+                self.table_dialog = DemTableDialog(dem_results, self)
+                self.table_dialog.resize(self.table_dialog.view.width(),
+                                         self.table_dialog.view.height())
+                self.table_dialog.exec()
+            else:
+                dem_results = results.data_checked.apply(
+                    utils._get_dem_groups,
+                    axis=1)
+                dem_results = DataFrame(list(dem_results))
+                self.table_dialog = DemTableDialog(dem_results, self)
+                self.table_dialog.resize(self.table_dialog.view.width(),
+                                         self.table_dialog.view.height())
+                self.table_dialog.exec()
 
     def update_interva_results(self, new_interva_results):
         self.interva_results = new_interva_results
@@ -796,15 +860,22 @@ class Results(QWidget):
         else:
             self.interva_include_probs = False
 
-    def _check_empty_interva_results(self):
+    def _check_empty_results(self, algorithm):
         empty = True
-        if self.interva_results is not None:
-            out = utils._get_cod_with_dem(self.interva_results)
-            if self.options_age != "all deaths":
-                out = out[out["age"] == self.options_age]
-            if self.options_sex != "all deaths":
-                out = out[out["sex"] == self.options_sex]
-            empty = out.shape[0] == 0
+        if algorithm == "insilicova":
+            if self.insilicova_results is not None:
+                out = self.insilicova_results.data_checked.apply(
+                    utils._get_dem_groups,
+                    axis=1)
+                out = DataFrame(list(out))
+        else:
+            if self.interva_results is not None:
+                out = utils._get_cod_with_dem(self.interva_results)
+        if self.options_age != "all deaths":
+            out = out[out["age"] == self.options_age]
+        if self.options_sex != "all deaths":
+            out = out[out["sex"] == self.options_sex]
+        empty = out.shape[0] == 0
         return empty
 
     def _make_results_file_name(self, algorithm, fnc):
