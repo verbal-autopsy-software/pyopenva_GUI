@@ -772,14 +772,14 @@ class Efficient(QWidget):
             self.insilicova_worker = InSilicoVAWorker(
                 data=self.pycrossva_data,
                 data_type="WHO2016",
-                # n_sim=self.insilicova_n_sim,
-                # thin=thin,
-                # burnin=burnin,
-                # auto_length=auto_extend,
-                n_sim=200,
-                thin=20,
-                burnin=5,
-                auto_length=False,
+                n_sim=self.insilicova_n_sim,
+                thin=thin,
+                burnin=burnin,
+                auto_length=auto_extend,
+                # n_sim=200,
+                # thin=20,
+                # burnin=5,
+                # auto_length=False,
                 seed=self.insilicova_seed,
                 gui_ctrl=self.insilicova_ctrl)
             self.insilicova_worker.moveToThread(self.insilicova_thread)

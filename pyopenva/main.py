@@ -297,6 +297,7 @@ class WindowManager(QMainWindow):
 
     def update_insilicova_results(self, new_results):
         self.results.update_insilicova(new_results)
+        self.command_center.update_insilicova_results(new_results)
 
     # def update_smartva_results(self, new_results):
     #     self.results.update_smartva(new_results)

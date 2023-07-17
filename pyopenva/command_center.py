@@ -18,6 +18,7 @@ from pandas import DataFrame
 from interva.interva5 import InterVA5
 from insilicova.api import InSilicoVA
 from insilicova.exceptions import InSilicoVAException
+from insilicova.diag import csmf_diag
 from PyQt5.QtCore import pyqtSignal, QObject, Qt, QDate, QThread, QTime
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
                              QHBoxLayout, QInputDialog, QLabel, QLineEdit,
@@ -680,6 +681,9 @@ class CommandCenter(QWidget):
         self.btn_insilicova_stop.setMaximumWidth(125)
         self.btn_insilicova_stop.setEnabled(False)
         self.btn_insilicova_stop.clicked.connect(self.stop_insilicova)
+        self.btn_check_convergence = QPushButton("Check convergence")
+        self.btn_check_convergence.setEnabled(False)
+        self.btn_check_convergence.clicked.connect(self.check_convergence)
         self.btn_save_insilicova_log = QPushButton(
             "Save log file from data checks")
         self.btn_save_insilicova_log.setEnabled(False)
@@ -690,6 +694,7 @@ class CommandCenter(QWidget):
         insilicova_vbox.addWidget(self.insilicova_pbar)
         insilicova_vbox.addWidget(self.label_insilicova_progress)
         insilicova_vbox.addWidget(self.btn_insilicova_stop)
+        insilicova_vbox.addWidget(self.btn_check_convergence)
         insilicova_vbox.addWidget(self.btn_save_insilicova_log)
         self.insilicova_box.setLayout(insilicova_vbox)
 
@@ -781,8 +786,9 @@ class CommandCenter(QWidget):
         self.combo_data_id_col.setEnabled(False)
         self.btn_data_format.setEnabled(False)
         self.btn_edit_data.setEnabled(False)
+        self.btn_check_convergence.setEnabled(False)
         self.btn_save_insilicova_log.setEnabled(False)
-        self.btn_insilicova_options.setEnabled(False)
+        self.btn_insilicova_options.setEnabled(True)
         if self.pycrossva_data is None:
             alert = QMessageBox()
             alert.setWindowTitle("openVA App")
@@ -795,7 +801,8 @@ class CommandCenter(QWidget):
             self.combo_data_id_col.setEnabled(True)
             self.btn_data_format.setEnabled(True)
             self.btn_edit_data.setEnabled(True)
-            self.btn_save_insilicova_log.setEnabled(True)
+            self.btn_check_convergence.setEnabled(False)
+            self.btn_save_insilicova_log.setEnabled(False)
             self.btn_insilicova_options.setEnabled(True)
         else:
             n_records = self.pycrossva_data.shape[0]
@@ -812,7 +819,8 @@ class CommandCenter(QWidget):
                 self.combo_data_id_col.setEnabled(True)
                 self.btn_data_format.setEnabled(True)
                 self.btn_edit_data.setEnabled(True)
-                self.btn_save_insilicova_log.setEnabled(True)
+                self.btn_check_convergence.setEnabled(False)
+                self.btn_save_insilicova_log.setEnabled(False)
                 self.btn_insilicova_options.setEnabled(True)
             else:
                 self.insilicova_warnings = None
@@ -866,6 +874,8 @@ class CommandCenter(QWidget):
                 self.insilicova_thread.finished.connect(
                     lambda: self.btn_edit_data.setEnabled(True))
                 self.insilicova_thread.finished.connect(
+                    lambda: self.btn_check_convergence.setEnabled(True))
+                self.insilicova_thread.finished.connect(
                     lambda: self.btn_save_insilicova_log.setEnabled(True))
                 self.insilicova_thread.finished.connect(
                     lambda: self.btn_insilicova_options.setEnabled(True))
@@ -907,6 +917,9 @@ class CommandCenter(QWidget):
     def stop_insilicova(self):
         self.insilicova_ctrl["break"] = True
         self.btn_insilicova_stop.setEnabled(False)
+
+    def update_insilicova_results(self, new_insilicova_results):
+        self.insilicova_results = new_insilicova_results
 
     def run_interva_dialog(self):
         self.interva_dialog = InterVADialog(self, self.hiv, self.malaria)
@@ -1063,6 +1076,19 @@ class CommandCenter(QWidget):
                 alert.setText(
                     "ID column does not have a unique value for every row")
                 alert.exec()
+
+    def check_convergence(self):
+        conv = csmf_diag(self.insilicova_results)
+        failed_conv = conv[(conv["Halfwidth test"] == "failed") |
+                           (conv["Stationarity test"] == "failed")].index
+        alert = QMessageBox()
+        alert.setWindowTitle("openVA App")
+        alert.setText(
+            "The following causes with CSMF > 0.02 did not converge:\n\n"
+            f"{', '.join(failed_conv.to_list())}"
+            "\n\n (convergence can be achieved by increasing the number of "
+            "simulations")
+        alert.exec()
 
     def save_insilicova_log(self):
         errors = self.insilicova_errors
