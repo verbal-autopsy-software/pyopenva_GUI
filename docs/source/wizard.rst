@@ -4,6 +4,7 @@ One-Click Wizard
 This mode in the openVA App will guide you through a sequence of windows where you will
 walk through the following steps (in order):
 
+
 1. :ref:`load and prepare the your VA data <wiz_step1>`
 2. :ref:`select the algorithm you wish to use for assigning CoDs <wiz_step2>`
 3. :ref:`running the algorithm (with user-selected options) <wiz_step3>`
@@ -14,8 +15,10 @@ walk through the following steps (in order):
 
 4. :ref:`accessing the results <wiz_step4>`
 
+
 Each of these steps is described below.  To access this mode, simply click the
 "Start One-Click (Wizard)" button in the initial openVA App window
+
 
 .. image:: img/openva_app.png
 
@@ -91,38 +94,61 @@ Step3: Run the Algorithm with Options
 The openVA App offers COD assignment using either the InSilicoVA or InterVA algorithm.  In the One-Click Wizard mode,
 each algorithm has its own window, which are described in turn.
 
+
 .. _wiz_step3_1:
 
 ----------
 InSilicoVA
 ----------
 
-The InSilicoVA window in the One-Click Wizard mode simply allows users to start (and stop) the algorithm and
-to save the message log from the data consistency check procedure.
+The InSilicoVA window in the One-Click Wizard mode allows users choose the number of iterations and to start (and stop)
+the algorithm.  There are also several features for monitoring the algorithm's progress, access information about the
+data processing steps (pyCrossVA and the data consistency checks), and checking the convergence of the InSilicoVA
+algorithm.
 
 
 .. image:: img/wiz_run_insilicova.png
 
 
-Once the data have been loaded (with at least 100 deaths included in the data file), clicking the "Run InSilicoVA"
+The default option for the number of iterations InSilicoVA will use is 4,000, which is displayed in the spinbox near
+the top of the top of the window.  Clicking on the up arrow on the right-side of the spinbox will increase the number
+of iterations in increments of 1,000.  It is also possible to click inside of the spinbox and use the keyboard to enter
+the number of iterations within the accepted range (he minimum number of iterations in Wizard mode is 4,000 and the
+maximum is 40,000.)  Increasing the number of iterations will help ensure that the algorithm will converge.
+
+If data have been loaded (with at least 100 deaths included in the data file), clicking the "Run InSilicoVA"
 button will start the process of assigning CODs.  This procedure includes 3 steps.  First, the app will convert the data
-from the ODK format to the format expected by the algorithm. [#]_ Next, the app will run the data consistency
-checks. [#]_  During these first two steps the openVA App will display a "preparing data" message below the progress bar.
-During the final step, the app will start the process of assigning CODs and the progress bar will start advancing
-(you will also see a message "Running InSilicoVA.." below the progress bar).  Depending on the size of the data set, it
-may take a while for the InSilicoVA algorithm to finish -- a data set with 100 deaths takes around 12 minutes to process
-with InSilicoVA.  The progress bar may reset once or twice, as the InSilicoVA algorithm works towards convergence
-of its sampling procedure for obtaining results.  Finally, there is a "Stop" button that will stop the InSilicoVA
-algorithm -- if stopped, the algorithm will need to run through all of the steps from the beginning when restarted.
+from the ODK format to the format expected by the algorithm. The results from this step will be displayed in the
+box with the text "(pyCrossVA messages...)".  If certain columns are missing in the data file, the message will include
+the names of these missing columns along with information about how they are used to prepare the data in the expected
+format.  If the data include all of the necessary columns, then the message box will print "All good!" (for more
+information about pyCrossVA, see the :ref:`FAQ page<faq_pycrossva>`).
+
+In the second step, the app will run the data consistency checks (for more information about this step, see the
+:ref:`FAQ page<faq_data_consistency_checks>`).  During these first two steps the openVA App will
+display a "preparing data" message below the progress bar.  During the final step, the app will start the process of
+assigning CODs and the progress bar will start advancing (you will also see a message "Running InSilicoVA.." below the
+progress bar).  Depending on the size of the data set, it may take a while for the InSilicoVA algorithm to finish -- a
+data set with 100 deaths takes around 12 minutes to process with InSilicoVA.  The progress bar may reset once or twice
+as the InSilicoVA algorithm works towards convergence of its sampling procedure for obtaining results.  Finally, there
+is a "Stop" button that will stop the InSilicoVA algorithm -- if stopped, the algorithm will need to run through all of
+the steps from the beginning when restarted.
 
 Once the results are ready, the message below the progress bar will indicate that the "InSilicoVA results are ready"
-and you will be able to access the results and the log from the data consistency checks.  Clicking on the
-"Save log from data checks" button will produce a new window where you can choose the location for saving the log file
-from the data consistency check.
+and you will be able to check the convergence of the algorithm and access the results from the data checks.  Clicking
+on the "Check convergence" button will display a new window that lists the causes of death for which the algorithm did
+not converge -- more specifically, this list only includes causes which account for at least 2% deaths (i.e., the
+CSMF values is greater than 0.02).  Again, increasing the number of iterations will improve the chances that the
+algorithm converges for the all of these causes.
 
-Clicking on the "Show Results" button will take you to a new window where you will be able to access the cause of death
-results produced by InSilicoVa.  Clicking the "Back" button will return to the window where you can select the
-algorithm, and you can click the "Exit" button to close the openVA App.
+Clicking on the "Save log from data checks" button will produce a new window where you can choose the location for
+saving the log file from the data consistency check.
+
+Clicking on the "Show Results" button, which will take you to a new window where you will be able to access the cause
+of death results produced by InSilicoVA.
+
+Finally, clicking the "Back" button will return to the window where you can select the algorithm, and you can click the
+"Exit" button to close the openVA App.
 
 
 .. _wiz_step3_2:
@@ -131,7 +157,50 @@ algorithm, and you can click the "Exit" button to close the openVA App.
 InterVA
 -------
 
-Here ww will include the screenshot of InterVA mode and describe the different options.
+The InterVA window allows users so set the algorithm's input parameters, run (and stop) the algorithm, and access information
+from the data processing steps, namely, pyCrossVA and the data consistency checks.
+
+
+.. image:: img/wiz_run_interva.png
+
+
+There are two parameters characterizing the prevalence of HIV/AIDS and malaria deaths.  The possible values for these
+input parameters are: "high", "low", and "very low".  According the User Guide for the original InterVA5 software,
+these levels roughly correspond to the cause accounting for 1.0% of all deaths (high), 0.10% (low), and 0.01% (very
+low).  The following guidance is quoted directly from the InterVA5 User Guide (which can be obtained from the Peter Byass
+`InterVA-5 GitHub repository <https://github.com/peterbyass/InterVA-5/tree/master/Download%20of%20InterVA-5%20software>`_)::
+
+    Examples of appropriate responses might be low malaria, low HIV for many Asian locations; high malaria, high
+    HIV for many East African locations; high malaria, low HIV for some West African locations, etc.  The "very low"
+    setting should be used for locations where deaths from malaria or HIV are known to be extremely rare.  The
+    choices for these settings do not directly determine the cause of death, but conceptually they are similar to a
+    physician knowing that (s)he is working in a high or low malaria or HIV population, irrespective of the details of
+    a specific case currently under consideration.  (p. 7)
+
+If data have been loaded, clicking the "Run InterVA" button will start the process of assigning CODs.  This procedure
+includes 3 steps.  First, the app will convert the data from the ODK format to the format expected by the algorithm.
+The results from this step will be displayed in the box with the text "(pyCrossVA messages...)".  If certain columns are
+missing in the data file, the message will include the names of these missing columns along with information about how
+they are used to prepare the data in the expected format.  If the data include all of the necessary columns, then the
+message box will print "All good!" (for more information about pyCrossVA, see the :ref:`FAQ page<faq_pycrossva>`)
+
+In the second step, the app will run the data consistency checks (for more information about this step, see the
+:ref:`FAQ page<faq_data_consistency_checks>`).  During the final step, the app will start the
+process of assigning CODs and the progress bar will start advancing (you will also see a message "Running InterVA.."
+below the progress bar with the values for the HIV and malaria parameters appearing above the progress bar).
+Depending on the size of the data set, it may take a while for the InterVA algorithm to finish -- a
+data set with 100 deaths takes a few seconds to process with InterVA.
+
+Once the results are ready, the message below the progress bar will indicate that the "InterVA5 results are ready"
+and you will be able to check the convergence of the algorithm and access the results from the data checks.
+Clicking on the "Save log from data checks" button will produce a new window where you can choose the location for
+saving the log file from the data consistency check.
+
+Clicking on the "Show Results" button, which will take you to a new window where you will be able to access the cause
+of death results produced by InterVA5.
+
+Finally, clicking the "Back" button will return to the window where you can select the algorithm, and you can click the
+"Exit" button to close the openVA App.
 
 
 .. _wiz_step4:
@@ -139,17 +208,36 @@ Here ww will include the screenshot of InterVA mode and describe the different o
 Step 4: Access Results
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Only able to show results for one algorithm at a time.[#]_
+In the results window, there are several options for tailoring the COD results from the chosen algorithm (note that the
+algorithm name appears in the window's title).  You are also able to view the CSMF results as a table or plot, as well
+as saving these results as a CSV or PDF file.  The age and sex distribution of the deaths can also be viewed as a table,
+and the individual cause assignments can be saved as a CSV file.
+
+
+.. image:: img/wiz_results_insilicova.png
+
+
+The options shown at the top of the Results window include a box where you can choose the number of causes to include
+when viewing or saving the CSMF results.  The default is "Include 5 causes in the results", but clicking the up arrow
+at the side of the box will add more causes to the summaries, while clicking the down arrow includes fewer causes.
+Just below is a label "Select demographic groups", with options for limiting the results to a specific age or sex group.
+The default for both demographic indicators is to include "all deaths".  However, clicking on the arrows at the side
+of each box will present menus for restricting the results to adults, children or neonates.  Similarly, the results
+can also be limited to either males or females.
+
+The middle panel of the Results window contains three buttons for viewing either the CSMFs or a cross tabulation of
+the deaths by the sex and age categories (described just above).
+
+Only able to show results for one algorithm at a time. [#]_
+
+
+
 
 .. rubric:: Footnotes
 
 .. [#]  While it is possible to run InSilicoVA with fewer deaths, our experience suggests that the results are more
         reliable with larger sample sizes.  In our experimentation with VA data (with external causes assigned), 100
         deaths provided to be a reasonable threshold for obtaining reliable results.
-.. [#]  Converting the data from the ODK format to the format expected by the algorithms is carried out using the
-        pyCrossVA tool.  If you are interested in seeing the output from this step, you can use the openVA App's
-        Customizable mode.  We need a user friendly introduction webpage for what pyCrossVA is actually doing.
-.. [#]  For mor information about the data consistency checks, see the :ref:`FAQ page<faq_data_consistency_checks>`.
 .. [#]  The openVA App's Customizable mode allows users to view results from both InterVA and InSilicoVA.
 
 :doc:`Home <index>`  :doc:`Customizable Mode <custom>`

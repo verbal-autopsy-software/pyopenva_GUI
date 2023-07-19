@@ -103,6 +103,8 @@ class CommandCenter(QWidget):
         self.label_data = QLabel("(no data loaded)")
         self.label_data_fname = QLabel("")
         self.label_data_n_records = QLabel("")
+        self.btn_edit_data = QPushButton("Edit Data")
+        self.btn_edit_data.setEnabled(False)
         label_data_id_col = QLabel("Select ID column in data")
         self.combo_data_id_col = QComboBox()
         self.combo_data_id_col.currentTextChanged.connect(
@@ -117,15 +119,18 @@ class CommandCenter(QWidget):
                                        # "PHMRC"))
         label_pycrossva_info = QLabel("Convert data: ODK -> openVA format")
         self.btn_pycrossva = QPushButton("Run pyCrossVA")
+        self.btn_pycrossva.setEnabled(False)
         self.label_pycrossva_status = QLabel("(no data loaded)")
         self.label_pycrossva_status.setAlignment(Qt.AlignCenter)
-        #self.btn_data_check = QPushButton("Data Check")
-        self.btn_edit_data = QPushButton("Edit Data")
-        self.btn_edit_data.setEnabled(False)
+        self.btn_save_pycrossva = QPushButton("Save pyCrossVA Data (.csv)")
+        self.btn_save_pycrossva.setEnabled(False)
+        self.btn_save_pycrossva.clicked.connect(self.save_pycrossva)
         data_panel_v_box.addWidget(self.btn_load_data)
         data_panel_v_box.addWidget(self.label_data)
         data_panel_v_box.addWidget(self.label_data_fname)
         data_panel_v_box.addWidget(self.label_data_n_records)
+        # data_panel_v_box.addStretch(1)
+        data_panel_v_box.addWidget(self.btn_edit_data)
         data_panel_v_box.addStretch(1)
         data_panel_v_box.addWidget(label_data_id_col)
         data_panel_v_box.addWidget(self.combo_data_id_col)
@@ -136,9 +141,8 @@ class CommandCenter(QWidget):
         data_panel_v_box.addWidget(label_pycrossva_info)
         data_panel_v_box.addWidget(self.btn_pycrossva)
         data_panel_v_box.addWidget(self.label_pycrossva_status)
-        #data_panel_v_box.addWidget(self.btn_data_check)
         data_panel_v_box.addStretch(1)
-        data_panel_v_box.addWidget(self.btn_edit_data)
+        data_panel_v_box.addWidget(self.btn_save_pycrossva)
         data_panel_v_box.addStretch(2)
         # data_panel_v_box.addWidget(self.btn_user_mode)
         self.data_panel = QGroupBox("Data")
@@ -183,6 +187,9 @@ class CommandCenter(QWidget):
             self.btn_pycrossva.setEnabled(True)
             # self.smartva_results = None
             # self.label_smartva_progress.setText("")
+            df = DataFrame(self.load_window.data[1:],
+                           columns=self.load_window.data[0])
+            self.parent.results.original_data = df
 
     def update_data(self):
         """Update status of data."""
@@ -225,6 +232,7 @@ class CommandCenter(QWidget):
             self.msg.setWindowTitle("openVA App")
             self.msg.setIcon(QMessageBox.Information)
             self.run_pycrossva()
+            self.btn_save_pycrossva.setEnabled(True)
             
             if self.pycrossva_messages == "":
                 self.msg.setText(
@@ -242,6 +250,44 @@ class CommandCenter(QWidget):
             self.msg.setDetailedText(self.pycrossva_messages)
             self.msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
             self.msg.show()
+
+    def save_pycrossva(self):
+        if self.pycrossva_data is None:
+            alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
+            alert.setText(
+                "No data available.  Please load data in the expected "
+                "format and/or run pyCrossVA.")
+            alert.exec()
+        else:
+            pycrossva_file_name = "pycrossva_output.csv"
+            path = QFileDialog.getSaveFileName(self,
+                                               "Save pyCrossVA output (csv)",
+                                               pycrossva_file_name,
+                                               "CSV Files (*.csv)")
+            if path != ("", ""):
+                try:
+                    self.pycrossva_data.to_csv(path[0], index=False)
+                    if os.path.isfile(path[0]):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText("pyCrossVA output saved to" + path[0])
+                        alert.exec()
+                    else:
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText(
+                            "ERROR: unable to save pyCrossVA output to"
+                            f"{path[0]}")
+                        alert.exec()
+                except (OSError, PermissionError):
+                    alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
+                    alert.setIcon(QMessageBox.Warning)
+                    alert.setText(
+                        f"Unable to save {path[0]}.\n" +
+                        "(don't have permission or read-only file system)")
+                    alert.exec()
         
     def create_edit_window(self):
         """Set up window for editing provided csv data or show error if
@@ -1067,6 +1113,7 @@ class CommandCenter(QWidget):
 
     def set_data_id_col(self, id_col):
         self.data_id_col = id_col
+        self.parent.results.original_data_id = self.data_id_col
         if self.data_id_col != "no ID column":
             df = DataFrame(self.load_window.data[1:],
                            columns=self.load_window.data[0])
@@ -1084,11 +1131,14 @@ class CommandCenter(QWidget):
                            (conv["Stationarity test"] == "failed")].index
         alert = QMessageBox()
         alert.setWindowTitle("openVA App")
-        alert.setText(
-            "The following causes with CSMF > 0.02 did not converge:\n\n"
-            f"{', '.join(failed_conv.to_list())}"
-            "\n\n (convergence can be achieved by increasing the number of "
-            "simulations)")
+        if len(failed_conv) == 0:
+            alert.setText("All causes with CSMF > 0.02 converged")
+        else:
+            alert.setText(
+                "The following causes with CSMF > 0.02 did not converge:\n\n"
+                f"{', '.join(failed_conv.to_list())}"
+                "\n\n (convergence can be achieved by increasing the number of"
+                " simulations)")
         alert.exec()
 
     def save_insilicova_log(self):

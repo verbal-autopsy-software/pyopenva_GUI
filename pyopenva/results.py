@@ -26,11 +26,16 @@ class Results(QWidget):
 
         # self.setGeometry(400, 400, 500, 400)
         self.setWindowTitle("openVA GUI: Results")
+        self.original_data = None
+        self.original_data_id = None
+        self.insilicova_include_va_data = False
         self.insilicova_results = None
         self.insilicova_include_probs = True
+        self.interva_include_va_data = False
         self.interva_results = None
         self.interva_include_probs = True
         self.interva_rule = True
+        self.interva_remove_undetermined = False
         self.interva_tmp_dir = None
         self.options_sex = "all deaths"
         self.options_age = "all deaths"
@@ -106,7 +111,7 @@ class Results(QWidget):
         hbox_save.addWidget(self.btn_save_insilicova_plot)
         vbox_save.addLayout(hbox_save)
         vbox_save.addWidget(self.btn_save_insilicova_indiv)
-        gbox_save.setLayout(vbox_save)
+
 
         self.chbox_insilicova_include_probs = QCheckBox(
             "Include probability of top cause (with individual CODs)")
@@ -114,22 +119,36 @@ class Results(QWidget):
             self.insilicova_include_probs)
         self.chbox_insilicova_include_probs.toggled.connect(
             self.set_insilicova_include_probs)
+        self.chbox_insilicova_include_va_data = QCheckBox(
+            "Include VA data (with individual CODs)")
+        self.chbox_insilicova_include_va_data.setChecked(
+            self.insilicova_include_va_data)
+        self.chbox_insilicova_include_va_data.toggled.connect(
+            self.set_insilicova_include_va_data)
+        vbox_save.addWidget(self.chbox_insilicova_include_probs)
+        vbox_save.addWidget(self.chbox_insilicova_include_va_data)
+        gbox_save.setLayout(vbox_save)
 
         layout = QVBoxLayout()
         layout.addWidget(gbox_dem)
         layout.addWidget(gbox_show)
         layout.addWidget(gbox_save)
-        layout.addWidget(self.chbox_insilicova_include_probs)
+        # layout.addWidget(self.chbox_insilicova_include_probs)
         layout.insertSpacing(1, 50)
         layout.insertSpacing(3, 50)
-        layout.insertSpacing(5, 50)
+        # layout.insertSpacing(5, 50)
         self.insilicova_panel = QWidget()
         self.insilicova_panel.setLayout(layout)
 
     def create_interva_panel(self):
 
+        self.chbox_interva_remove_undetermined = QCheckBox(
+            "Remove 'Undetermined' as a COD")
+        self.chbox_interva_remove_undetermined.setChecked(
+            self.interva_remove_undetermined)
+        self.chbox_interva_remove_undetermined.toggled.connect(
+            self.set_interva_remove_undetermined)
         gbox_dem = self.create_demographics_gbox()
-
         gbox_show = QGroupBox("Show Results")
         hbox_show = QHBoxLayout()
         self.btn_interva_table = QPushButton("Show \n CSMF Table")
@@ -147,10 +166,10 @@ class Results(QWidget):
         gbox_save = QGroupBox("Save Results")
         vbox_save = QVBoxLayout()
         hbox_save = QHBoxLayout()
-        self.btn_save_interva_table = QPushButton("Save Table")
+        self.btn_save_interva_table = QPushButton("Save CSMF Table")
         self.btn_save_interva_table.clicked.connect(
             self.save_interva_table)
-        self.btn_save_interva_plot = QPushButton("Save Plot")
+        self.btn_save_interva_plot = QPushButton("Save CSMF Plot")
         self.btn_save_interva_plot.clicked.connect(self.save_interva_plot)
         self.btn_save_interva_indiv = QPushButton(
             "Save Individual \n Cause Assignments")
@@ -160,27 +179,34 @@ class Results(QWidget):
         hbox_save.addWidget(self.btn_save_interva_plot)
         vbox_save.addLayout(hbox_save)
         vbox_save.addWidget(self.btn_save_interva_indiv)
-        gbox_save.setLayout(vbox_save)
 
-        self.chbox_interva_rule = QCheckBox(
-            "Use InterVA Rule (this will include 'Undetermined' as a cause)")
-        self.chbox_interva_rule.setChecked(True)
-        self.chbox_interva_rule.toggled.connect(
-            self.set_interva_rule)
+        # self.chbox_interva_rule = QCheckBox(
+        #     "Use InterVA Rule (this will include 'Undetermined' as a cause)")
+        # self.chbox_interva_rule.setChecked(True)
+        # self.chbox_interva_rule.toggled.connect(
+        #     self.set_interva_rule)
         self.chbox_interva_include_probs = QCheckBox(
             "Include probability of top cause (with individual CODs)")
         self.chbox_interva_include_probs.setChecked(
             self.interva_include_probs)
         self.chbox_interva_include_probs.toggled.connect(
             self.set_interva_include_probs)
+        self.chbox_interva_include_va_data = QCheckBox(
+            "Include VA data (with individual CODs)")
+        self.chbox_interva_include_va_data.setChecked(
+            self.interva_include_va_data)
+        self.chbox_interva_include_va_data.toggled.connect(
+            self.set_interva_include_va_data)
+        vbox_save.addWidget(self.chbox_interva_include_probs)
+        vbox_save.addWidget(self.chbox_interva_include_va_data)
+        gbox_save.setLayout(vbox_save)
 
         layout = QVBoxLayout()
+        layout.addWidget(self.chbox_interva_remove_undetermined)
         layout.addWidget(gbox_dem)
         layout.addWidget(gbox_show)
         layout.addWidget(gbox_save)
-        layout.addWidget(self.chbox_interva_rule)
-        layout.addWidget(self.chbox_interva_include_probs)
-        layout.insertSpacing(1, 50)
+        layout.insertSpacing(1, 15)
         layout.insertSpacing(3, 50)
         layout.insertSpacing(5, 50)
         self.interva_panel = QWidget()
@@ -249,6 +275,12 @@ class Results(QWidget):
         gbox_dem.setLayout(hbox_demographics)
         return gbox_dem
 
+    def set_interva_remove_undetermined(self, checked):
+        if checked:
+            self.interva_remove_undetermined = True
+        else:
+            self.interva_remove_undetermined = False
+
     def interva_plot(self):
         if self.interva_results is None:
             alert = QMessageBox()
@@ -273,7 +305,8 @@ class Results(QWidget):
                     colors=self.plot_color,
                     age=self.options_age,
                     sex=self.options_sex,
-                    interva_rule=self.interva_rule)
+                    interva_rule=self.interva_rule,
+                    remove_undetermined=self.interva_remove_undetermined)
                 self.interva_plot_dialog.exec()
 
     def interva_table(self):
@@ -299,7 +332,8 @@ class Results(QWidget):
                     top=self.n_top_causes,
                     age=self.options_age,
                     sex=self.options_sex,
-                    interva_rule=self.interva_rule)
+                    interva_rule=self.interva_rule,
+                    remove_undetermined=self.interva_remove_undetermined)
                 self.interva_table.resize(self.interva_table.table.width(),
                                           self.interva_table.table.height())
                 self.interva_table.exec()
@@ -321,11 +355,21 @@ class Results(QWidget):
                     f"age: {self.options_age},   sex: {self.options_sex}")
                 alert.exec()
             else:
+                age = self.options_age
+                if self.options_age == "all deaths":
+                    age = None
+                sex = self.options_sex
+                if self.options_sex == "all deaths":
+                    sex = None
                 csmf = utils.csmf(self.interva_results,
                                   top=self.n_top_causes,
-                                  age=self.options_age,
-                                  sex=self.options_sex,
+                                  age=age,
+                                  sex=sex,
                                   interva_rule=self.interva_rule)
+                if (self.interva_remove_undetermined and
+                        "Undetermined" in csmf.index):
+                    csmf = csmf.drop("Undetermined")
+                    csmf = csmf / sum(csmf)
                 csmf.sort_values(ascending=False, inplace=True)
                 csmf_df = csmf.reset_index()[0:self.n_top_causes]
                 title = _make_title(age=self.options_age,
@@ -333,7 +377,6 @@ class Results(QWidget):
                 csmf_df.rename(columns={"index": "Cause",
                                         0: title},
                                inplace=True)
-                # results_file_name = "interva5_csmf.csv"
                 results_file_name = self._make_results_file_name("interva5",
                                                                  "table")
                 path = QFileDialog.getSaveFileName(self,
@@ -394,14 +437,16 @@ class Results(QWidget):
                 if path != ("", ""):
                     # os.remove(path[0])
                     try:
-                        save_plot(results=self.interva_results,
-                                  algorithm="interva",
-                                  top=self.n_top_causes,
-                                  file_name=path[0],
-                                  plot_colors=self.plot_color,
-                                  age=self.options_age,
-                                  sex=self.options_sex,
-                                  interva_rule=self.interva_rule)
+                        save_plot(
+                            results=self.interva_results,
+                            algorithm="interva",
+                            top=self.n_top_causes,
+                            file_name=path[0],
+                            plot_colors=self.plot_color,
+                            age=self.options_age,
+                            sex=self.options_sex,
+                            interva_rule=self.interva_rule,
+                            remove_undetermined=self.interva_remove_undetermined)
                         if os.path.isfile(path[0]):
                             alert = QMessageBox()
                             alert.setWindowTitle("openVA App")
@@ -447,11 +492,14 @@ class Results(QWidget):
                                                    results_file_name,
                                                    "CSV Files (*.csv)")
                 if path != ("", ""):
+                    how_to_merge = "outer"
                     keep = utils._get_cod_with_dem(self.interva_results)
                     if self.options_age != "all deaths":
                         keep = keep[keep["age"] == self.options_age]
+                        how_to_merge = "inner"
                     if self.options_sex != "all deaths":
                         keep = keep[keep["sex"] == self.options_sex]
+                        how_to_merge = "inner"
                     keep_id = keep["ID"]
                     out = utils.get_indiv_cod(
                         iva5=self.interva_results,
@@ -459,6 +507,10 @@ class Results(QWidget):
                         interva_rule=self.interva_rule,
                         include_propensities=self.interva_include_probs)
                     out = out[out["ID"].isin(keep_id)]
+                    out["ID"] = out["ID"].astype("int64")
+                    if self.interva_include_va_data:
+                        tmp_data = self._add_id_to_input_data()
+                        out = out.merge(tmp_data, how=how_to_merge, on="ID")
                     try:
                         out.to_csv(path[0], index=False)
                         if os.path.isfile(path[0]):
@@ -695,6 +747,7 @@ class Results(QWidget):
 
     def prepare_insilico_indiv_cod(self, results):
         all_results = []
+        how_to_merge = "outer"
         for i in range(results.indiv_prob.shape[0]):
             row = results.indiv_prob.iloc[i].copy()
             top_causes = row.sort_values(ascending=False)[0:self.n_top_causes]
@@ -722,6 +775,7 @@ class Results(QWidget):
         indiv_cod = indiv_cod.reset_index(names="ID")
         if (self.options_age != "all deaths" or
                 self.options_sex != "all deaths"):
+            how_to_merge = "inner"
             age_groups = []
             sex_groups = []
             if self.options_age == "all deaths":
@@ -741,6 +795,11 @@ class Results(QWidget):
                 indiv_cod["sex"].isin(sex_groups))
             indiv_cod = indiv_cod[subpop_index]
             indiv_cod = indiv_cod.drop(columns=["age", "sex"])
+
+        if self.insilicova_include_va_data:
+            tmp_data = self._add_id_to_input_data()
+            indiv_cod = indiv_cod.merge(tmp_data, how=how_to_merge, on="ID")
+
         return indiv_cod
 
     # def smartva_plot(self):
@@ -791,7 +850,6 @@ class Results(QWidget):
     def run_table_dialog_dem(self, algorithm):
         if algorithm == "interva":
             results = self.interva_results
-
         else:
             results = self.insilicova_results
         if results is None:
@@ -848,6 +906,12 @@ class Results(QWidget):
         else:
             self.insilicova_include_probs = False
 
+    def set_insilicova_include_va_data(self, checked):
+        if checked:
+            self.insilicova_include_va_data = True
+        else:
+            self.insilicova_include_va_data = False
+
     def set_interva_rule(self, checked):
         if checked:
             self.interva_rule = True
@@ -859,6 +923,12 @@ class Results(QWidget):
             self.interva_include_probs = True
         else:
             self.interva_include_probs = False
+
+    def set_interva_include_va_data(self, checked):
+        if checked:
+            self.interva_include_va_data = True
+        else:
+            self.interva_include_va_data = False
 
     def _check_empty_results(self, algorithm):
         empty = True
@@ -891,3 +961,11 @@ class Results(QWidget):
         else:
             results_file_name += "_individual_cod.csv"
         return results_file_name
+
+    def _add_id_to_input_data(self):
+        tmp_data = self.original_data.copy()
+        if self.original_data_id in ("no ID column", None):
+            tmp_data["ID"] = [i + 1 for i in self.original_data.index]
+        else:
+            tmp_data["ID"] = tmp_data[self.data_id_col].copy()
+        return tmp_data

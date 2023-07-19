@@ -113,6 +113,9 @@ class WindowManager(QMainWindow):
         #
         # self.efficient.btn_smartva_ui_exit.clicked.connect(self.close)
 
+        self.efficient.btn_insilicova_go_to_results_page.clicked.connect(
+            self.show_efficient_results_page)
+
         self.efficient.btn_go_to_results_page.clicked.connect(
             self.show_efficient_results_page)
 
@@ -245,8 +248,10 @@ class WindowManager(QMainWindow):
     def show_efficient_algorithm(self):
         if self.efficient.chosen_algorithm == "insilicova":
             self.show_efficient_insilicova_page()
+            self.setWindowTitle("openVA App: InSilicoVA")
         elif self.efficient.chosen_algorithm == "interva":
             self.show_efficient_interva_page()
+            self.setWindowTitle("openVA App: InterVA")
         # else:
         #     self.show_efficient_smartva_page()
 
@@ -275,16 +280,19 @@ class WindowManager(QMainWindow):
     #     # self.efficient.show_smartva_page()
     #     # self.setWindowTitle("openVA App: SmartVA")
     #     alert = QMessageBox()
-    #     alert.setWindowTitle("openVA App")
+    #     alert.setWindowTitle("openVA App: SmartVA")
     #     alert.setText("SmartVA is not available (it is based on Python 2" +
-    #                   "which is no longer supported by the Python Software " +
-    #                   "Foundation).  It will be included when a verison " +
-    #                   "based on Python 3 is released.")
+    #                   "which is no longer supported by the Python " +
+    #                   "Software Foundation).  It will be included when " +
+    #                   "a version based on Python 3 is released.")
     #     alert.exec()
 
     def show_efficient_results_page(self):
         self.efficient.show_results_page()
-        self.setWindowTitle("openVA App: results")
+        if self.efficient.chosen_algorithm == "insilicova":
+            self.setWindowTitle("openVA App: InSilicoVA Results")
+        else:
+            self.setWindowTitle("openVA App: InterVA Results")
 
     # def update_interva_results(self, new_results, tmp_dir):
     #     self.results.update_interva(new_results, tmp_dir)

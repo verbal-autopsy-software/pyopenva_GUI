@@ -50,7 +50,12 @@ class InSilicoVAWorker(QObject):
                 self.insilicova_results.emit(results)
                 self.insilicova_errors.emit(results.errors)
                 self.insilicova_warnings.emit(results.warnings)
-                self.state.emit("InSilicoVA results are ready")
+                msg = "InSilicoVA results are ready"
+                n_failed = (insilicova_out.original_data.shape[0] -
+                            len(insilicova_out.results.id))
+                if n_failed > 0:
+                    msg += f" ({n_failed} deaths failed data checks)"
+                self.state.emit(msg)
                 self.finished.emit()
             except InSilicoVAException:
                 self.insilicova_errors.emit(insilicova_out._error_log)
@@ -100,7 +105,12 @@ class InterVAWorker(QObject):
                     "available).\nPlease reload data in the expected format.")
             else:
                 self.interva_results.emit(iv5_out)
-                self.state.emit("InterVA5 results are ready")
+                n_failed = (iv5_out.va_input.shape[0] -
+                            iv5_out.results["VA5"].shape[0])
+                msg = "InterVA5 results are ready"
+                if n_failed > 0:
+                    msg += f" ({n_failed} deaths failed data checks)"
+                self.state.emit(msg)
                 self.finished.emit()
         except RuntimeError:
             self.state.emit("InterVA stopped (no results).")

@@ -23,7 +23,8 @@ class PlotDialog(QDialog):
 
     def __init__(self, results, algorithm, parent=None, top=5, save=False,
                  file_name=None, colors="Greys", age="all deaths",
-                 sex="all deaths", interva_rule=False):
+                 sex="all deaths", interva_rule=True,
+                 remove_undetermined=False):
         super(PlotDialog, self).__init__(parent=parent)
         self.setWindowTitle("Cause-Specific Mortality Fraction")
         self.results = results
@@ -37,6 +38,7 @@ class PlotDialog(QDialog):
         self.age = age
         self.sex = sex
         self.interva_rule = interva_rule
+        self.remove_undetermined = remove_undetermined
 
         vbox_csmf = QVBoxLayout()
         vbox_csmf.addWidget(self.toolbar)
@@ -85,6 +87,9 @@ class PlotDialog(QDialog):
         plt_series = utils.csmf(self.results, top=self.n_top_causes,
                                 interva_rule=self.interva_rule,
                                 age=age, sex=sex)
+        if self.remove_undetermined and "Undetermined" in plt_series.index:
+            plt_series = plt_series.drop("Undetermined")
+            plt_series = plt_series/sum(plt_series)
         plt_series.sort_values(ascending=True, inplace=True)
         cm_colors = get_cmap(self.colors)
         linspace_colors = linspace(0.5, 0.9, self.n_top_causes)
@@ -136,12 +141,14 @@ class PlotDialog(QDialog):
 class TableDialog(QDialog):
 
     def __init__(self, results, parent=None, top=5, age="all deaths",
-                 sex="all deaths", interva_rule=False):
+                 sex="all deaths", interva_rule=True,
+                 remove_undetermined=False):
         super(TableDialog, self).__init__(parent=parent)
         self.setWindowTitle("Cause-Specific Mortality Fraction")
         self.results = results
         self.n_top_causes = top
         self.interva_rule = interva_rule
+        self.remove_undetermined = remove_undetermined
         self.age = age
         self.sex = sex
         age = self.age
@@ -174,6 +181,9 @@ class TableDialog(QDialog):
             csmf = utils.csmf(self.results, top=self.n_top_causes,
                               interva_rule=self.interva_rule,
                               age=age, sex=sex)
+            if self.remove_undetermined and "Undetermined" in csmf.index:
+                csmf = csmf.drop("Undetermined")
+                csmf = csmf/sum(csmf)
             csmf.sort_values(ascending=False, inplace=True)
             csmf_df = csmf.reset_index()[0:self.n_top_causes]
             title = _make_title(age=self.age, sex=self.sex)
@@ -344,7 +354,8 @@ class TableModel(QAbstractTableModel):
 
 
 def save_plot(results, algorithm, top=5, file_name=None, plot_colors="Greys",
-              age="all deaths", sex="all deaths", interva_rule=False):
+              age="all deaths", sex="all deaths", interva_rule=True,
+              remove_undetermined=False):
     age_grp = age
     if age == "all deaths":
         age_grp = None
@@ -388,6 +399,9 @@ def save_plot(results, algorithm, top=5, file_name=None, plot_colors="Greys",
         plt_series = utils.csmf(results, top=top,
                                 interva_rule=interva_rule,
                                 age=age_grp, sex=sex_grp)
+        if remove_undetermined and "Undetermined" in plt_series.index:
+            plt_series = plt_series.drop("Undetermined")
+            plt_series = plt_series/sum(plt_series)
         plt_series.sort_values(ascending=True, inplace=True)
         cm_colors = get_cmap(plot_colors)
         linspace_colors = linspace(0.5, 0.9, top)

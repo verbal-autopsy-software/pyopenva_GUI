@@ -36,6 +36,15 @@ Frequently Asked Questions
     file (not the original data) and a message is added to the log file.  For more
     information see the `openVA GitHub repository <https://github.com/verbal-autopsy-software/vacheck#details>`_.
 
+.. _faq_pycrossva:
+
+**What is pyCrossVA?**
+    Converting the data from the ODK format to the format expected by the algorithms is carried out using the
+    pyCrossVA tool.  When a CSV data file is loaded into to the openVA App, these data are passed to pyCrossVA, which
+    searches for the columns needed to produce the new variables in the output dataset expected by the algorithms.  If
+    needed columns are found, then pyCrossVA performs the appropriate transformation to create the new variable;
+    otherwise, pyCrossVA proceed as if the needed variable was present but had missing values for all of the VAs.
+    pyCrossVA also allows users to specify the ID column.
 
 
 :doc:`Home <index>`  :doc:`Customizable Mode <custom>`

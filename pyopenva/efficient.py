@@ -39,6 +39,7 @@ class Efficient(QWidget):
         self.data_id_col = None
         self.pycrossva_data = None
         self.data_ui()
+        self.include_va_data = False
         self.select_algorithm_page = QWidget()
         self.select_algorithm_ui()
         self.chosen_algorithm = "insilicova"
@@ -62,6 +63,7 @@ class Efficient(QWidget):
         self.interva_pbar = QProgressBar()
         self.label_interva_progress = QLabel("(no results)")
         self.interva_ctrl = {"break": False}
+        self.interva_remove_undetermined = False
         self.interva_ui()
         # self.smartva_page = QWidget()
         # self.smartva_country = "Unknown"
@@ -137,8 +139,8 @@ class Efficient(QWidget):
         # TODO: use format in argument for pycrossva (need a setter function
         #       with a dictionary for mapping options to pycrossva parameters)
         self.btn_data_format.addItems(("WHO 2016",))
-                                       # "WHO 2012",
-                                       # "PHMRC"))
+        # "WHO 2012",
+        # "PHMRC"))
         self.btn_data_format.setMaximumWidth(350)
         form_vbox.addWidget(label_data_format)
         form_vbox.addWidget(self.btn_data_format)
@@ -247,8 +249,8 @@ class Efficient(QWidget):
         self.btn_save_insilicova_log.clicked.connect(self.save_log)
 
         self.btn_insilicova_to_select_algorithm = QPushButton("Back")
-        self.btn_go_to_results_page = QPushButton("Show Results")
-        self.btn_go_to_results_page.pressed.connect(
+        self.btn_insilicova_go_to_results_page = QPushButton("Show Results")
+        self.btn_insilicova_go_to_results_page.pressed.connect(
             self.show_results_page)
         self.btn_insilicova_ui_exit = QPushButton("Exit")
 
@@ -278,7 +280,7 @@ class Efficient(QWidget):
         layout.addStretch(1)
         h_box = QHBoxLayout()
         h_box.addWidget(self.btn_insilicova_to_select_algorithm)
-        h_box.addWidget(self.btn_go_to_results_page)
+        h_box.addWidget(self.btn_insilicova_go_to_results_page)
         h_box.addWidget(self.btn_insilicova_ui_exit)
         layout.addLayout(h_box)
         self.insilicova_page.setLayout(layout)
@@ -423,6 +425,7 @@ class Efficient(QWidget):
         layout = QVBoxLayout()
         gbox_options = QGroupBox("Options")
         vbox_options = QVBoxLayout()
+        hbox_options = QHBoxLayout()
         self.spinbox_n_causes = QSpinBox()
         self.spinbox_n_causes.setRange(1, 64)
         self.spinbox_n_causes.setPrefix("Include ")
@@ -430,7 +433,16 @@ class Efficient(QWidget):
         self.spinbox_n_causes.setValue(self.n_top_causes)
         self.spinbox_n_causes.valueChanged.connect(self.set_n_top_causes)
         self.spinbox_n_causes.setMaximumWidth(250)
-        vbox_options.addWidget(self.spinbox_n_causes)
+        self.chbox_interva_remove_undetermined = QCheckBox(
+            "Remove 'Undetermined' as a COD")
+        self.chbox_interva_remove_undetermined.setChecked(
+            self.interva_remove_undetermined)
+        self.chbox_interva_remove_undetermined.toggled.connect(
+            self.set_interva_remove_undetermined)
+        hbox_options.addWidget(self.spinbox_n_causes)
+        hbox_options.addWidget(self.chbox_interva_remove_undetermined)
+        hbox_options.insertSpacing(1, 50)
+        vbox_options.addLayout(hbox_options)
         self.label_dem_results = QLabel("Select demographic groups")
         self.label_dem_results.setAlignment(Qt.AlignCenter)
         vbox_options.addWidget(self.label_dem_results)
@@ -503,15 +515,17 @@ class Efficient(QWidget):
             "Include probability of top cause (with individual CODs)")
         self.chbox_insilicova_include_probs.toggled.connect(
             self.set_insilicova_include_probs)
-        # self.btn_save_log = QPushButton("Save log from data checks")
-        # self.btn_save_log.clicked.connect(self.save_log)
+        self.chbox_include_va_data = QCheckBox(
+            "Include VA data (with individual CODs)")
+        self.chbox_include_va_data.toggled.connect(
+            self.set_include_va_data)
         hbox_save.addWidget(self.btn_save_table)
         hbox_save.addWidget(self.btn_save_plot)
         vbox_save.addLayout(hbox_save)
         vbox_save.addWidget(self.btn_save_individual_results)
         if self.chosen_algorithm == "insilicova":
             vbox_save.addWidget(self.chbox_insilicova_include_probs)
-        # vbox_save.addWidget(self.btn_save_log)
+        vbox_save.addWidget(self.chbox_include_va_data)
         gbox_save.setLayout(vbox_save)
 
         hbox_navigate = QHBoxLayout()
@@ -525,7 +539,6 @@ class Efficient(QWidget):
         layout.addStretch(1)
         layout.addWidget(gbox_save)
         layout.addStretch(1)
-        # layout.addWidget(self.btn_results_to_algorithm)
         layout.addLayout(hbox_navigate)
         self.results_page.setLayout(layout)
 
@@ -567,6 +580,8 @@ class Efficient(QWidget):
                 self.interva_results = None
                 self.interva_pbar.setValue(0)
                 self.pycrossva_data = None
+                self.interva_pycva_tedit.setText("(pyCrossVA messages...)")
+                self.insilicova_pycva_tedit.setText("(pyCrossVA messages...)")
             except (ParserError, UnicodeDecodeError):
                 alert = QMessageBox()
                 alert.setWindowTitle("openVA App")
@@ -608,6 +623,24 @@ class Efficient(QWidget):
             self.insilicova_include_probs = True
         else:
             self.insilicova_include_probs = False
+
+    def set_include_va_data(self, checked):
+        if checked:
+            self.include_va_data = True
+            if self.data_id_col not in ("no ID column", None):
+                n_unique = len(self.data[self.data_id_col].unique())
+                if n_unique != self.data.shape[0]:
+                    alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
+                    alert.setIcon(QMessageBox.Warning)
+                    alert.setText(
+                        "Unable to save individual cause assignments with"
+                        "VA data (ID column does not have unique values).")
+                    alert.exec()
+                self.include_va_data = False
+                self.chbox_include_va_data.setChecked(False)
+        else:
+            self.include_va_data = False
 
     def run_pycrossva(self):
         raw_data_col_id = self.data_id_col
@@ -684,9 +717,19 @@ class Efficient(QWidget):
     #
     def set_chosen_algorithm(self, updated_choice):
         self.chosen_algorithm = updated_choice
+        if self.chosen_algorithm == "interva":
+            self.chbox_interva_remove_undetermined.setEnabled(True)
+        else:
+            self.chbox_interva_remove_undetermined.setEnabled(False)
 
     def set_n_top_causes(self, n):
         self.n_top_causes = n
+
+    def set_interva_remove_undetermined(self, checked):
+        if checked:
+            self.interva_remove_undetermined = True
+        else:
+            self.interva_remove_undetermined = False
 
     def set_options_sex(self, sex):
         self.options_sex = sex
@@ -766,20 +809,20 @@ class Efficient(QWidget):
             auto_extend = False
             if self.insilicova_auto == "True":
                 auto_extend = True
-            burnin = max(int(self.insilicova_n_sim/2), 1)
+            burnin = max(int(self.insilicova_n_sim / 2), 1)
             thin = 10
             self.insilicova_thread = QThread()
             self.insilicova_worker = InSilicoVAWorker(
                 data=self.pycrossva_data,
                 data_type="WHO2016",
-                n_sim=self.insilicova_n_sim,
-                thin=thin,
-                burnin=burnin,
-                auto_length=auto_extend,
-                # n_sim=200,
-                # thin=20,
-                # burnin=5,
-                # auto_length=False,
+                # n_sim=self.insilicova_n_sim,
+                # thin=thin,
+                # burnin=burnin,
+                # auto_length=auto_extend,
+                n_sim=200,
+                thin=20,
+                burnin=5,
+                auto_length=False,
                 seed=self.insilicova_seed,
                 gui_ctrl=self.insilicova_ctrl)
             self.insilicova_worker.moveToThread(self.insilicova_thread)
@@ -946,14 +989,16 @@ class Efficient(QWidget):
                     f"age: {self.options_age},   sex: {self.options_sex}")
                 alert.exec()
             else:
-                self.plot_dialog = PlotDialog(results=results,
-                                              algorithm=self.chosen_algorithm,
-                                              parent=self,
-                                              top=self.n_top_causes,
-                                              colors=self.plot_color,
-                                              age=self.options_age,
-                                              sex=self.options_sex,
-                                              interva_rule=True)
+                self.plot_dialog = PlotDialog(
+                    results=results,
+                    algorithm=self.chosen_algorithm,
+                    parent=self,
+                    top=self.n_top_causes,
+                    colors=self.plot_color,
+                    age=self.options_age,
+                    sex=self.options_sex,
+                    interva_rule=True,
+                    remove_undetermined=self.interva_remove_undetermined)
                 self.plot_dialog.exec()
 
     def run_table_dialog(self):
@@ -978,12 +1023,14 @@ class Efficient(QWidget):
                     f"age: {self.options_age},   sex: {self.options_sex}")
                 alert.exec()
             else:
-                self.table_dialog = TableDialog(results,
-                                                parent=self,
-                                                top=self.n_top_causes,
-                                                age=self.options_age,
-                                                sex=self.options_sex,
-                                                interva_rule=False)
+                self.table_dialog = TableDialog(
+                    results,
+                    parent=self,
+                    top=self.n_top_causes,
+                    age=self.options_age,
+                    sex=self.options_sex,
+                    interva_rule=True,
+                    remove_undetermined=self.interva_remove_undetermined)
                 self.table_dialog.resize(self.table_dialog.table.width(),
                                          self.table_dialog.table.height())
                 self.table_dialog.exec()
@@ -1078,8 +1125,13 @@ class Efficient(QWidget):
                         sex = None
                     csmf = utils.csmf(results,
                                       top=n_top_causes,
+                                      interva_rule=True,
                                       age=age,
                                       sex=sex)
+                    if (self.interva_remove_undetermined and
+                            "Undetermined" in csmf.index):
+                        csmf = csmf.drop("Undetermined")
+                        csmf = csmf / sum(csmf)
                     csmf.sort_values(ascending=False, inplace=True)
                     csmf_df = csmf.reset_index()[0:n_top_causes]
                     title = _make_title(age=self.options_age,
@@ -1145,7 +1197,8 @@ class Efficient(QWidget):
                           plot_colors=self.plot_color,
                           age=self.options_age,
                           sex=self.options_sex,
-                          interva_rule=False)
+                          interva_rule=True,
+                          remove_undetermined=self.interva_remove_undetermined)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
@@ -1187,16 +1240,23 @@ class Efficient(QWidget):
                                                "CSV Files (*.csv)")
             if path != ("", ""):
                 if self.chosen_algorithm == "insilicova":
-                    out = self.prepare_insilico_indiv_cod(results)
+                    out = self.prepare_insilicova_indiv_cod(results)
                 else:
+                    how_to_merge = "outer"
                     keep = utils._get_cod_with_dem(results)
                     if self.options_age != "all deaths":
                         keep = keep[keep["age"] == self.options_age]
+                        how_to_merge = "inner"
                     if self.options_sex != "all deaths":
                         keep = keep[keep["sex"] == self.options_sex]
+                        how_to_merge = "inner"
                     keep_id = keep["ID"]
                     out = results.results["VA5"]
                     out = out[out["ID"].isin(keep_id)]
+                    out["ID"] = out["ID"].astype("int64")
+                    if self.include_va_data:
+                        tmp_data = self._add_id_to_input_data()
+                        out = out.merge(tmp_data, how=how_to_merge, on="ID")
                 try:
                     out.to_csv(path[0], index=False)
                     if os.path.isfile(path[0]):
@@ -1219,18 +1279,19 @@ class Efficient(QWidget):
                         "(don't have permission or read-only file system)")
                     alert.exec()
 
-    def prepare_insilico_indiv_cod(self, results):
+    def prepare_insilicova_indiv_cod(self, results):
         top_cause = results.indiv_prob.idxmax(axis=1)
         indiv_cod = top_cause.reset_index()
         indiv_cod = indiv_cod.set_index("index", drop=False)
         indiv_cod.columns = ["ID", "Top Cause"]
+        how_to_merge = "outer"
         if self.insilicova_include_probs is True:
             top_prob = results.indiv_prob.max(axis=1)
             indiv_cod["Probability"] = top_prob
 
         if (self.options_age != "all deaths" or
                 self.options_sex != "all deaths"):
-
+            how_to_merge = "inner"
             age_groups = []
             sex_groups = []
             if self.options_age == "all deaths":
@@ -1250,6 +1311,10 @@ class Efficient(QWidget):
                 indiv_cod["sex"].isin(sex_groups))
             indiv_cod = indiv_cod[subpop_index]
             indiv_cod = indiv_cod.drop(columns=["age", "sex"])
+
+        if self.include_va_data:
+            tmp_data = self._add_id_to_input_data()
+            indiv_cod = indiv_cod.merge(tmp_data, how=how_to_merge, on="ID")
 
         return indiv_cod
 
@@ -1324,11 +1389,14 @@ class Efficient(QWidget):
                            (conv["Stationarity test"] == "failed")].index
         alert = QMessageBox()
         alert.setWindowTitle("openVA App")
-        alert.setText(
-            "The following causes with CSMF > 0.02 did not converge:\n\n"
-            f"{', '.join(failed_conv.to_list())}"
-            "\n\n (convergence can be achieved by increasing the number of "
-            "simulations)")
+        if len(failed_conv) == 0:
+            alert.setText("All causes with CSMF > 0.02 converged")
+        else:
+            alert.setText(
+                "The following causes with CSMF > 0.02 did not converge:\n\n"
+                f"{', '.join(failed_conv.to_list())}"
+                "\n\n (convergence can be achieved by increasing the number of "
+                "simulations)")
         alert.exec()
 
     def _check_empty_results(self):
@@ -1362,3 +1430,11 @@ class Efficient(QWidget):
         else:
             results_file_name += "_individual_cod.csv"
         return results_file_name
+
+    def _add_id_to_input_data(self):
+        tmp_data = self.data.copy()
+        if self.data_id_col in ("no ID column", None):
+            tmp_data["ID"] = [i + 1 for i in self.data.index]
+        else:
+            tmp_data["ID"] = tmp_data[self.data_id_col].copy()
+        return tmp_data
