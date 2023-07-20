@@ -967,5 +967,5 @@ class Results(QWidget):
         if self.original_data_id in ("no ID column", None):
             tmp_data["ID"] = [i + 1 for i in self.original_data.index]
         else:
-            tmp_data["ID"] = tmp_data[self.data_id_col].copy()
+            tmp_data["ID"] = tmp_data[self.original_data_id].copy()
         return tmp_data
