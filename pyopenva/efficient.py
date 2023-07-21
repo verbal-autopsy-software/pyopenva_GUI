@@ -14,6 +14,7 @@ import shutil
 import tempfile
 from interva import utils
 from insilicova.diag import csmf_diag
+from insilicova.api import InSilicoVA
 # from pyopenva.data import COUNTRIES
 from pandas import concat, DataFrame, read_csv
 from pandas.errors import EmptyDataError, ParserError
@@ -30,7 +31,7 @@ from pyopenva.workers import InSilicoVAWorker, InterVAWorker
 
 class Efficient(QWidget):
 
-    def __init__(self):
+    def __init__(self, insilicova_limit):
         super().__init__()
         # self.setGeometry(400, 400, 500, 400)
         self.data_page = QWidget()
@@ -43,6 +44,7 @@ class Efficient(QWidget):
         self.select_algorithm_page = QWidget()
         self.select_algorithm_ui()
         self.chosen_algorithm = "insilicova"
+        self.insilicova_limit = insilicova_limit
         self.insilicova_results = None
         self.insilicova_warnings = None
         self.insilicova_errors = None
@@ -806,57 +808,75 @@ class Efficient(QWidget):
             self.btn_check_convergence.setEnabled(False)
         else:
             self.run_pycrossva()
-            auto_extend = False
-            if self.insilicova_auto == "True":
-                auto_extend = True
-            burnin = max(int(self.insilicova_n_sim / 2), 1)
-            thin = 10
-            self.insilicova_thread = QThread()
-            self.insilicova_worker = InSilicoVAWorker(
-                data=self.pycrossva_data,
-                data_type="WHO2016",
-                # n_sim=self.insilicova_n_sim,
-                # thin=thin,
-                # burnin=burnin,
-                # auto_length=auto_extend,
-                n_sim=200,
-                thin=20,
-                burnin=5,
-                auto_length=False,
-                seed=self.insilicova_seed,
-                gui_ctrl=self.insilicova_ctrl)
-            self.insilicova_worker.moveToThread(self.insilicova_thread)
-            self.insilicova_thread.started.connect(self.insilicova_worker.run)
-            self.insilicova_worker.finished.connect(
-                self.insilicova_thread.quit)
-            self.insilicova_worker.finished.connect(
-                self.insilicova_worker.deleteLater)
-            self.insilicova_thread.finished.connect(
-                self.insilicova_thread.deleteLater)
-            self.insilicova_worker.progress.connect(
-                self.update_insilicova_progress)
-            self.insilicova_worker.state.connect(
-                self.update_insilicova_progress_label)
-            self.insilicova_worker.insilicova_errors.connect(
-                self.update_insilicova_errors)
-            self.insilicova_worker.insilicova_warnings.connect(
-                self.update_insilicova_warnings)
-            self.insilicova_worker.insilicova_results.connect(
-                self.update_insilicova_results)
-            self.insilicova_thread.start()
-            self.btn_insilicova_stop.setEnabled(True)
+            tmp_ins = InSilicoVA(self.pycrossva_data, run=False)
+            tmp_ins._remove_bad(is_numeric=False)
+            n_valid = tmp_ins.data.shape[0]
+            n_removed = self.pycrossva_data.shape[0] - n_valid
+            del tmp_ins
+            if n_valid < self.insilicova_limit:
+                alert = QMessageBox()
+                alert.setText(
+                    "InSilicoVA is unavailable.  At least "
+                    f"{self.insilicova_limit} deaths are needed for reliable "
+                    f"results.\n\n({n_removed} deaths removed because of "
+                    "missing data.)\n\n(InterVA is available.)")
+                alert.exec()
+                self.btn_insilicova_run.setEnabled(True)
+                self.btn_load_data.setEnabled(True)
+                self.btn_save_insilicova_log.setEnabled(True)
+                self.btn_check_convergence.setEnabled(True)
+            else:
+                if self.insilicova_auto == "True":
+                    auto_extend = True
+                burnin = max(int(self.insilicova_n_sim / 2), 1)
+                thin = 10
+                self.insilicova_thread = QThread()
+                self.insilicova_worker = InSilicoVAWorker(
+                    data=self.pycrossva_data,
+                    data_type="WHO2016",
+                    n_sim=self.insilicova_n_sim,
+                    thin=thin,
+                    burnin=burnin,
+                    auto_length=auto_extend,
+                    # n_sim=200,
+                    # thin=20,
+                    # burnin=5,
+                    # auto_length=False,
+                    seed=self.insilicova_seed,
+                    gui_ctrl=self.insilicova_ctrl)
+                self.insilicova_worker.moveToThread(self.insilicova_thread)
+                self.insilicova_thread.started.connect(
+                    self.insilicova_worker.run)
+                self.insilicova_worker.finished.connect(
+                    self.insilicova_thread.quit)
+                self.insilicova_worker.finished.connect(
+                    self.insilicova_worker.deleteLater)
+                self.insilicova_thread.finished.connect(
+                    self.insilicova_thread.deleteLater)
+                self.insilicova_worker.progress.connect(
+                    self.update_insilicova_progress)
+                self.insilicova_worker.state.connect(
+                    self.update_insilicova_progress_label)
+                self.insilicova_worker.insilicova_errors.connect(
+                    self.update_insilicova_errors)
+                self.insilicova_worker.insilicova_warnings.connect(
+                    self.update_insilicova_warnings)
+                self.insilicova_worker.insilicova_results.connect(
+                    self.update_insilicova_results)
+                self.insilicova_thread.start()
+                self.btn_insilicova_stop.setEnabled(True)
 
-            self.btn_insilicova_run.setEnabled(False)
-            self.insilicova_thread.finished.connect(
-                lambda: self.btn_insilicova_run.setEnabled(True))
-            self.insilicova_thread.finished.connect(
-                lambda: self.btn_insilicova_stop.setEnabled(False))
-            self.insilicova_thread.finished.connect(
-                lambda: self.btn_load_data.setEnabled(True))
-            self.insilicova_thread.finished.connect(
-                lambda: self.btn_save_insilicova_log.setEnabled(True))
-            self.insilicova_thread.finished.connect(
-                lambda: self.btn_check_convergence.setEnabled(True))
+                self.btn_insilicova_run.setEnabled(False)
+                self.insilicova_thread.finished.connect(
+                    lambda: self.btn_insilicova_run.setEnabled(True))
+                self.insilicova_thread.finished.connect(
+                    lambda: self.btn_insilicova_stop.setEnabled(False))
+                self.insilicova_thread.finished.connect(
+                    lambda: self.btn_load_data.setEnabled(True))
+                self.insilicova_thread.finished.connect(
+                    lambda: self.btn_save_insilicova_log.setEnabled(True))
+                self.insilicova_thread.finished.connect(
+                    lambda: self.btn_check_convergence.setEnabled(True))
 
     def update_insilicova_progress(self, n):
         self.insilicova_pbar.setValue(n)

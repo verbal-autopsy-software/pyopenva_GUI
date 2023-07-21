@@ -40,12 +40,12 @@ class WindowManager(QMainWindow):
         super().__init__()
         # self.setGeometry(200, 200, 500, 300)
         self.setWindowTitle("Select Mode")
-        self.efficient = Efficient()
+        self.insilicova_limit = 100
+        self.efficient = Efficient(self.insilicova_limit)
         self.mode = Mode()
         # self.command_center = CommandCenter()
         self.command_center = CommandCenter(self)
         self.results = Results()
-        self.insilicova_limit = 100
 
         self.stacked_layout = QStackedLayout()
         self.stacked_layout.addWidget(self.mode)
@@ -367,6 +367,7 @@ class WindowManager(QMainWindow):
         self.command_center.combo_data_id_col.blockSignals(False)
         self.command_center.combo_data_id_col.setCurrentIndex(0)
 
+        self.command_center.btn_pycrossva.setEnabled(True)
         self.command_center.pycrossva_data = None
         self.command_center.insilicova_results = None
         self.command_center.label_insilicova_progress.setText("")

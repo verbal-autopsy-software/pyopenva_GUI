@@ -19,6 +19,7 @@ from interva.interva5 import InterVA5
 from insilicova.api import InSilicoVA
 from insilicova.exceptions import InSilicoVAException
 from insilicova.diag import csmf_diag
+from insilicova.api import InSilicoVA
 from PyQt5.QtCore import pyqtSignal, QObject, Qt, QDate, QThread, QTime
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
                              QHBoxLayout, QInputDialog, QLabel, QLineEdit,
@@ -853,12 +854,21 @@ class CommandCenter(QWidget):
             self.btn_insilicova_options.setEnabled(True)
         else:
             n_records = self.pycrossva_data.shape[0]
-            if n_records < self.insilicova_limit:
+            tmp_ins = InSilicoVA(self.pycrossva_data, run=False)
+            tmp_ins._remove_bad(is_numeric=False)
+            n_valid = tmp_ins.data.shape[0]
+            n_removed = n_records - n_valid
+            del tmp_ins
+            if n_valid < self.insilicova_limit:
+                msg = ("InSilicoVA is unavailable.  At least "
+                       f"{self.insilicova_limit} deaths are needed for "
+                       "results.")
+                if n_removed > 0:
+                    msg += (f"\n\n({n_removed} deaths removed because of "
+                            "missing data.)")
+                msg += "\n\n(InterVA is available.)"
                 alert = QMessageBox()
-                alert.setText(
-                    "InSilicoVA is unavailable.  At least "
-                    f"{self.insilicova_limit} deaths are needed for reliable "
-                    "results.\n\n(InterVA is available.)")
+                alert.setText(msg)
                 alert.exec()
                 self.btn_insilicova_run.setEnabled(True)
                 self.btn_load_data.setEnabled(True)
