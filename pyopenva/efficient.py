@@ -812,14 +812,21 @@ class Efficient(QWidget):
             tmp_ins._remove_bad(is_numeric=False)
             n_valid = tmp_ins.data.shape[0]
             n_removed = self.pycrossva_data.shape[0] - n_valid
+            if self.pycrossva_data["ID"].is_unique:
+                index_removed = (~self.pycrossva_data.ID.isin(tmp_ins.data.ID))
+                id_removed = self.pycrossva_data.ID[index_removed].astype("str")
+                id_removed_str = "\n".join(id_removed)
             del tmp_ins
             if n_valid < self.insilicova_limit:
+                msg = ("InSilicoVA is unavailable.  At least "
+                       f"{self.insilicova_limit} deaths are needed for "
+                       "reliable results.\n\nData check has removed"
+                       f" {n_removed} deaths because of missing data.")
+                if self.pycrossva_data["ID"].is_unique:
+                       msg += f"  IDs are:\n\n{id_removed_str}"
+                msg += "\n\n(InterVA is available.)"
                 alert = QMessageBox()
-                alert.setText(
-                    "InSilicoVA is unavailable.  At least "
-                    f"{self.insilicova_limit} deaths are needed for reliable "
-                    f"results.\n\n({n_removed} deaths removed because of "
-                    "missing data.)\n\n(InterVA is available.)")
+                alert.setText(msg)
                 alert.exec()
                 self.btn_insilicova_run.setEnabled(True)
                 self.btn_load_data.setEnabled(True)

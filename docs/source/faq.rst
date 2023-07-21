@@ -6,6 +6,8 @@ Frequently Asked Questions
     suggests that the results are more reliable with larger sample sizes.  In
     our experimentation with VA data (with external causes assigned), 100 deaths
     provided to be a reasonable threshold for obtaining reliable results.
+    *Note that if VA records fail the data check (e.g., have missing information*
+    *for age) then they are not included when checking for 100 deaths.*
 
 **Why are some deaths removed from the analysis (and not assigned a cause)?**
     If the VA record is missing information on either sex or age, then this death
@@ -35,6 +37,11 @@ Frequently Asked Questions
     the decedent.  If inconsistencies are found, then changes are made to a working data
     file (not the original data) and a message is added to the log file.  For more
     information see the `openVA GitHub repository <https://github.com/verbal-autopsy-software/vacheck#details>`_.
+    Also note that both algorithms check that each death can be classified in one of the
+    age groups (neonate, child, adult), is a non-missing response for sex (female or male),
+    and is not missing values for all of the indicators.  If these three conditions are
+    not satisfied, then the death is removed from the analytic data set (and is not
+    assigned a cause of death).
 
 .. _faq_pycrossva:
 
@@ -45,6 +52,12 @@ Frequently Asked Questions
     needed columns are found, then pyCrossVA performs the appropriate transformation to create the new variable;
     otherwise, pyCrossVA proceed as if the needed variable was present but had missing values for all of the VAs.
     pyCrossVA also allows users to specify the ID column.
+
+**The openVA App tells me that some deaths have failed the data checks.  How do I know which deaths failed?**
+    The log file from the data checks includes the ID (or row number) of the VA records that fail the data
+    checks.  These can be saved by clicking the "Save log file from data checks" button located in the
+    "openVA App: InterVA" or "openVA App: InSilicoVA" in the One-Click Wizard mode, or in the "the "Command Center"
+    window in the Customizable mode.
 
 
 :doc:`Home <index>`  :doc:`Customizable Mode <custom>`
