@@ -43,6 +43,7 @@ class CommandCenter(QWidget):
         self.raw_data_loaded = False
         self.label_data = None
         self.data_id_col = None
+        self.prev_data_id_col = None
         self.pycrossva_data = None
         self.insilicova_dialog = None
         self.interva_dialog = None
@@ -217,7 +218,8 @@ class CommandCenter(QWidget):
             self.pycrossva_data = transform(
                 mapping=("2016WHOv151", "InterVA5"),
                 raw_data=df,
-                raw_data_id=raw_data_id)
+                raw_data_id=raw_data_id,
+                lower=True)
         logging.info(pycrossva_stdout.getvalue())
         self.pycrossva_messages = pycrossva_stdout.getvalue()
         self.label_pycrossva_status.setText("(pyCrossVA finished)")
@@ -231,7 +233,7 @@ class CommandCenter(QWidget):
         else:
             self.msg = QMessageBox()
             self.msg.setWindowTitle("openVA App")
-            self.msg.setIcon(QMessageBox.Information)
+            # self.msg.setIcon(QMessageBox.Information)
             self.run_pycrossva()
             self.btn_save_pycrossva.setEnabled(True)
             
@@ -243,7 +245,7 @@ class CommandCenter(QWidget):
                     self.msg.setText(
                         "ERROR: ALL VALUES ARE MISSING!\n"
                         "The data have an unexpected format and cannot be"
-                        "processed.  Please reload data in the expected format")
+                        "processed. Please reload data in the expected format")
                 else:
                     self.msg.setText(
                         "pyCrossVA returned message(s)\n(details available)")
@@ -935,6 +937,8 @@ class CommandCenter(QWidget):
                 self.insilicova_thread.finished.connect(
                     lambda: self.btn_data_format.setEnabled(True))
                 self.insilicova_thread.finished.connect(
+                    lambda: self.btn_pycrossva.setEnabled(True))
+                self.insilicova_thread.finished.connect(
                     lambda: self.btn_edit_data.setEnabled(True))
                 self.insilicova_thread.finished.connect(
                     lambda: self.btn_check_convergence.setEnabled(True))
@@ -1062,6 +1066,14 @@ class CommandCenter(QWidget):
                 lambda: self.btn_interva_options.setEnabled(True))
             self.interva_thread.finished.connect(
                 lambda: self.btn_save_interva_log.setEnabled(True))
+            self.interva_thread.finished.connect(
+                lambda: self.btn_pycrossva.setEnabled(True))
+            self.interva_thread.finished.connect(
+                lambda: self.combo_data_id_col.setEnabled(True))
+            self.interva_thread.finished.connect(
+                lambda: self.btn_data_format.setEnabled(True))
+            self.interva_thread.finished.connect(
+                lambda: self.btn_edit_data.setEnabled(True))
         #     iv5out.run()
         #     self.interva_log = "ready"
         #     if iv5out.out["VA5"] is None:
@@ -1128,18 +1140,71 @@ class CommandCenter(QWidget):
     #     self.smartva_freetext = updated_freetext
 
     def set_data_id_col(self, id_col):
-        self.data_id_col = id_col
-        self.parent.results.original_data_id = self.data_id_col
-        if self.data_id_col != "no ID column":
-            df = DataFrame(self.load_window.data[1:],
-                           columns=self.load_window.data[0])
-            if df[self.data_id_col].nunique() != df.shape[0]:
-                alert = QMessageBox()
-                alert.setWindowTitle("openVA App")
-                alert.setIcon(QMessageBox.Warning)
-                alert.setText(
-                    "ID column does not have a unique value for every row")
-                alert.exec()
+        id_col_check = [i for i in self.load_window.data[0] if i == id_col]
+        if len(id_col_check) > 1:
+            alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
+            alert.setIcon(QMessageBox.Warning)
+            alert.setText(
+                f"There are multiple columns named {id_col}."
+                "Please choose a unique column name or change the duplicate "
+                "column names to unique names.")
+            alert.exec()
+            if self.prev_data_id_col is None:
+                prev_index = self.combo_data_id_col.findText(
+                    "no ID column")
+            else:
+                prev_index = self.combo_data_id_col.findText(
+                    self.prev_data_id_col)
+            self.combo_data_id_col.blockSignals(True)
+            self.combo_data_id_col.setCurrentIndex(prev_index)
+            self.combo_data_id_col.blockSignals(False)
+        elif self.pycrossva_data is not None:
+            qmbox_yn = QMessageBox()
+            msg = ("You have created pyCrossVA data and/or COD results.\n\n"
+                   "Changing the column ID will DELETE these results.\n\n"
+                   "Do you want to change the ID?")
+            ans = qmbox_yn.question(self, "", msg, qmbox_yn.Yes | qmbox_yn.No)
+            if ans == qmbox_yn.Yes:
+                self.data_id_col = id_col
+                self.parent.results.original_data_id = id_col
+                self.prev_data_id_col = id_col
+                self._reset_results()
+                if self.data_id_col not in (None, "no ID column"):
+                    df = DataFrame(self.load_window.data[1:],
+                                   columns=self.load_window.data[0])
+                    if df[self.data_id_col].is_unique is False:
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setIcon(QMessageBox.Warning)
+                        alert.setText(
+                            "ID column does not have a unique value "
+                            "for every row")
+                        alert.exec()
+            else:
+                if self.prev_data_id_col is None:
+                    prev_index = self.combo_data_id_col.findText(
+                        "no ID column")
+                else:
+                    prev_index = self.combo_data_id_col.findText(
+                        self.prev_data_id_col)
+                self.combo_data_id_col.blockSignals(True)
+                self.combo_data_id_col.setCurrentIndex(prev_index)
+                self.combo_data_id_col.blockSignals(False)
+        else:
+            self.data_id_col = id_col
+            self.parent.results.original_data_id = id_col
+            self.prev_data_id_col = id_col
+            if self.data_id_col not in (None, "no ID column"):
+                df = DataFrame(self.load_window.data[1:],
+                               columns=self.load_window.data[0])
+                if df[self.data_id_col].is_unique is False:
+                    alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
+                    alert.setIcon(QMessageBox.Warning)
+                    alert.setText(
+                        "ID column does not have a unique value for every row")
+                    alert.exec()
 
     def check_convergence(self):
         conv = csmf_diag(self.insilicova_results)
@@ -1254,19 +1319,17 @@ class CommandCenter(QWidget):
                         "(don't have permission or read-only file system)")
                     alert.exec()
 
-    def print_insilicova(self):
-        print(self.n_iterations)
-        print(self.auto_extend)
-        print(self.jump_scale)
-        print(self.seed)
-
-    def print_interva(self):
-        print(self.hiv)
-        print(self.malaria)
-
-    # def print_smartva(self):
-    #     print(self.smartva_country)
-    #     print(self.smartva_hiv)
-    #     print(self.smartva_malaria)
-    #     print(self.smartva_hce)
-    #     print(self.smartva_freetext)
+    def _reset_results(self):
+        self.pycrossva_data = None
+        self.label_pycrossva_status.setText("(need to run pyCrossVA)")
+        self.insilicova_results = None
+        self.parent.results.insilicova_results = None
+        self.label_insilicova_progress.setText("")
+        self.insilicova_pbar.setValue(0)
+        self.insilicova_warnings = None
+        self.insilicova_errors = None
+        self.interva_results = None
+        self.parent.results.interva_results = None
+        self.interva_log = None
+        self.label_interva_progress.setText("")
+        self.interva_pbar.setValue(0)

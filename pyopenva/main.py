@@ -14,7 +14,7 @@ from PyQt5.QtGui import QDesktopServices
 import os
 import sys
 import qdarktheme
-from pandas import read_csv
+from pandas import DataFrame, read_csv
 from pyopenva.efficient import Efficient
 from pyopenva.mode import Mode
 from pyopenva.command_center import CommandCenter
@@ -348,6 +348,9 @@ class WindowManager(QMainWindow):
     def load_example_data_command_center(self):
         path = self.find_data_file("data/who151_odk_export.csv")
         self.command_center.load_window = LoadData(input_fname=path)
+        df = DataFrame(self.command_center.load_window.data[1:],
+                       columns=self.command_center.load_window.data[0])
+        self.results.original_data = df
         self.command_center.btn_edit_data.setEnabled(True)
         n_records = len(self.command_center.load_window.data) - 1
         f_name = self.command_center.load_window.fname.split("/")[-1]

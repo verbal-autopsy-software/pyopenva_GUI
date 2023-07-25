@@ -377,7 +377,7 @@ class Results(QWidget):
                 csmf_df.rename(columns={"index": "Cause",
                                         0: title},
                                inplace=True)
-                results_file_name = self._make_results_file_name("interva5",
+                results_file_name = self._make_results_file_name("interva",
                                                                  "table")
                 path = QFileDialog.getSaveFileName(self,
                                                    "Save CSMF (csv)",
@@ -428,7 +428,7 @@ class Results(QWidget):
                 alert.exec()
             else:
                 # results_file_name = "interva5_csmf.pdf"
-                results_file_name = self._make_results_file_name("interva5",
+                results_file_name = self._make_results_file_name("interva",
                                                                  "plot")
                 path = QFileDialog.getSaveFileName(self,
                                                    "Save CSMF plot (pdf)",
@@ -485,7 +485,7 @@ class Results(QWidget):
                 alert.exec()
             else:
                 # results_file_name = "interva5_individual_cod.csv"
-                results_file_name = self._make_results_file_name("interva5",
+                results_file_name = self._make_results_file_name("interva",
                                                                  "indiv")
                 path = QFileDialog.getSaveFileName(self,
                                                    "Save CSMF (csv)",
@@ -507,7 +507,8 @@ class Results(QWidget):
                         interva_rule=self.interva_rule,
                         include_propensities=self.interva_include_probs)
                     out = out[out["ID"].isin(keep_id)]
-                    out["ID"] = out["ID"].astype("int64")
+                    if self.original_data_id is None:
+                        out["ID"] = out["ID"].astype("int64")
                     if self.interva_include_va_data:
                         tmp_data = self._add_id_to_input_data()
                         out = out.merge(tmp_data, how=how_to_merge, on="ID")
