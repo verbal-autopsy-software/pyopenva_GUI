@@ -503,7 +503,8 @@ class Results(QWidget):
                     keep_id = keep["ID"]
                     out = utils.get_indiv_cod(
                         iva5=self.interva_results,
-                        top=self.n_top_causes,
+                        # top=self.n_top_causes,
+                        top=3,
                         interva_rule=self.interva_rule,
                         include_propensities=self.interva_include_probs)
                     out = out[out["ID"].isin(keep_id)]

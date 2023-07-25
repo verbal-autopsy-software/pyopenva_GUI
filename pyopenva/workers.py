@@ -6,6 +6,8 @@ pyopenva.efficient
 This module creates a stacked layout to walk through the analysis step-by-step.
 """
 
+import os
+
 from insilicova.api import InSilicoVA
 from insilicova.structures import InSilico
 from insilicova.exceptions import HaltGUIException, InSilicoVAException
@@ -97,6 +99,10 @@ class InterVAWorker(QObject):
                                directory=self.directory,
                                openva_app=self.progress,
                                gui_ctrl=self.gui_ctrl)
+            try:
+                os.getcwd()
+            except FileNotFoundError:
+                os.chdir(self.directory)
             iv5_out.run()
             self.log.emit("ready")
             if iv5_out.results["VA5"] is None:
