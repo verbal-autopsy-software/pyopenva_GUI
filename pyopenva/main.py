@@ -5,8 +5,8 @@ pyopenva.main
 ~~~~~~~~~~~~~~
 This module creates user interface for the app.
 """
-from PyQt5.QtWidgets import (QAction, QApplication, QMainWindow, QMessageBox,
-                             QStackedLayout, QWidget)
+from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog,
+                             QMainWindow, QMessageBox, QStackedLayout, QWidget)
 from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage
@@ -144,6 +144,8 @@ class WindowManager(QMainWindow):
         # actions for menu bar
         act_about = QAction("About openVA App", self)
         act_about.triggered.connect(self.show_about)
+        act_setwd = QAction("Set working directory", self)
+        act_setwd.triggered.connect(self.select_working_dir)
         act_close = QAction("Exit", self)
         act_close.triggered.connect(self.close)
         act_goto_eff = QAction("Wizard mode", self)
@@ -194,6 +196,7 @@ class WindowManager(QMainWindow):
         menu_help = menu.addMenu("&Help")
 
         menu_file.addAction(act_about)
+        menu_file.addAction(act_setwd)
         menu_file.addAction(act_close)
         menu_nav_go = menu_nav.addMenu("Go to... ")
         menu_nav_go.addAction(act_goto_eff)
@@ -439,6 +442,12 @@ class WindowManager(QMainWindow):
         self.browser.setUrl(QUrl.fromLocalFile(help_path))
         self.browser.setGeometry(200, 200, 1017, 800)
         self.browser.show()
+
+    def select_working_dir(self):
+        file = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
+        self.command_center.working_dir = file
+        self.efficient.working_dir = file
+        self.results.working_dir = file
 
 
 if __name__ == '__main__':

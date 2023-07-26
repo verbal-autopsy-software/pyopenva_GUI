@@ -21,12 +21,10 @@ from insilicova.exceptions import InSilicoVAException
 from insilicova.diag import csmf_diag
 from insilicova.api import InSilicoVA
 from PyQt5.QtCore import pyqtSignal, QObject, Qt, QDate, QThread, QTime
-from PyQt5.QtWidgets import (QCheckBox, QComboBox,
-                             QDialog, QDialogButtonBox,
-                             QFileDialog, QGroupBox,
-                             QHBoxLayout, QInputDialog, QLabel, QLineEdit,
-                             QMessageBox, QProgressBar, QPushButton,
-                             QTableView, QVBoxLayout, QWidget)
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
+                             QFileDialog, QGroupBox, QHBoxLayout, QInputDialog,
+                             QLabel, QLineEdit, QMessageBox, QProgressBar,
+                             QPushButton, QTableView, QVBoxLayout, QWidget)
 
 from pyopenva.edit_window import EditData, EditableHeaderView
 from pyopenva.insilicova_ui import InSilicoVADialog
@@ -41,6 +39,7 @@ class CommandCenter(QWidget):
 
     def __init__(self, parent=None):
         super().__init__()
+        self.working_dir = ""
         self.raw_data = None
         self.raw_data_loaded = False
         self.label_data = None
@@ -159,7 +158,7 @@ class CommandCenter(QWidget):
     def load_data(self):
         """Set up window for loading csv data."""
         
-        self.load_window = LoadData()
+        self.load_window = LoadData(working_dir=self.working_dir)
         if self.load_window.fname != "":
             self.btn_edit_data.setEnabled(True)
             n_records = len(self.load_window.data) - 1
@@ -261,6 +260,8 @@ class CommandCenter(QWidget):
             alert.exec()
         else:
             pycrossva_file_name = "pycrossva_output.csv"
+            pycrossva_file_name = os.path.join(self.working_dir,
+                                               pycrossva_file_name)
             path = QFileDialog.getSaveFileName(self,
                                                "Save pyCrossVA output (csv)",
                                                pycrossva_file_name,
@@ -455,8 +456,8 @@ class CommandCenter(QWidget):
             file_name = QFileDialog.getSaveFileName(
                 self,
                 "Save As",
-                self.load_window.fname[:-4] + "_edited-by_" + name + "_" +
-                date + "_" + time,
+                self.working_dir + self.load_window.fname[:-4] +
+                "_edited-by_" + name + "_" + date + "_" + time,
                 "csv Files (*.csv)")
 
             fname = file_name[0]
@@ -1232,6 +1233,8 @@ class CommandCenter(QWidget):
             alert.exec()
         else:
             log_file_name = "insilicova_log.txt"
+            log_file_name = os.path.join(self.working_dir,
+                                         log_file_name)
             path = QFileDialog.getSaveFileName(self,
                                                "Save log (txt)",
                                                log_file_name,
@@ -1287,6 +1290,8 @@ class CommandCenter(QWidget):
             alert.exec()
         else:
             log_file_name = "interva_log.txt"
+            log_file_name = os.path.join(self.working_dir,
+                                         log_file_name)
             path = QFileDialog.getSaveFileName(self,
                                                "Save log (txt)",
                                                log_file_name,

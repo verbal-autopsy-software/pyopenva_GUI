@@ -13,7 +13,7 @@ from pandas import read_csv
 
 class LoadData(QWidget):
 
-    def __init__(self, input_fname=None):
+    def __init__(self, input_fname=None, working_dir=""):
         super().__init__()
 
         if input_fname:
@@ -21,7 +21,7 @@ class LoadData(QWidget):
         else:
             file_name = QFileDialog.getOpenFileName(self,
                                                     "Open csv file",
-                                                    "",
+                                                    working_dir,
                                                     "csv Files (*.csv)")
         self.fname = file_name[0]
         if file_name is not None and file_name[0] != "":

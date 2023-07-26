@@ -34,6 +34,7 @@ class Efficient(QWidget):
     def __init__(self, insilicova_limit):
         super().__init__()
         # self.setGeometry(400, 400, 500, 400)
+        self.working_dir = ""
         self.data_page = QWidget()
         self.data = None
         self.data_loaded = False
@@ -547,7 +548,8 @@ class Efficient(QWidget):
     def load_data(self):
         path = QFileDialog.getOpenFileName(self,
                                            "Open a CSV file",
-                                           "",
+                                           # "",
+                                           self.working_dir,
                                            "csv(*.csv)")
         if path != ("", ""):
             try:
@@ -1396,6 +1398,8 @@ class Efficient(QWidget):
             alert.exec()
         else:
             log_file_name = f"{self.chosen_algorithm}_log.txt"
+            log_file_name = os.path.join(self.working_dir,
+                                         log_file_name)
             path = QFileDialog.getSaveFileName(self,
                                                "Save log (txt)",
                                                log_file_name,
@@ -1491,6 +1495,9 @@ class Efficient(QWidget):
             results_file_name += "_csmf.csv"
         else:
             results_file_name += "_individual_cod.csv"
+        if self.working_dir != "":
+            results_file_name = os.path.join(self.working_dir,
+                                             results_file_name)
         return results_file_name
 
     def _add_id_to_input_data(self):

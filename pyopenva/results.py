@@ -26,6 +26,7 @@ class Results(QWidget):
 
         # self.setGeometry(400, 400, 500, 400)
         self.setWindowTitle("openVA GUI: Results")
+        self.working_dir = ""
         self.original_data = None
         self.original_data_id = None
         self.insilicova_include_va_data = False
@@ -962,6 +963,9 @@ class Results(QWidget):
             results_file_name += "_csmf.csv"
         else:
             results_file_name += "_individual_cod.csv"
+        if self.working_dir != "":
+            results_file_name = os.path.join(self.working_dir,
+                                             results_file_name)
         return results_file_name
 
     def _add_id_to_input_data(self):
