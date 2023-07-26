@@ -501,12 +501,12 @@ class Results(QWidget):
                         keep = keep[keep["sex"] == self.options_sex]
                         how_to_merge = "inner"
                     keep_id = keep["ID"]
-                    out = utils.get_indiv_cod(
-                        iva5=self.interva_results,
-                        # top=self.n_top_causes,
-                        top=3,
-                        interva_rule=self.interva_rule,
-                        include_propensities=self.interva_include_probs)
+                    out = self.interva_results.results["VA5"].copy()
+                    out = out.drop(["WHOLEPROB"], axis=1)
+                    if self.interva_include_probs is False:
+                        out = out.drop(
+                            ["PREGLIK", "LIK1", "LIK2", "LIK3", "INDET"],
+                            axis=1)
                     out = out[out["ID"].isin(keep_id)]
                     if self.original_data_id is None:
                         out["ID"] = out["ID"].astype("int64")

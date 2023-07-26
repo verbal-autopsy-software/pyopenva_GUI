@@ -1312,6 +1312,7 @@ class Efficient(QWidget):
                         how_to_merge = "inner"
                     keep_id = keep["ID"]
                     out = results.results["VA5"]
+                    out = out.drop(["WHOLEPROB"], axis=1)
                     out = out[out["ID"].isin(keep_id)]
                     if self.data_id_col in (None, "no ID column"):
                         out["ID"] = out["ID"].astype("int64")

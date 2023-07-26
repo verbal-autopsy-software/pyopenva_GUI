@@ -21,7 +21,9 @@ from insilicova.exceptions import InSilicoVAException
 from insilicova.diag import csmf_diag
 from insilicova.api import InSilicoVA
 from PyQt5.QtCore import pyqtSignal, QObject, Qt, QDate, QThread, QTime
-from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
+from PyQt5.QtWidgets import (QCheckBox, QComboBox,
+                             QDialog, QDialogButtonBox,
+                             QFileDialog, QGroupBox,
                              QHBoxLayout, QInputDialog, QLabel, QLineEdit,
                              QMessageBox, QProgressBar, QPushButton,
                              QTableView, QVBoxLayout, QWidget)
@@ -231,28 +233,23 @@ class CommandCenter(QWidget):
             alert.setText("Please load data before running pyCrossVA.")
             alert.exec()
         else:
-            self.msg = QMessageBox()
-            self.msg.setWindowTitle("openVA App")
-            # self.msg.setIcon(QMessageBox.Information)
             self.run_pycrossva()
             self.btn_save_pycrossva.setEnabled(True)
-            
+            self.pycva_diag = PyCrossVADialog()
             if self.pycrossva_messages == "":
-                self.msg.setText(
+                self.pycva_diag.set_text(
                     "Data successfully converted to openVA format")
             else:
                 if (self.pycrossva_data.iloc[:, 1:] == ".").all(axis=None):
-                    self.msg.setText(
+                    self.pycva_diag.set_text(
                         "ERROR: ALL VALUES ARE MISSING!\n"
                         "The data have an unexpected format and cannot be"
                         "processed. Please reload data in the expected format")
                 else:
-                    self.msg.setText(
-                        "pyCrossVA returned message(s)\n(details available)")
-            self.msg.setWindowTitle("pyCrossVA Results")
-            self.msg.setDetailedText(self.pycrossva_messages)
-            self.msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-            self.msg.show()
+                    msg = "pyCrossVA returned message\n"
+                    msg += self.pycrossva_messages
+                    self.pycva_diag.set_text(msg)
+            self.pycva_diag.exec()
 
     def save_pycrossva(self):
         if self.pycrossva_data is None:
@@ -1333,3 +1330,20 @@ class CommandCenter(QWidget):
         self.interva_log = None
         self.label_interva_progress.setText("")
         self.interva_pbar.setValue(0)
+
+
+class PyCrossVADialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.label = QLabel("")
+        self.setWindowTitle("openVA: pyCrossVA message")
+        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok)
+        self.button_box.accepted.connect(self.accept)
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.label)
+        self.layout.addWidget(self.button_box)
+        self.setLayout(self.layout)
+
+    def set_text(self, text):
+        self.label.setText(text)
