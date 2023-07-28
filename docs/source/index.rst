@@ -1,5 +1,6 @@
+###################################
 Welcome to openVA App documentation
-===================================
+###################################
 
 The openVA App implements the `InterVA <https://doi.org/10.1186/s12916-019-1333-6>`_ and
 `InSilicoVA <https://doi.org/10.1080/01621459.2016.1152191>`_ algorithms for coding cause of death

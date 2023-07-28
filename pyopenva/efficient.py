@@ -491,11 +491,11 @@ class Efficient(QWidget):
 
         gbox_show = QGroupBox("Show Results")
         hbox_show = QHBoxLayout()
-        self.btn_show_table = QPushButton("Show \n CSMF table")
+        self.btn_show_table = QPushButton("Show \n CSMF Table")
         self.btn_show_table.pressed.connect(self.run_table_dialog)
-        self.btn_show_plot = QPushButton("Show \n CSMF plot")
+        self.btn_show_plot = QPushButton("Show \n CSMF Plot")
         self.btn_show_plot.pressed.connect(self.run_plot_dialog)
-        self.btn_show_dem = QPushButton("Show \n demographics")
+        self.btn_show_dem = QPushButton("Show \n Demographics")
         self.btn_show_dem.pressed.connect(self.run_table_dialog_dem)
         hbox_show.addWidget(self.btn_show_table)
         hbox_show.addWidget(self.btn_show_plot)
@@ -971,6 +971,8 @@ class Efficient(QWidget):
         else:
             self.interva_log = None
             self.interva_results = None
+            self.update_interva_progress_label(
+                "(running algorithm)")
             # TODO: clear old error log if it exists?
             self.interva_tmp_dir = tempfile.TemporaryDirectory()
             self.run_pycrossva()

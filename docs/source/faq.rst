@@ -1,5 +1,6 @@
+##########################
 Frequently Asked Questions
-==========================
+##########################
 
 **Why do I need at least 100 deaths to run the InSilicoVA algorithm?**
     While it is possible to run InSilicoVA with fewer deaths, our experience
@@ -13,7 +14,9 @@ Frequently Asked Questions
     If the VA record is missing information on either sex or age, then this death
     is removed from the analysis and is NOT assigned a cause of death.  Both of
     these demographic indicators are crucial to the assignment of CODs and the
-    algorithms filter out these VA records before assigning causes of death.
+    algorithms filter out these VA records before assigning causes of death.  VA records
+    are also removed if they have missing values for all of the symptom indicators.  This
+    typically happens if the respondent did not consent to the VA interview.
 
 **Why does the progress bar for InSilicoVA reset a few times after reaching the end?**
     InSilicoVA obtains results by making draws from a distribution.  With each draw, the
@@ -60,4 +63,6 @@ Frequently Asked Questions
     window in the Customizable mode.
 
 
-:doc:`Home <index>`  :doc:`Customizable Mode <custom>`
+===================  =======================================  =================================  ==========================
+:doc:`Home <index>`  :doc:`One-Click (Wizard) Mode <wizard>`  :doc:`Customizable Mode <custom>`  :doc:`Vignette <vignette>`
+===================  =======================================  =================================  ==========================

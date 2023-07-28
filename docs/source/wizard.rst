@@ -1,32 +1,44 @@
+################
 One-Click Wizard
-================
+################
 
 This mode in the openVA App will guide you through a sequence of windows where you will
-walk through the following steps (in order):
+walk through the following steps:
+
+1. :ref:`set working directory <wiz_step1>`
+2. :ref:`load and prepare your VA data <wiz_step2>`
+3. :ref:`select the algorithm you wish to use for assigning CoDs <wiz_step3>`
+4. :ref:`running the algorithm (with user-selected options) <wiz_step4>`
+
+   * :ref:`InSilicoVA<wiz_step4_1>`
+
+   * :ref:`InterVA<wiz_step4_2>`
+
+5. :ref:`view and save results <wiz_step5>`
 
 
-1. :ref:`load and prepare the your VA data <wiz_step1>`
-2. :ref:`select the algorithm you wish to use for assigning CoDs <wiz_step2>`
-3. :ref:`running the algorithm (with user-selected options) <wiz_step3>`
-
-   * :ref:`InSilicoVA<wiz_step3_1>`
-
-   * :ref:`InterVA<wiz_step3_2>`
-
-4. :ref:`accessing the results <wiz_step4>`
+Each of these steps is described below.  To access this mode, simply click the "Start One-Click (Wizard)" button in the
+initial openVA App window.
 
 
-Each of these steps is described below.  To access this mode, simply click the
-"Start One-Click (Wizard)" button in the initial openVA App window
-
-
-.. image:: img/openva_app.png
+.. image:: img/select_wizard.png
 
 
 .. _wiz_step1:
 
-Step1: Load and Prepare Data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 1: Set Working Directory
+=============================
+
+The openVA App has several features allowing you to load or save files.  It can be useful to set a working directory,
+which is a folder on you computer where the app will open as the default location for opening or saving files.  You can
+set the working directory using the menu bar: `File` -> `Set working directory`.  In the new window that opens, go to
+the folder that you would like to use as the working directory, click on it, and then click `Open`.
+
+
+.. _wiz_step2:
+
+Step 2: Load and Prepare Data
+=============================
 
 After clicking the "Start One-Click (Wizard)" button on the initial openVA App window, you will
 be presented with the "load and prepare data" window where you can: **(a)** load your VA data into the App;
@@ -38,7 +50,7 @@ of the WHO VA instrument that was used to collect the VA data.
 
 
 (a) Here you can load a comma-separated values (CSV) file containing VA data into the openVA App.
-This mode is designed to work with CSV exports from an `ODK Central Server <https://docs.getodk.org/central-intro>`_.
+This App is designed to work with CSV exports from an `ODK Central Server <https://docs.getodk.org/central-intro>`_.
 Clicking the "Load Data (.csv)" button will open a new window in which you can navigate your computer's
 folders to find your VA data file.  Once you have located your CSV file, select the file by clicking on it,
 and then click on the Open button.  The "load and prepare data" window should now display a message that your
@@ -47,11 +59,13 @@ If there is a problem (e.g., the file is corrupt or empty), then a message will 
 App is unable to to load the data file.  In this case, check to make sure you can open the CSV file in a spreadsheet
 program and that the file is not empty.
 
-(b) After loading your data, click on the arrows to display a list of the column names in the CSV data file.
-Scroll to the column name that you would like to use as the ID for the individual VA records and click on the name.
-In a later step, you will be able to run an algorithm and save the assigned causes as a CSV file.  This file will
-include the ID column you selected oo help you identify the VA records.  The default option (which appears after the
-data file is loaded) is "no ID column", which will simply use integers 1, 2, 3, ... for the ID.
+(b) After loading valid VA data, you can select the column that contains the ID so that you can locate VA records when
+looking at the results.  In the box under the label "Select ID column in data", click on the arrows to display a list
+of the column names in the CSV data file.  Scroll to the column name that you would like to use as the ID for the
+individual VA records and click on the name.  In a later step, you will be able to run an algorithm and save the
+assigned causes as a CSV file.  This file will include the ID column you selected to help you identify the VA records.
+The default option (which appears after the data file is loaded) is "no ID column", which will simply use integers 1,
+2, 3, ... for the ID.
 
 (c) As of now, the openVA App is only able to process VA data collected using the 2016 WHO VA instrument,
 and thus this is the only option.  When the InterVA and InSilicoVA algorithms have been updated to use
@@ -63,16 +77,17 @@ Back button to return to the window where you can select the mode (either One-Cl
 mode).  Finally, you can click the Exit button to close the openVA App.
 
 
-.. _wiz_step2:
+.. _wiz_step3:
 
-Step 2: Select Algorithm
-~~~~~~~~~~~~~~~~~~~~~~~~
+Step 3: Select Algorithm
+========================
 
 The openVA App displays the "select algorithm" window after you advance from the "load and prepare data" window.  Simply
-click on the InSilicoVA button to run this algorithm.  **Please note that your data file must include at least 100
-deaths to use the InSilicoVA algorithm.** [#]_ If the CSV data file that you loaded includes less than one hundred
-records, clicking on the InSilicoVA button will produce a message stating that "InSilicoVA is unavailable.  At least 100
-deaths are needed for reliable results. (InterVA is available.)"
+click on the InSilicoVA button to run this algorithm.  **Please note that your data file must include at least valid 100
+deaths to use the InSilicoVA algorithm.  VA records that fail the data checks (e.g., have missing data for age or sex)
+are removed and do not count toward the 100 record threshold.** [#]_ If the CSV data file that you loaded includes less
+than one hundred records, clicking on the InSilicoVA button will produce a message stating that
+"InSilicoVA is unavailable.  At least 100 deaths are needed for reliable results. (InterVA is available.)"
 
 
 Alternatively, click on the "InterVA" button to use the InterVA5 algorithm to assign causes of death to the VA records.
@@ -86,18 +101,17 @@ InSilicoVA algorithm or the InterVA algorithm.  Alternatively, you can click the
 where you can load and prepare your data; or you can click the Exit button to close the openVA App.
 
 
-.. _wiz_step3:
+.. _wiz_step4:
 
-Step3: Run the Algorithm with Options
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Step 4: Run the Algorithm with Options
+======================================
 
 The openVA App offers COD assignment using either the InSilicoVA or InterVA algorithm.  In the One-Click Wizard mode,
 each algorithm has its own window, which are described in turn.
 
 
-.. _wiz_step3_1:
+.. _wiz_step4_1:
 
-----------
 InSilicoVA
 ----------
 
@@ -151,14 +165,13 @@ Finally, clicking the "Back" button will return to the window where you can sele
 "Exit" button to close the openVA App.
 
 
-.. _wiz_step3_2:
+.. _wiz_step4_2:
 
--------
 InterVA
 -------
 
-The InterVA window allows users so set the algorithm's input parameters, run (and stop) the algorithm, and access information
-from the data processing steps, namely, pyCrossVA and the data consistency checks.
+The InterVA window allows users so set the algorithm's input parameters, run (and stop) the algorithm, and access
+information from the data processing steps, namely, pyCrossVA and the data consistency checks.
 
 
 .. image:: img/wiz_run_interva.png
@@ -203,15 +216,15 @@ Finally, clicking the "Back" button will return to the window where you can sele
 "Exit" button to close the openVA App.
 
 
-.. _wiz_step4:
+.. _wiz_step5:
 
-Step 4: Access Results
-~~~~~~~~~~~~~~~~~~~~~~
+Step 5: View and Save Results
+=============================
 
 In the results window, there are several options for tailoring the COD results from the chosen algorithm (note that the
-algorithm name appears in the window's title).  You are also able to view the CSMF results as a table or plot, as well
-as saving these results as a CSV or PDF file.  The age and sex distribution of the deaths can also be viewed as a table,
-and the individual cause assignments can be saved as a CSV file.
+algorithm name appears in the window's title).  You are also able to view the CSMF (cause-specific mortality fractions)
+results as a table or plot, as well as saving these results as a CSV or PDF file.  The age and sex distribution of the
+deaths can also be viewed as a table, and the individual cause assignments can be saved as a CSV file.
 
 
 .. image:: img/wiz_results_insilicova.png
@@ -222,15 +235,30 @@ when viewing or saving the CSMF results.  The default is "Include 5 causes in th
 at the side of the box will add more causes to the summaries, while clicking the down arrow includes fewer causes.
 Just below is a label "Select demographic groups", with options for limiting the results to a specific age or sex group.
 The default for both demographic indicators is to include "all deaths".  However, clicking on the arrows at the side
-of each box will present menus for restricting the results to adults, children or neonates.  Similarly, the results
-can also be limited to either males or females.
+of each box will present options to restrict the results to adults, children or neonates.  Similarly, the results
+can also be set to only include either females or males.  Combinations are also possible (e.g., female children).
+When exploring results from the InterVA algorithm, it is also possible to exclude "Undetermined" as a cause of death
+by clicking the box next to the label "Remove 'Undetermined' as a COD".  Since InSilicoVA does not assign "Undetermined"
+as a COD, this option is not available when exploring InSilicoVA results.
 
-The middle panel of the Results window contains three buttons for viewing either the CSMFs or a cross tabulation of
-the deaths by the sex and age categories (described just above).
+The middle panel of the Results window contains three buttons for viewing either the CSMF or a cross tabulation of
+the deaths by the sex and age categories (described just above).  Clicking on any of these three buttons will produce
+a new window with the chosen results (for the selected demographic options and number of causes).  Note that different
+color schemes can be selected for the plot from the menu bar: `Plot` -> `Choose color scheme...`.  It is also
+possible to change the data presented in the demographic table shown by clicking on the "Show demographics" button,
+e.g., you can the totals for the rows and columns, or change the cell values so that they are a percentage (or
+proportion) of the row or column totals.
 
-Only able to show results for one algorithm at a time. [#]_
+The bottom panel, labeled "Save Results", contains three buttons for saving the CSMF results as either a table (in CSV
+file) or a plot (in a PDF file), as well as a button for saving the individual cause assignments as a CSV file.  Again,
+the options for selecting a demographic group are reflected in the saved results.  For example, if the "male" and
+"neonate" options are selected, then the saved files will contain the CSMF for male neonates, or the individual causes
+assigned only to members of this group.  When saving the individual cause assignments, you can merge the original VA
+data (loaded into the app in a Step 2) with the CSV file by first checking the box labeled
+"Include VA data (with individual CODs)" and then clicking the "Save Individual Cause Assignments" button.
 
-
+Finally, clicking the "Back" button will return to the window where you can run the selected algorithm, while clicking
+the "Exit" button will close the openVA App.
 
 
 .. rubric:: Footnotes
@@ -238,6 +266,7 @@ Only able to show results for one algorithm at a time. [#]_
 .. [#]  While it is possible to run InSilicoVA with fewer deaths, our experience suggests that the results are more
         reliable with larger sample sizes.  In our experimentation with VA data (with external causes assigned), 100
         deaths provided to be a reasonable threshold for obtaining reliable results.
-.. [#]  The openVA App's Customizable mode allows users to view results from both InterVA and InSilicoVA.
 
-:doc:`Home <index>`  :doc:`Customizable Mode <custom>`
+===================  ================================= ========================== ================
+:doc:`Home <index>`  :doc:`Customizable Mode <custom>` :doc:`Vignette <vignette>` :doc:`FAQ <faq>`
+===================  ================================= ========================== ================

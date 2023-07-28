@@ -87,7 +87,7 @@ class Results(QWidget):
         self.btn_insilicova_plot = QPushButton("Show \n CSMF Plot")
         self.btn_insilicova_plot.clicked.connect(
             self.insilicova_plot)
-        self.btn_show_dem = QPushButton("Show \n demographics")
+        self.btn_show_dem = QPushButton("Show \n Demographics")
         self.btn_show_dem.pressed.connect(
             lambda: self.run_table_dialog_dem("insilicova"))
         hbox_show.addWidget(self.btn_insilicova_table)
@@ -156,7 +156,7 @@ class Results(QWidget):
         self.btn_interva_table.clicked.connect(self.interva_table)
         self.btn_interva_plot = QPushButton("Show \n CSMF Plot")
         self.btn_interva_plot.clicked.connect(self.interva_plot)
-        self.btn_show_dem = QPushButton("Show \n demographics")
+        self.btn_show_dem = QPushButton("Show \n Demographics")
         self.btn_show_dem.pressed.connect(
             lambda: self.run_table_dialog_dem("interva"))
         hbox_show.addWidget(self.btn_interva_table)

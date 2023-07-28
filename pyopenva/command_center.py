@@ -190,9 +190,43 @@ class CommandCenter(QWidget):
             self.btn_pycrossva.setEnabled(True)
             # self.smartva_results = None
             # self.label_smartva_progress.setText("")
-            df = DataFrame(self.load_window.data[1:],
-                           columns=self.load_window.data[0])
-            self.parent.results.original_data = df
+            data_problem = False
+            try:
+                df = DataFrame(self.load_window.data[1:],
+                               columns=self.load_window.data[0])
+                self.parent.results.original_data = df
+                if df.shape[0] == 0:
+                    data_problem = True
+                    alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
+                    alert.setIcon(QMessageBox.Warning)
+                    alert.setText(
+                        f"Unable to read in CSV file {f_name}.\n" +
+                        "File appears to be empty.")
+                    alert.exec()
+            except ValueError:
+                data_problem = True
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setText(
+                    f"Error to processing the file {f_name}.\n"
+                    "These data have an unexpected format.  Please load "
+                    "data in the format of an ODK export.")
+                alert.exec()
+            if data_problem:
+                self.parent.results.original_data = None
+                self.btn_edit_data.setEnabled(False)
+                self.raw_data = None
+                self.raw_data_loaded = False
+                self.label_data.setText("(no data loaded)")
+                self.label_data_fname.setText("")
+                self.label_data_n_records.setText("")
+                self.data_id_col = None
+                self.prev_data_id_col = None
+                self.pycrossva_data = None
+                self.load_window = None
+
+
 
     def update_data(self):
         """Update status of data."""
@@ -242,7 +276,7 @@ class CommandCenter(QWidget):
                 if (self.pycrossva_data.iloc[:, 1:] == ".").all(axis=None):
                     self.pycva_diag.set_text(
                         "ERROR: ALL VALUES ARE MISSING!\n"
-                        "The data have an unexpected format and cannot be"
+                        "The data have an unexpected format and cannot be "
                         "processed. Please reload data in the expected format")
                 else:
                     msg = "pyCrossVA returned message\n"

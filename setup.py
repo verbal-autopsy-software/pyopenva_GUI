@@ -1,19 +1,22 @@
 """
-A simple setup script to create an executable using PyQt5. This also
-demonstrates the method for creating a Windows executable that does not have
-an associated console.
+cx_Freeze script for building pyopenVA App.  Build the windows installer
+with
 
-PyQt5app.py is a very simple type of PyQt5 application
+python setup.py bdist_msi
 
-Run the build process by running the command 'python setup.py build'
+and the macOS installer with
 
-If everything works well you should find a subdirectory in the build
-subdirectory that contains the files needed to run the application
+python setup.py bdist_dmg
 """
 
 import sys
 from cx_Freeze import Executable, setup
 import os
+import subprocess
+
+# create docs
+subprocess.run(["sphinx-build", "-b", "html", "docs/source",
+                "pyopenva/docs", "-a"])
 
 here = os.path.abspath(os.path.dirname(__file__))
 

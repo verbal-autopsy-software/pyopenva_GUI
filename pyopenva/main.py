@@ -206,7 +206,7 @@ class WindowManager(QMainWindow):
         menu_data_load.addAction(act_load_ex_data_efficient)
         menu_data_load.addSeparator()
         menu_data_load.addAction(act_load_ex_data_command_center)
-        menu_plot_color = menu_plot.addMenu("Choose plot color...")
+        menu_plot_color = menu_plot.addMenu("Choose color scheme...")
         menu_plot_color_blind = menu_plot_color.addMenu("Colorblind-Friendly")
         menu_plot_color.addSeparator()
         menu_plot_color_alt = menu_plot_color.addMenu("Alternates")
