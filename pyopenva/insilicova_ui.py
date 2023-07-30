@@ -14,8 +14,8 @@ from PyQt5.QtCore import Qt
 
 class InSilicoVADialog(QDialog):
 
-    def __init__(self, parent=None, seed=None, auto_extend=True, jump_scale=0.1,
-                 n_iterations=3000):
+    def __init__(self, parent=None, seed=None, auto_extend=True,
+                 jump_scale=0.1, n_iterations=3000):
         super(InSilicoVADialog, self).__init__(parent=parent)
         self.setWindowTitle("InSilicoVA Options")
         self.auto_extend = auto_extend
@@ -73,8 +73,9 @@ class InSilicoVADialog(QDialog):
         self.setLayout(self.layout)
 
     def setup_n_iterations_groupbox(self):
-        self.n_iterations_slider.setRange(400, 10000)
-        self.n_iterations_slider.setValue(self.n_iterations)
+        # self.n_iterations_slider.setRange(400, 10000)
+        self.n_iterations_slider.setRange(4, 100)
+        self.n_iterations_slider.setValue(self.n_iterations/100)
         self.n_iterations_slider.valueChanged.connect(self.set_n_iterations)
         layout = QVBoxLayout()
         layout.addWidget(self.n_iterations_slider)
@@ -94,7 +95,7 @@ class InSilicoVADialog(QDialog):
         self.groupbox_jump_scale.setLayout(layout)
 
     def set_n_iterations(self):
-        self.n_iterations = self.n_iterations_slider.value()
+        self.n_iterations = self.n_iterations_slider.value() * 100
         self.n_iterations_label.setText(f'value: {self.n_iterations}')
 
     def set_jump_scale(self):

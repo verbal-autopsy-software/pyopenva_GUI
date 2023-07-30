@@ -430,7 +430,7 @@ class Efficient(QWidget):
         vbox_options = QVBoxLayout()
         hbox_options = QHBoxLayout()
         self.spinbox_n_causes = QSpinBox()
-        self.spinbox_n_causes.setRange(1, 64)
+        self.spinbox_n_causes.setRange(1, 61)
         self.spinbox_n_causes.setPrefix("Include ")
         self.spinbox_n_causes.setSuffix(" causes in the results")
         self.spinbox_n_causes.setValue(self.n_top_causes)

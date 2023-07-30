@@ -49,7 +49,7 @@ class Results(QWidget):
         # self.create_smartva_panel()
 
         self.spinbox_n_causes = QSpinBox()
-        self.spinbox_n_causes.setRange(1, 64)
+        self.spinbox_n_causes.setRange(1, 61)
         self.spinbox_n_causes.setPrefix("Include ")
         self.spinbox_n_causes.setSuffix(" causes in the results")
         self.spinbox_n_causes.setValue(self.n_top_causes)
@@ -754,17 +754,13 @@ class Results(QWidget):
         for i in range(results.indiv_prob.shape[0]):
             row = results.indiv_prob.iloc[i].copy()
             top_causes = row.sort_values(ascending=False)[0:self.n_top_causes]
-            top_causes = top_causes.reset_index()
             if self.insilicova_include_probs:
                 labels = ["Cause", "Prob"] * self.n_top_causes
                 numbers = []
                 [numbers.extend([str(a)]*2) for a in
                  range(1, self.n_top_causes + 1)]
                 col_names = [a + b for a, b in zip(labels, numbers)]
-                top_causes = top_causes.unstack(level=0)
-                top_causes = top_causes.droplevel(level=0)
-                top_causes = top_causes.sort_index()
-                values = top_causes.tolist()
+                values = [i for j in top_causes.items() for i in j]
                 all_results.append(
                     DataFrame([values], columns=col_names, index=[row.name]))
             else:
