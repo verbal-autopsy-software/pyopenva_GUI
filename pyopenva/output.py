@@ -14,7 +14,7 @@ from matplotlib.backends.backend_qt5agg import (FigureCanvasQTAgg,
 from matplotlib.figure import Figure
 from matplotlib import style
 from matplotlib.pyplot import get_cmap
-from numpy import linspace
+from numpy import array, linspace, reshape
 from pandas import crosstab, DataFrame, concat
 from interva import utils
 
@@ -119,7 +119,8 @@ class PlotDialog(QDialog):
     def plot_dot_whisker(self):
         plt_df = self.results.get_csmf(top=self.n_top_causes).copy()
         plt_df.sort_values(by="Median", ascending=True, inplace=True)
-        errors = [plt_df["Lower"].to_list(), plt_df["Upper"].to_list()]
+        errors = [(plt_df["Median"] - plt_df["Lower"]).to_list(),
+                  (plt_df["Upper"] - plt_df["Median"]).to_list()]
         cm_colors = get_cmap(self.colors)
         linspace_colors = linspace(0.5, 0.9, self.n_top_causes)
         colors = cm_colors(linspace_colors)
@@ -367,17 +368,23 @@ def save_plot(results, algorithm, top=5, file_name=None, plot_colors="Greys",
     figure = Figure(figsize=(7, 5), dpi=100, constrained_layout=True)
     ax = figure.add_subplot(111)
     if algorithm == "insilicova":
-        if age == "age deaths" and sex == "all deaths":
+        if age == "all deaths" and sex == "all deaths":
             plt_df = results.get_csmf(top=top).copy()
             plt_df.sort_values(by="Median", ascending=True, inplace=True)
-            errors = [plt_df["Lower"].to_list(), plt_df["Upper"].to_list()]
-            ax.errorbar(x=plt_df["Median"].to_list(),
-                        y=plt_df.index.to_list(),
-                        xerr=errors,
-                        ecolor="black",
-                        markerfacecolor="black", markeredgecolor="black",
-                        fmt="o",
-                        capsize=5)
+            errors = [(plt_df["Median"] - plt_df["Lower"]).to_list(),
+                      (plt_df["Upper"] - plt_df["Median"]).to_list()]
+            cm_colors = get_cmap(plot_colors)
+            linspace_colors = linspace(0.5, 0.9, top)
+            colors = cm_colors(linspace_colors)
+            for i in range(top):
+                clr = colors[i].tolist()
+                ax.errorbar(x=plt_df["Median"].to_list()[i],
+                            y=plt_df.index.to_list()[i],
+                            xerr=[[errors[0][i]], [errors[1][i]]],
+                            ecolor=clr,
+                            markerfacecolor=clr, markeredgecolor=clr,
+                            fmt="o",
+                            capsize=5)
             ax.grid(alpha=0.5, linestyle=":")
             ax.set(title="Top CSMF Distribution")
             ax.set_xlabel("CSMF")

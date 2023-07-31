@@ -16,7 +16,8 @@ from interva import utils
 from insilicova.diag import csmf_diag
 from insilicova.api import InSilicoVA
 # from pyopenva.data import COUNTRIES
-from pandas import concat, DataFrame, read_csv
+from pandas import DataFrame, read_csv
+from pandas import concat as pd_concat
 from pandas.errors import EmptyDataError, ParserError
 from pycrossva.transform import transform
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
@@ -876,14 +877,14 @@ class Efficient(QWidget):
                 self.insilicova_worker = InSilicoVAWorker(
                     data=self.pycrossva_data,
                     data_type="WHO2016",
-                    n_sim=self.insilicova_n_sim,
-                    thin=thin,
-                    burnin=burnin,
-                    auto_length=auto_extend,
-                    # n_sim=200,
-                    # thin=20,
-                    # burnin=5,
-                    # auto_length=False,
+                    # n_sim=self.insilicova_n_sim,
+                    # thin=thin,
+                    # burnin=burnin,
+                    # auto_length=auto_extend,
+                    n_sim=200,
+                    thin=20,
+                    burnin=5,
+                    auto_length=False,
                     seed=self.insilicova_seed,
                     gui_ctrl=self.insilicova_ctrl)
                 self.insilicova_worker.moveToThread(self.insilicova_thread)
@@ -1317,6 +1318,10 @@ class Efficient(QWidget):
                     keep_id = keep["ID"]
                     out = results.results["VA5"]
                     out = out.drop(["WHOLEPROB"], axis=1)
+                    if self.n_top_causes in [1, 2]:
+                        out = out.drop(["CAUSE3", "LIK3"], axis=1)
+                    if self.n_top_causes == 1:
+                        out = out.drop(["CAUSE2", "LIK2"], axis=1)
                     out = out[out["ID"].isin(keep_id)]
                     if self.data_id_col in (None, "no ID column"):
                         out["ID"] = out["ID"].astype("int64")
@@ -1345,16 +1350,76 @@ class Efficient(QWidget):
                         "(don't have permission or read-only file system)")
                     alert.exec()
 
-    def prepare_insilicova_indiv_cod(self, results):
-        top_cause = results.indiv_prob.idxmax(axis=1)
-        indiv_cod = top_cause.reset_index()
-        indiv_cod = indiv_cod.set_index("index", drop=False)
-        indiv_cod.columns = ["ID", "Top Cause"]
-        how_to_merge = "outer"
-        if self.insilicova_include_probs is True:
-            top_prob = results.indiv_prob.max(axis=1)
-            indiv_cod["Probability"] = top_prob
+    # def prepare_insilicova_indiv_cod(self, results):
+    #     top_cause = results.indiv_prob.idxmax(axis=1)
+    #     indiv_cod = top_cause.reset_index()
+    #     indiv_cod = indiv_cod.set_index("index", drop=False)
+    #     indiv_cod.columns = ["ID", "Top Cause"]
+    #     how_to_merge = "outer"
+    #     if self.insilicova_include_probs is True:
+    #         top_prob = results.indiv_prob.max(axis=1)
+    #         indiv_cod["Probability"] = top_prob
+    #
+    #     if (self.options_age != "all deaths" or
+    #             self.options_sex != "all deaths"):
+    #         how_to_merge = "inner"
+    #         age_groups = []
+    #         sex_groups = []
+    #         if self.options_age == "all deaths":
+    #             age_groups = ["neonate", "child", "adult"]
+    #         else:
+    #             age_groups.append(self.options_age)
+    #         if self.options_sex == "all deaths":
+    #             sex_groups = ["female", "male"]
+    #         else:
+    #             sex_groups.append(self.options_sex)
+    #
+    #         dem_groups = results.data_checked.apply(utils._get_dem_groups,
+    #                                                 axis=1)
+    #         dem_groups = DataFrame(list(dem_groups)).set_index("ID")
+    #         indiv_cod = concat([indiv_cod, dem_groups], axis=1)
+    #         subpop_index = (indiv_cod["age"].isin(age_groups)) & (
+    #             indiv_cod["sex"].isin(sex_groups))
+    #         indiv_cod = indiv_cod[subpop_index]
+    #         indiv_cod = indiv_cod.drop(columns=["age", "sex"])
+    #
+    #     if self.include_va_data:
+    #         tmp_data = self._add_id_to_input_data()
+    #         indiv_cod = indiv_cod.merge(tmp_data, how=how_to_merge, on="ID")
+    #
+    #     if self.data_id_col is None:
+    #         indiv_cod = indiv_cod.sort_values(by="ID")
+    #     else:
+    #         indiv_cod = indiv_cod.set_index("ID")
+    #         indiv_cod = indiv_cod.reindex(self.data[self.data_id_col])
+    #         indiv_cod = indiv_cod.reset_index(names="ID")
+    #
+    #     return indiv_cod
 
+    def prepare_insilicova_indiv_cod(self, results):
+        all_results = []
+        how_to_merge = "outer"
+        for i in range(results.indiv_prob.shape[0]):
+            row = results.indiv_prob.iloc[i].copy()
+            top_causes = row.sort_values(ascending=False)[0:self.n_top_causes]
+            if self.insilicova_include_probs:
+                labels = ["Cause", "Prob"] * self.n_top_causes
+                numbers = []
+                [numbers.extend([str(a)]*2) for a in
+                 range(1, self.n_top_causes + 1)]
+                col_names = [a + b for a, b in zip(labels, numbers)]
+                values = [i for j in top_causes.items() for i in j]
+                all_results.append(
+                    DataFrame([values], columns=col_names, index=[row.name]))
+            else:
+                col_names = ["Cause" + str(i) for i in
+                             range(1, self.n_top_causes + 1)]
+                all_results.append(
+                    DataFrame([top_causes["index"].tolist()],
+                              columns=col_names,
+                              index=[row.name]))
+        indiv_cod = pd_concat(all_results)
+        indiv_cod = indiv_cod.reset_index(names="ID")
         if (self.options_age != "all deaths" or
                 self.options_sex != "all deaths"):
             how_to_merge = "inner"
@@ -1369,10 +1434,10 @@ class Efficient(QWidget):
             else:
                 sex_groups.append(self.options_sex)
 
-            dem_groups = results.data_checked.apply(utils._get_dem_groups,
-                                                    axis=1)
+            dem_groups = self.insilicova_results.data_checked.apply(
+                utils._get_dem_groups, axis=1)
             dem_groups = DataFrame(list(dem_groups)).set_index("ID")
-            indiv_cod = concat([indiv_cod, dem_groups], axis=1)
+            indiv_cod = pd_concat([indiv_cod, dem_groups], axis=1)
             subpop_index = (indiv_cod["age"].isin(age_groups)) & (
                 indiv_cod["sex"].isin(sex_groups))
             indiv_cod = indiv_cod[subpop_index]
@@ -1381,6 +1446,14 @@ class Efficient(QWidget):
         if self.include_va_data:
             tmp_data = self._add_id_to_input_data()
             indiv_cod = indiv_cod.merge(tmp_data, how=how_to_merge, on="ID")
+
+        if self.data_id_col is None:
+            indiv_cod = indiv_cod.sort_values(by="ID")
+        else:
+            indiv_cod = indiv_cod.set_index("ID")
+            indiv_cod = indiv_cod.reindex(
+                self.data[self.data_id_col])
+            indiv_cod = indiv_cod.reset_index(names="ID")
 
         return indiv_cod
 

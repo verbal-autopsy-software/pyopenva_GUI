@@ -97,7 +97,8 @@ class Results(QWidget):
 
         gbox_save = QGroupBox("Save Results")
         vbox_save = QVBoxLayout()
-        hbox_save = QHBoxLayout()
+        hbox_save_row1 = QHBoxLayout()
+        hbox_save_row2 = QHBoxLayout()
         self.btn_save_insilicova_table = QPushButton("Save CSMF Table")
         self.btn_save_insilicova_table.clicked.connect(
             self.save_insilicova_table)
@@ -108,11 +109,16 @@ class Results(QWidget):
             "Save Individual \n Cause Assignments")
         self.btn_save_insilicova_indiv.clicked.connect(
             self.save_insilicova_indiv)
-        hbox_save.addWidget(self.btn_save_insilicova_table)
-        hbox_save.addWidget(self.btn_save_insilicova_plot)
-        vbox_save.addLayout(hbox_save)
-        vbox_save.addWidget(self.btn_save_insilicova_indiv)
-
+        self.btn_save_insilicova_all_cod = QPushButton(
+            "Save All \n Cause Assignments")
+        self.btn_save_insilicova_all_cod.clicked.connect(
+            self.save_insilicova_indiv_all)
+        hbox_save_row1.addWidget(self.btn_save_insilicova_table)
+        hbox_save_row1.addWidget(self.btn_save_insilicova_plot)
+        hbox_save_row2.addWidget(self.btn_save_insilicova_indiv)
+        hbox_save_row2.addWidget(self.btn_save_insilicova_all_cod)
+        vbox_save.addLayout(hbox_save_row1)
+        vbox_save.addLayout(hbox_save_row2)
 
         self.chbox_insilicova_include_probs = QCheckBox(
             "Include probability of top cause (with individual CODs)")
@@ -725,7 +731,7 @@ class Results(QWidget):
                                                "CSV Files (*.csv)")
             if path != ("", ""):
                 try:
-                    out = self.prepare_insilico_indiv_cod(
+                    out = self.prepare_insilicova_indiv_cod(
                         self.insilicova_results)
                     out.to_csv(path[0], index=False)
                     if os.path.isfile(path[0]):
@@ -748,7 +754,7 @@ class Results(QWidget):
                         "(don't have permission or read-only file system)")
                     alert.exec()
 
-    def prepare_insilico_indiv_cod(self, results):
+    def prepare_insilicova_indiv_cod(self, results):
         all_results = []
         how_to_merge = "outer"
         for i in range(results.indiv_prob.shape[0]):
@@ -799,7 +805,69 @@ class Results(QWidget):
             tmp_data = self._add_id_to_input_data()
             indiv_cod = indiv_cod.merge(tmp_data, how=how_to_merge, on="ID")
 
+        if self.original_data_id is None:
+            indiv_cod = indiv_cod.sort_values(by="ID")
+        else:
+            indiv_cod = indiv_cod.set_index("ID")
+            indiv_cod = indiv_cod.reindex(
+                self.original_data[self.original_data_id])
+            indiv_cod = indiv_cod.reset_index(names="ID")
+
         return indiv_cod
+
+    def save_insilicova_indiv_all(self):
+        if self.insilicova_results is None:
+            alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
+            alert.setText(
+                "Need to run InSilicoVA first.")
+            alert.exec()
+        elif self._check_empty_results("insilicova"):
+            alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
+            alert.setText(
+                "There are no VA records for the selected "
+                f"group:\n age: {self.options_age},   "
+                f"sex: {self.options_sex}")
+            alert.exec()
+        else:
+            # results_file_name = "insilicova_individual_cod.csv"
+            results_file_name = self._make_results_file_name("insilicova",
+                                                             "indiv")
+            path = QFileDialog.getSaveFileName(self,
+                                               "Save CSMF (csv)",
+                                               results_file_name,
+                                               "CSV Files (*.csv)")
+            if path != ("", ""):
+                try:
+                    out = self.insilicova_results.indiv_prob.copy()
+                    if self.original_data_id is None:
+                        out = out.sort_index()
+
+                    else:
+                        out = out.reindex(
+                            self.original_data[self.original_data_id])
+                    out.reset_index(names="ID")
+                    out.to_csv(path[0], index=False)
+                    if os.path.isfile(path[0]):
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText("results saved to" + path[0])
+                        alert.exec()
+                    else:
+                        alert = QMessageBox()
+                        alert.setWindowTitle("openVA App")
+                        alert.setText(
+                            "ERROR: unable to save results to" + path[0])
+                        alert.exec()
+                except (OSError, PermissionError):
+                    alert = QMessageBox()
+                    alert.setWindowTitle("openVA App")
+                    alert.setIcon(QMessageBox.Warning)
+                    alert.setText(
+                        f"Unable to save {path[0]}.\n" +
+                        "(don't have permission or read-only file system)")
+                    alert.exec()
 
     # def smartva_plot(self):
     #     alert = QMessageBox()

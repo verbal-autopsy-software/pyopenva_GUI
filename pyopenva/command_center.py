@@ -862,6 +862,7 @@ class CommandCenter(QWidget):
 
     def run_insilicova(self):
         self.insilicova_ctrl["break"] = False
+        self.btn_insilicova_options.setEnabled(False)
         self.btn_insilicova_run.setEnabled(False)
         self.btn_load_data.setEnabled(False)
         self.btn_pycrossva.setEnabled(False)
@@ -877,6 +878,7 @@ class CommandCenter(QWidget):
             alert.setText(
                 "Data need to be loaded and/or prepared with pyCrossVA.")
             alert.exec()
+            self.btn_insilicova_options.setEnabled(True)
             self.btn_insilicova_run.setEnabled(True)
             self.btn_load_data.setEnabled(True)
             self.btn_pycrossva.setEnabled(True)
@@ -910,6 +912,7 @@ class CommandCenter(QWidget):
                 alert = QMessageBox()
                 alert.setText(msg)
                 alert.exec()
+                self.btn_insilicova_options.setEnabled(True)
                 self.btn_insilicova_run.setEnabled(True)
                 self.btn_load_data.setEnabled(True)
                 self.btn_pycrossva.setEnabled(True)
@@ -957,7 +960,10 @@ class CommandCenter(QWidget):
                 self.insilicova_thread.start()
                 self.btn_insilicova_stop.setEnabled(True)
 
+                self.btn_insilicova_options.setEnabled(False)
                 self.btn_insilicova_run.setEnabled(False)
+                self.insilicova_thread.finished.connect(
+                    lambda: self.btn_insilicova_options.setEnabled(True))
                 self.insilicova_thread.finished.connect(
                     lambda: self.btn_insilicova_run.setEnabled(True))
                 self.insilicova_thread.finished.connect(
