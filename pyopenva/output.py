@@ -88,6 +88,10 @@ class PlotDialog(QDialog):
                                 interva_rule=self.interva_rule,
                                 age=age, sex=sex)
         if self.remove_undetermined and "Undetermined" in plt_series.index:
+            n_top = self.n_top_causes + 1
+            plt_series = utils.csmf(self.results, top=n_top,
+                                    interva_rule=self.interva_rule,
+                                    age=age, sex=sex)
             plt_series = plt_series.drop("Undetermined")
             plt_series = plt_series/sum(plt_series)
         plt_series.sort_values(ascending=True, inplace=True)
@@ -183,6 +187,10 @@ class TableDialog(QDialog):
                               interva_rule=self.interva_rule,
                               age=age, sex=sex)
             if self.remove_undetermined and "Undetermined" in csmf.index:
+                n_top = self.n_top_causes + 1
+                csmf = utils.csmf(self.results, top=n_top,
+                                  interva_rule=self.interva_rule,
+                                  age=age, sex=sex)
                 csmf = csmf.drop("Undetermined")
                 csmf = csmf/sum(csmf)
             csmf.sort_values(ascending=False, inplace=True)
@@ -407,6 +415,10 @@ def save_plot(results, algorithm, top=5, file_name=None, plot_colors="Greys",
                                 interva_rule=interva_rule,
                                 age=age_grp, sex=sex_grp)
         if remove_undetermined and "Undetermined" in plt_series.index:
+            new_top = top + 1
+            plt_series = utils.csmf(results, top=new_top,
+                                    interva_rule=interva_rule,
+                                    age=age_grp, sex=sex_grp)
             plt_series = plt_series.drop("Undetermined")
             plt_series = plt_series/sum(plt_series)
         plt_series.sort_values(ascending=True, inplace=True)
