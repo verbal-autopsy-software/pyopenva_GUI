@@ -110,48 +110,74 @@ to assign causes of death to the example data set included with the openVA App.
    .. image:: img/vignette_interva_dem_tab.png
 
 
-#.  **Select age group and # of top causes**
+#. **Select age group and # of top causes**: In our next step, we will focus on the CSMF for adults by clicking on the
+   option box for "age" and select `adult`.
 
    .. image:: img/vignette_interva_select_adults.png
 
+   Since there are only 66 adults, we will start by limiting our analysis to the top 3 causes in the CSMF.  To do so,
+   locate the box in the "Options" panel with the text "Include 5 causes in the results".  Click on the down arrow to
+   reduce the number of top causes from 5 to 3.
 
    .. image:: img/vignette_interva_ntop.png
 
-#.
+#. **Look at the CSMF plot**: Now let us take a look at the CSMF plot by clicking on the "Show CSMF plot" button in the
+   "Show Results" panel.
+
    .. image:: img/vignette_interva_show_plot.png
 
-#.
+   The openVA App will produce a new window with a bar chart of the top 3 causes.  Note how the title includes the
+   demographic group we are focusing on.  Over 17.5% of the adult deaths were due to Acute respiratory infections,
+   including pneumonia, while about 15% were HIV/AIDS related deaths, and about 11% of adult deaths were caused by
+   acute cardiac disease.
 
    .. image:: img/vignette_interva_csmf.png
 
-#.
+#. **Select more causes and view the CSMF table**: Although we do not have a lot of information (only 66 adult deaths),
+   let's increase the number of deaths to 12 so we can illustrate another feature of the openVA App.
 
    .. image:: img/vignette_interva_ntop_12.png
 
-#.
+   Next, note how the box next to the label "Remove 'Undetermined' as a COD" is NOT checked.  Thus, when we look at the
+   CSMF table, it is possible to have `Undetermined` included as a cause.  To see this, click on the "Show CSMF table"
+   button in the middle panel of the window.
 
    .. image:: img/vignette_interva_show_tab.png
 
-#.
+   Note that the tenth row of the table is `Undetermined` which applies to about 3% of adult deaths.  Again, to close
+   this window, simply click on the "X" in the top right corner of the window with the CSMF table.
 
    .. image:: img/vignette_interva_tab_with_undet.png
 
-#.
+#. **Remove Undetermined as a cause**:  Now, let's see another version of the results by clicking in the checkbox next
+   to the label "Remove 'Undetermined' as a COD".  Next, repeat the previous step to display the CSMF summary by
+   clicking on the "Show CSMF table" button in the "Show Results" panel.
 
    .. image:: img/vignette_interva_check_no_undet.png
 
-#.
+   In the new window displaying the CSMF table, we now see a new cause, Assault, that is now included in the top 12
+   causes of the CSMF because `Undetermined` has been removed.  To close this window, simply click on the "X" in the
+   top right corner of the window with the CSMF table.
 
    .. image:: img/vignette_interva_tab_no_undet.png
 
-#.
+#. **Save the individual cause assignments with VA data**: In the final steps, we will merge the original VA data to
+   the individual causes assigned by InterVA, and then save the results as a CSV file.  To do this, first click in the
+   checkbox located at the bottom of the "Save Results" panel.  As the label states, this will
+   "Include VA data (with individual CODs)".  Next, click on the button "Save Individual Cause Assignments", which will
+   produce a new window where you can choose where to save the results as a CSV file.  Note that the default file name
+   is "interva_adult_individual_cod.csv" indicating that these results will only include the 66 cause assignments for
+   the adults.
 
    .. image:: img/vignette_interva_save_data.png
 
-#.
+   The results, when opened in a spreadsheet program, should look like the following screenshot.  You should verify
+   that the values in the meta-InstanceID column match the ID column in the saved file.
 
    .. image:: img/vignette_interva_indiv.png
 
+Congratulations!  You have finished the tour of the openVA App and are hopefully ready to begin analyzing your own
+data.
 
 ===================  ==================================  =================================  ================
 :doc:`Home <index>`  :doc:`One-Click (Wizard) <wizard>`  :doc:`Customizable Mode <custom>`  :doc:`FAQ <faq>`
