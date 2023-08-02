@@ -231,7 +231,7 @@ deaths can also be viewed as a table, and the individual cause assignments can b
 
 
 The options shown at the top of the Results window include a box where you can choose the number of causes to include
-when viewing or saving the CSMF results.  The default is "Include 5 causes in the results", but clicking the up arrow
+when viewing or saving the COD results.  The default is "Include 5 causes in the results", but clicking the up arrow
 at the side of the box will add more causes to the summaries, while clicking the down arrow includes fewer causes.
 Just below is a label "Select demographic groups", with options for limiting the results to a specific age or sex group.
 The default for both demographic indicators is to include "all deaths".  However, clicking on the arrows at the side
@@ -255,7 +255,10 @@ the options for selecting a demographic group are reflected in the saved results
 "neonate" options are selected, then the saved files will contain the CSMF for male neonates, or the individual causes
 assigned only to members of this group.  When saving the individual cause assignments, you can merge the original VA
 data (loaded into the app in a Step 2) with the CSV file by first checking the box labeled
-"Include VA data (with individual CODs)" and then clicking the "Save Individual Cause Assignments" button.
+"Include VA data (with individual CODs)" and then clicking the "Save Individual Cause Assignments" button. It is also possible
+to include either the propensities (with InterVA) or the probabilities (with InSilicoVA) of each cause of death in the
+saved CSV file by checking the box next to the label "Include probability of top cause (with individual CODs)".  With InterVA,
+only the top 3 causes can be included.
 
 Finally, clicking the "Back" button will return to the window where you can run the selected algorithm, while clicking
 the "Exit" button will close the openVA App.

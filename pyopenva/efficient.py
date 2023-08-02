@@ -1415,7 +1415,8 @@ class Efficient(QWidget):
                 col_names = ["Cause" + str(i) for i in
                              range(1, self.n_top_causes + 1)]
                 all_results.append(
-                    DataFrame([top_causes["index"].tolist()],
+                    # DataFrame([top_causes["index"].tolist()],
+                    DataFrame([top_causes.index.tolist()],
                               columns=col_names,
                               index=[row.name]))
         indiv_cod = pd_concat(all_results)
@@ -1436,8 +1437,10 @@ class Efficient(QWidget):
 
             dem_groups = self.insilicova_results.data_checked.apply(
                 utils._get_dem_groups, axis=1)
-            dem_groups = DataFrame(list(dem_groups)).set_index("ID")
-            indiv_cod = pd_concat([indiv_cod, dem_groups], axis=1)
+            # dem_groups = DataFrame(list(dem_groups)).set_index("ID")
+            dem_groups = DataFrame(list(dem_groups))
+            # indiv_cod = pd_concat([indiv_cod, dem_groups], axis=1)
+            indiv_cod = indiv_cod.merge(dem_groups, on="ID")
             subpop_index = (indiv_cod["age"].isin(age_groups)) & (
                 indiv_cod["sex"].isin(sex_groups))
             indiv_cod = indiv_cod[subpop_index]
@@ -1447,13 +1450,15 @@ class Efficient(QWidget):
             tmp_data = self._add_id_to_input_data()
             indiv_cod = indiv_cod.merge(tmp_data, how=how_to_merge, on="ID")
 
-        if self.data_id_col is None:
-            indiv_cod = indiv_cod.sort_values(by="ID")
-        else:
-            indiv_cod = indiv_cod.set_index("ID")
-            indiv_cod = indiv_cod.reindex(
-                self.data[self.data_id_col])
-            indiv_cod = indiv_cod.reset_index(names="ID")
+        if (self.options_age == "all deaths" and
+                self.options_sex == "all deaths"):
+            if self.data_id_col is None:
+                indiv_cod = indiv_cod.sort_values(by="ID")
+            else:
+                indiv_cod = indiv_cod.set_index("ID")
+                indiv_cod = indiv_cod.reindex(
+                    self.data[self.data_id_col])
+                indiv_cod = indiv_cod.reset_index(names="ID")
 
         return indiv_cod
 
@@ -1577,7 +1582,7 @@ class Efficient(QWidget):
 
     def _add_id_to_input_data(self):
         tmp_data = self.data.copy()
-        if self.data_id_col in ("no ID column", None):
+        if self.data_id_col in (None, "no ID column"):
             tmp_data["ID"] = [i + 1 for i in self.data.index]
         else:
             tmp_data["ID"] = tmp_data[self.data_id_col].copy()

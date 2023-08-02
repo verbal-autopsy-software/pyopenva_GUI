@@ -515,7 +515,7 @@ class Results(QWidget):
                             ["PREGLIK", "LIK1", "LIK2", "LIK3", "INDET"],
                             axis=1)
                     out = out[out["ID"].isin(keep_id)]
-                    if self.original_data_id is None:
+                    if self.original_data_id in (None, "no ID column"):
                         out["ID"] = out["ID"].astype("int64")
                     if self.interva_include_va_data:
                         tmp_data = self._add_id_to_input_data()
@@ -773,7 +773,7 @@ class Results(QWidget):
                 col_names = ["Cause" + str(i) for i in
                              range(1, self.n_top_causes + 1)]
                 all_results.append(
-                    DataFrame([top_causes["index"].tolist()],
+                    DataFrame([top_causes.index.tolist()],
                               columns=col_names,
                               index=[row.name]))
         indiv_cod = pd_concat(all_results)
@@ -794,8 +794,10 @@ class Results(QWidget):
 
             dem_groups = self.insilicova_results.data_checked.apply(
                 utils._get_dem_groups, axis=1)
-            dem_groups = DataFrame(list(dem_groups)).set_index("ID")
-            indiv_cod = pd_concat([indiv_cod, dem_groups], axis=1)
+            # dem_groups = DataFrame(list(dem_groups)).set_index("ID")
+            dem_groups = DataFrame(list(dem_groups))
+            # indiv_cod = pd_concat([indiv_cod, dem_groups], axis=1)
+            indiv_cod = indiv_cod.merge(dem_groups, on="ID")
             subpop_index = (indiv_cod["age"].isin(age_groups)) & (
                 indiv_cod["sex"].isin(sex_groups))
             indiv_cod = indiv_cod[subpop_index]
@@ -805,17 +807,20 @@ class Results(QWidget):
             tmp_data = self._add_id_to_input_data()
             indiv_cod = indiv_cod.merge(tmp_data, how=how_to_merge, on="ID")
 
-        if self.original_data_id is None:
-            indiv_cod = indiv_cod.sort_values(by="ID")
-        else:
-            indiv_cod = indiv_cod.set_index("ID")
-            indiv_cod = indiv_cod.reindex(
-                self.original_data[self.original_data_id])
-            indiv_cod = indiv_cod.reset_index(names="ID")
+        if (self.options_age == "all deaths" and
+                self.options_sex == "all deaths"):
+            if self.original_data_id in (None, "no ID column"):
+                indiv_cod = indiv_cod.sort_values(by="ID")
+            else:
+                indiv_cod = indiv_cod.set_index("ID")
+                indiv_cod = indiv_cod.reindex(
+                    self.original_data[self.original_data_id])
+                indiv_cod = indiv_cod.reset_index(names="ID")
 
         return indiv_cod
 
     def save_insilicova_indiv_all(self):
+        how_to_merge = "outer"
         if self.insilicova_results is None:
             alert = QMessageBox()
             alert.setWindowTitle("openVA App")
@@ -841,14 +846,14 @@ class Results(QWidget):
             if path != ("", ""):
                 try:
                     out = self.insilicova_results.indiv_prob.copy()
-                    if self.original_data_id is None:
+                    if self.original_data_id in (None, "no ID column"):
                         out = out.sort_index()
-
                     else:
                         out = out.reindex(
                             self.original_data[self.original_data_id])
-                    out.reset_index(names="ID")
-                    out.to_csv(path[0], index=False)
+                    # out = out.reset_index(names="ID")
+                    indiv_cod = self.prepare_insilicova_indiv_cod_all(out)
+                    indiv_cod.to_csv(path[0], index=False)
                     if os.path.isfile(path[0]):
                         alert = QMessageBox()
                         alert.setWindowTitle("openVA App")
@@ -868,6 +873,50 @@ class Results(QWidget):
                         f"Unable to save {path[0]}.\n" +
                         "(don't have permission or read-only file system)")
                     alert.exec()
+
+    def prepare_insilicova_indiv_cod_all(self, results):
+        how_to_merge = "outer"
+        indiv_cod = results.reset_index(names="ID")
+        if (self.options_age != "all deaths" or
+                self.options_sex != "all deaths"):
+            how_to_merge = "inner"
+            age_groups = []
+            sex_groups = []
+            if self.options_age == "all deaths":
+                age_groups = ["neonate", "child", "adult"]
+            else:
+                age_groups.append(self.options_age)
+            if self.options_sex == "all deaths":
+                sex_groups = ["female", "male"]
+            else:
+                sex_groups.append(self.options_sex)
+
+            dem_groups = self.insilicova_results.data_checked.apply(
+                utils._get_dem_groups, axis=1)
+            # dem_groups = DataFrame(list(dem_groups)).set_index("ID")
+            dem_groups = DataFrame(list(dem_groups))
+            # indiv_cod = pd_concat([results, dem_groups], axis=1)
+            indiv_cod = indiv_cod.merge(dem_groups, on="ID")
+            subpop_index = (indiv_cod["age"].isin(age_groups)) & (
+                indiv_cod["sex"].isin(sex_groups))
+            indiv_cod = indiv_cod[subpop_index]
+            indiv_cod = indiv_cod.drop(columns=["age", "sex"])
+
+        if self.insilicova_include_va_data:
+            tmp_data = self._add_id_to_input_data()
+            indiv_cod = indiv_cod.merge(tmp_data, how=how_to_merge, on="ID")
+
+        if (self.options_age == "all deaths" and
+                self.options_sex == "all deaths"):
+            if self.original_data_id in (None, "no ID column"):
+                indiv_cod = indiv_cod.sort_values(by="ID")
+            else:
+                indiv_cod = indiv_cod.set_index("ID")
+                indiv_cod = indiv_cod.reindex(
+                    self.original_data[self.original_data_id])
+                indiv_cod = indiv_cod.reset_index(names="ID")
+
+        return indiv_cod
 
     # def smartva_plot(self):
     #     alert = QMessageBox()
@@ -1034,7 +1083,7 @@ class Results(QWidget):
 
     def _add_id_to_input_data(self):
         tmp_data = self.original_data.copy()
-        if self.original_data_id in ("no ID column", None):
+        if self.original_data_id in (None, "no ID column"):
             tmp_data["ID"] = [i + 1 for i in self.original_data.index]
         else:
             tmp_data["ID"] = tmp_data[self.original_data_id].copy()
