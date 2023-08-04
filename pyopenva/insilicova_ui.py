@@ -75,7 +75,7 @@ class InSilicoVADialog(QDialog):
     def setup_n_iterations_groupbox(self):
         # self.n_iterations_slider.setRange(400, 10000)
         self.n_iterations_slider.setRange(4, 100)
-        self.n_iterations_slider.setValue(self.n_iterations/100)
+        self.n_iterations_slider.setValue(int(self.n_iterations/100))
         self.n_iterations_slider.valueChanged.connect(self.set_n_iterations)
         layout = QVBoxLayout()
         layout.addWidget(self.n_iterations_slider)
