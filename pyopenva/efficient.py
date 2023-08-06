@@ -22,8 +22,8 @@ from pandas.errors import EmptyDataError, ParserError
 from pycrossva.transform import transform
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
                              QHBoxLayout, QMessageBox, QLabel, QProgressBar,
-                             QPushButton, QSpinBox, QStackedLayout, QTextEdit,
-                             QVBoxLayout, QWidget)
+                             QPushButton, QScrollArea, QSpinBox, QStackedLayout,
+                             QTextEdit, QVBoxLayout, QWidget)
 from PyQt5.QtCore import Qt, QThread
 from pyopenva.output import (PlotDialog, TableDialog, DemTableDialog,
                              save_plot, _insilicova_subpop, _make_title)
@@ -571,6 +571,8 @@ class Efficient(QWidget):
                 )
                 self.combo_data_id_col.blockSignals(False)
                 self.combo_data_id_col.setCurrentIndex(0)
+                self.data_id_col = None
+                self.prev_data_id_col = None
                 # reset app
                 self._reset_results()
                 # self.label_insilicova_progress.setText(
@@ -859,10 +861,12 @@ class Efficient(QWidget):
                        "reliable results.\n\nData check has removed"
                        f" {n_removed} deaths because of missing data.")
                 if self.pycrossva_data["ID"].is_unique:
-                       msg += f"  IDs are:\n\n{id_removed_str}"
-                msg += "\n\n(InterVA is available.)"
-                alert = QMessageBox()
-                alert.setText(msg)
+                       # msg += f"  IDs are:\n\n{id_removed_str}"
+                       msg += "  IDs are listed below."
+                msg += "\n(InterVA is available.)\n\n"
+                # alert = QMessageBox()
+                # alert.setText(msg)
+                alert = ScrollMessageBox(msg, id_removed)
                 alert.exec()
                 self.btn_insilicova_run.setEnabled(True)
                 self.btn_load_data.setEnabled(True)
@@ -1604,3 +1608,20 @@ class Efficient(QWidget):
         self.label_interva_chosen_options.setText("")
         self.label_interva_chosen_malaria.setText("")
         self.label_interva_chosen_hiv.setText("")
+
+
+class ScrollMessageBox(QMessageBox):
+
+    def __init__(self, msg, l, *args, **kwargs):
+        QMessageBox.__init__(self, *args, **kwargs)
+        self.setWindowTitle("openVA App: InSilicoVA message")
+        scroll = QScrollArea(self)
+        scroll.setWidgetResizable(True)
+        self.content = QWidget()
+        scroll.setWidget(self.content)
+        lay = QVBoxLayout(self.content)
+        lay.addWidget(QLabel(msg, self))
+        for item in l:
+            lay.addWidget(QLabel(item, self))
+        self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount())
+        self.setStyleSheet("QScrollArea{min-width:500 px; min-height: 400px}")

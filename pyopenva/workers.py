@@ -105,10 +105,12 @@ class InterVAWorker(QObject):
                 os.chdir(self.directory)
             iv5_out.run()
             self.log.emit("ready")
-            if iv5_out.results["VA5"] is None:
+            if (iv5_out.results["VA5"] is None or
+                    len(iv5_out.results) == 0):
                 self.state.emit(
                     "Data do not have any valid VA records (no results "
                     "available).\nPlease reload data in the expected format.")
+                self.finished.emit()
             else:
                 self.interva_results.emit(iv5_out)
                 n_failed = (iv5_out.va_input.shape[0] -
@@ -120,5 +122,11 @@ class InterVAWorker(QObject):
                 self.finished.emit()
         except RuntimeError:
             self.state.emit("InterVA stopped (no results).")
+            self.progress.emit(0)
+            self.finished.emit()
+        except KeyError:
+            self.state.emit(
+                "ERROR: InterVA not able to assign any causes.\n"
+                "Please check you have valid VA records.")
             self.progress.emit(0)
             self.finished.emit()

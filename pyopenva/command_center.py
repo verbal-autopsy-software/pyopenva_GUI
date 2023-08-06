@@ -24,7 +24,8 @@ from PyQt5.QtCore import pyqtSignal, QObject, Qt, QDate, QThread, QTime
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
                              QFileDialog, QGroupBox, QHBoxLayout, QInputDialog,
                              QLabel, QLineEdit, QMessageBox, QProgressBar,
-                             QPushButton, QTableView, QVBoxLayout, QWidget)
+                             QPushButton, QScrollArea, QTableView, QVBoxLayout,
+                             QWidget)
 
 from pyopenva.edit_window import EditData, EditableHeaderView
 from pyopenva.insilicova_ui import InSilicoVADialog
@@ -907,10 +908,12 @@ class CommandCenter(QWidget):
                     msg += (f"\n\nData check has removed {n_removed} deaths "
                             "because of missing data.")
                     if self.pycrossva_data["ID"].is_unique:
-                        msg += f"  IDs are:\n\n{id_removed_str}"
-                msg += "\n\n(InterVA is available.)"
-                alert = QMessageBox()
-                alert.setText(msg)
+                        # msg += f"  IDs are:\n\n{id_removed_str}"
+                        msg += "  IDs are listed below."
+                msg += "\n(InterVA is available.)\n\n"
+                # alert = QMessageBox()
+                # alert.setText(msg)
+                alert = ScrollMessageBox(msg, id_removed)
                 alert.exec()
                 self.btn_insilicova_options.setEnabled(True)
                 self.btn_insilicova_run.setEnabled(True)
@@ -1392,3 +1395,20 @@ class PyCrossVADialog(QDialog):
 
     def set_text(self, text):
         self.label.setText(text)
+
+
+class ScrollMessageBox(QMessageBox):
+
+    def __init__(self, msg, l, *args, **kwargs):
+        QMessageBox.__init__(self, *args, **kwargs)
+        self.setWindowTitle("openVA App: InSilicoVA message")
+        scroll = QScrollArea(self)
+        scroll.setWidgetResizable(True)
+        self.content = QWidget()
+        scroll.setWidget(self.content)
+        lay = QVBoxLayout(self.content)
+        lay.addWidget(QLabel(msg, self))
+        for item in l:
+            lay.addWidget(QLabel(item, self))
+        self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount())
+        self.setStyleSheet("QScrollArea{min-width:500 px; min-height: 400px}")
