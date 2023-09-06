@@ -54,26 +54,6 @@ directory_table = [
     ("MyProgramMenu", "ProgramMenuFolder", "MYPROG~1|My Program"),
 ]
 
-msi_data = {
-    "Directory": directory_table,
-    "ProgId": [
-        ("Prog.Id", None, None,
-         "openVA App for verbal autopsy data", "IconId", None),
-    ],
-    "Icon": [
-        ("IconId", "pyopenva/icons/openva-logo.ico"),
-    ],
-}
-
-bdist_msi_options = {
-    "add_to_path": True,
-    "data": msi_data,
-    # "environment_variables": [
-    #     ("E_MYAPP_VAR", "=-*MYAPP_VAR", "1", "TARGETDIR")
-    # ],
-    # "upgrade_code": "{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}",
-}
-
 executables = [
         Executable(
             "pyopenva/main.py",
@@ -91,7 +71,6 @@ setup(
     description=about["__description__"],
     options={
         "build_exe": build_exe_options,
-        # "bdist_msi": bdist_msi_options,
         "bdist_mac": bdist_mac_options,
         "bdist_dmg": bdist_dmg_options,
     },

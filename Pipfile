@@ -6,7 +6,6 @@ name = "pypi"
 [packages]
 pyqt5 = "*"
 pyqtwebengine = "*"
-pandas = ">=1.1.5"
 pycrossva = ">=0.97"
 interva = "*"
 vacheck = "==0.0.2"
@@ -14,3 +13,4 @@ insilicova = {git = "https://github.com/verbal-autopsy-software/pyinsilicova"}
 matplotlib = "==3.6.3"
 sphinx  = "*"
 cx_Freeze = "*"
+pandas = "==2.0.3"

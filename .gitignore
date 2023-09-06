@@ -4,3 +4,5 @@ dist
 venv
 pyopenva/__pycache__
 pyopenva/.idea
+pyopenva/docs
+venv*
