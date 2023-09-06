@@ -37,6 +37,18 @@ class LoadData(QWidget):
                     data += header + rows
                 self.header = header
                 self.data = data
+            except UnicodeDecodeError as exc:
+                alert = QMessageBox()
+                alert.setWindowTitle("openVA App")
+                alert.setIcon(QMessageBox.Warning)
+                exc_slice = slice((exc.start - 20), (exc.end + 20))
+                msg = ("Unable to read in CSV file "
+                       f"{self.fname.split('/')[-1]}.\n\n"
+                       "File contains unexpected characters:\n\n"
+                       f"{exc.object[exc_slice]}.")
+                alert.setText(msg)
+                alert.exec()
+                self.fname = ""
             except StopIteration:
                 alert = QMessageBox()
                 alert.setText(

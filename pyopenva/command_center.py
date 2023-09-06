@@ -227,8 +227,6 @@ class CommandCenter(QWidget):
                 self.pycrossva_data = None
                 self.load_window = None
 
-
-
     def update_data(self):
         """Update status of data."""
         pass

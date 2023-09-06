@@ -3,16 +3,14 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
-[dev-packages]
-sphinx  = "*"
-
 [packages]
 pyqt5 = "*"
 pyqtwebengine = "*"
-pandas = "*"
-pycrossva = "==0.93"
-interva = "==0.0.5"
+pandas = ">=1.1.5"
+pycrossva = ">=0.97"
+interva = "*"
 vacheck = "==0.0.2"
 insilicova = {git = "https://github.com/verbal-autopsy-software/pyinsilicova"}
 matplotlib = "==3.6.3"
-pyqtdarktheme = "*"
+sphinx  = "*"
+cx_Freeze = "*"

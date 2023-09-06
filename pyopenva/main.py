@@ -5,15 +5,14 @@ pyopenva.main
 ~~~~~~~~~~~~~~
 This module creates user interface for the app.
 """
+
+import os
+import sys
 from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog,
                              QMainWindow, QMessageBox, QStackedLayout, QWidget)
-from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage
 from PyQt5.QtGui import QDesktopServices
-import os
-import sys
-import qdarktheme
 from pandas import DataFrame, read_csv
 from pyopenva.efficient import Efficient
 from pyopenva.mode import Mode
@@ -452,8 +451,6 @@ class WindowManager(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    # qdarktheme.setup_theme("auto")
-    # qdarktheme.setup_theme("light")
     gui = WindowManager()
     gui.show()
     sys.exit(app.exec_())
