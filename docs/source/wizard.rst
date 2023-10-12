@@ -249,6 +249,16 @@ possible to change the data presented in the demographic table shown by clicking
 e.g., you can the totals for the rows and columns, or change the cell values so that they are a percentage (or
 proportion) of the row or column totals.
 
+The CSMF results produced by InSilicoVA include different information from what is made available by InterVA.  More
+specifically, InSilicoVA estimates the uncertainty around the CSMF values and provides ranges of the most
+likely values.  In the CSMF plot from InSilicoVA, there is a 95% probability that CSMF value in the *population* [#]_ is
+included in the range covered by the bar; the dot in the middle of the bar indicates the median value (so there is a
+50% chance that the true value is below the dot).  In the CSMF table, the mean value is included in the column with the
+label CSMF, the standard error is listed in the next column, and the final three columns show the 2.5th percentile
+("lower"), the median, and the 97.5th (percentile).  These last three columns are the values used to create the CSMF
+plot for InSilicoVA.  On the other hand, InterVA does not include uncertainty, so there is only a single value for
+the CSMF for each cause of death.
+
 The bottom panel, labeled "Save Results", contains three buttons for saving the CSMF results as either a table (in CSV
 file) or a plot (in a PDF file), as well as a button for saving the individual cause assignments as a CSV file.  Again,
 the options for selecting a demographic group are reflected in the saved results.  For example, if the "male" and
@@ -269,6 +279,11 @@ the "Exit" button will close the openVA App.
 .. [#]  While it is possible to run InSilicoVA with fewer deaths, our experience suggests that the results are more
         reliable with larger sample sizes.  In our experimentation with VA data (with external causes assigned), 100
         deaths provided to be a reasonable threshold for obtaining reliable results.
+.. [#]  VA data include only a fraction of all the deaths that have occurred in the population.  InSilicoVA uses the
+        information in the data set to estimate the CSMF of the population where the verbal autopsies are collected.
+        Since the data do not include all deaths, InSilicoVA is uncertain about what the true CSMF values are in the
+        population.  However, the more deaths that are included in the data set, the more information InSilicoVA has and
+        the less uncertainty (i.e., the smaller the bars in the CSMF plot).
 
 ===================  ================================= ========================== ================
 :doc:`Home <index>`  :doc:`Customizable Mode <custom>` :doc:`Vignette <vignette>` :doc:`FAQ <faq>`
