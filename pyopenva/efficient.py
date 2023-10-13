@@ -87,6 +87,7 @@ class Efficient(QWidget):
         self.n_top_causes = 5
         self.options_sex = "all deaths"
         self.options_age = "all deaths"
+        self.results_use_prop = False
         self.results_ui()
         self.plot_color = "Greys"
         self.stacked_layout = QStackedLayout()
@@ -443,10 +444,14 @@ class Efficient(QWidget):
             self.interva_remove_undetermined)
         self.chbox_interva_remove_undetermined.toggled.connect(
             self.set_interva_remove_undetermined)
+        self.chbox_use_prop = QCheckBox("show CSMF as proportions")
+        self.chbox_use_prop.setChecked(self.results_use_prop)
+        self.chbox_use_prop.toggled.connect(self.set_results_use_prop)
         hbox_options.addWidget(self.spinbox_n_causes)
         hbox_options.addWidget(self.chbox_interva_remove_undetermined)
         hbox_options.insertSpacing(1, 50)
         vbox_options.addLayout(hbox_options)
+        vbox_options.addWidget(self.chbox_use_prop)
         self.label_dem_results = QLabel("Select demographic groups")
         self.label_dem_results.setAlignment(Qt.AlignCenter)
         vbox_options.addWidget(self.label_dem_results)
@@ -804,6 +809,12 @@ class Efficient(QWidget):
     def set_plot_color(self, color):
         self.plot_color = color
 
+    def set_results_use_prop(self, checked):
+        if checked:
+            self.results_use_prop = True
+        else:
+            self.results_use_prop = False
+
     # TODO: need to clean these up (window management handled in main)
     def show_data_page(self):
         self.stacked_layout.setCurrentIndex(0)
@@ -892,14 +903,14 @@ class Efficient(QWidget):
                 self.insilicova_worker = InSilicoVAWorker(
                     data=self.pycrossva_data,
                     data_type="WHO2016",
-                    n_sim=self.insilicova_n_sim,
-                    thin=thin,
-                    burnin=burnin,
-                    auto_length=auto_extend,
-                    # n_sim=200,
-                    # thin=20,
-                    # burnin=5,
-                    # auto_length=False,
+                    # n_sim=self.insilicova_n_sim,
+                    # thin=thin,
+                    # burnin=burnin,
+                    # auto_length=auto_extend,
+                    n_sim=200,
+                    thin=20,
+                    burnin=5,
+                    auto_length=False,
                     seed=self.insilicova_seed,
                     gui_ctrl=self.insilicova_ctrl)
                 self.insilicova_worker.moveToThread(self.insilicova_thread)
@@ -1078,7 +1089,8 @@ class Efficient(QWidget):
                     age=self.options_age,
                     sex=self.options_sex,
                     interva_rule=True,
-                    remove_undetermined=self.interva_remove_undetermined)
+                    remove_undetermined=self.interva_remove_undetermined,
+                    use_prop=self.results_use_prop)
                 self.plot_dialog.exec()
 
     def run_table_dialog(self):
@@ -1110,7 +1122,8 @@ class Efficient(QWidget):
                     age=self.options_age,
                     sex=self.options_sex,
                     interva_rule=True,
-                    remove_undetermined=self.interva_remove_undetermined)
+                    remove_undetermined=self.interva_remove_undetermined,
+                    use_prop=self.results_use_prop)
                 self.table_dialog.resize(self.table_dialog.table.width(),
                                          self.table_dialog.table.height())
                 self.table_dialog.exec()
@@ -1150,6 +1163,9 @@ class Efficient(QWidget):
                 self.table_dialog.exec()
 
     def save_csmf_table(self):
+        prop_scale = 100
+        if self.results_use_prop:
+            prop_scale = 1
         if self.chosen_algorithm == "insilicova":
             results = self.insilicova_results
             no_subpop = (self.options_age == "all deaths" and
@@ -1220,6 +1236,7 @@ class Efficient(QWidget):
                                             0: title},
                                    inplace=True)
                 try:
+                    csmf_df.iloc[:, 1:] *= prop_scale  # ok for std error (sqrt (a * var[x]))
                     csmf_df.to_csv(path[0], index=False)
                 except (OSError, PermissionError):
                     alert = QMessageBox()
@@ -1278,7 +1295,8 @@ class Efficient(QWidget):
                           age=self.options_age,
                           sex=self.options_sex,
                           interva_rule=True,
-                          remove_undetermined=self.interva_remove_undetermined)
+                          remove_undetermined=self.interva_remove_undetermined,
+                          use_prop=self.results_use_prop)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")

@@ -37,6 +37,7 @@ class Results(QWidget):
         self.interva_include_probs = True
         self.interva_rule = True
         self.interva_remove_undetermined = False
+        self.results_use_prop = False
         self.interva_tmp_dir = None
         self.options_sex = "all deaths"
         self.options_age = "all deaths"
@@ -48,6 +49,7 @@ class Results(QWidget):
         self.create_interva_panel()
         # self.create_smartva_panel()
 
+        hbox_display_options = QHBoxLayout()
         self.spinbox_n_causes = QSpinBox()
         self.spinbox_n_causes.setRange(1, 61)
         self.spinbox_n_causes.setPrefix("Include ")
@@ -55,7 +57,14 @@ class Results(QWidget):
         self.spinbox_n_causes.setValue(self.n_top_causes)
         self.spinbox_n_causes.valueChanged.connect(self.set_n_top_causes)
         self.spinbox_n_causes.setMaximumWidth(350)
-        self.results_v_box.addWidget(self.spinbox_n_causes)
+        self.chbox_use_prop = QCheckBox("show CSMF as proportions")
+        self.chbox_use_prop.setChecked(self.results_use_prop)
+        self.chbox_use_prop.toggled.connect(self.set_results_use_prop)
+        hbox_display_options.addWidget(self.spinbox_n_causes)
+        hbox_display_options.addWidget(self.chbox_use_prop)
+
+        # self.results_v_box.addWidget(self.spinbox_n_causes)
+        self.results_v_box.addLayout(hbox_display_options)
 
         self.results_tabs = QTabWidget()
         self.results_tabs.addTab(self.insilicova_panel, "InSilicoVA")
@@ -313,7 +322,8 @@ class Results(QWidget):
                     age=self.options_age,
                     sex=self.options_sex,
                     interva_rule=self.interva_rule,
-                    remove_undetermined=self.interva_remove_undetermined)
+                    remove_undetermined=self.interva_remove_undetermined,
+                    use_prop=self.results_use_prop)
                 self.interva_plot_dialog.exec()
 
     def interva_table(self):
@@ -340,12 +350,16 @@ class Results(QWidget):
                     age=self.options_age,
                     sex=self.options_sex,
                     interva_rule=self.interva_rule,
-                    remove_undetermined=self.interva_remove_undetermined)
+                    remove_undetermined=self.interva_remove_undetermined,
+                    use_prop=self.results_use_prop)
                 self.interva_table.resize(self.interva_table.table.width(),
                                           self.interva_table.table.height())
                 self.interva_table.exec()
 
     def save_interva_table(self):
+        prop_scale = 100
+        if self.results_use_prop:
+            prop_scale = 1
         if self.interva_results is None:
             alert = QMessageBox()
             alert.setWindowTitle("openVA App")
@@ -379,6 +393,7 @@ class Results(QWidget):
                     csmf = csmf / sum(csmf)
                 csmf.sort_values(ascending=False, inplace=True)
                 csmf_df = csmf.reset_index()[0:self.n_top_causes]
+                csmf_df.iloc[:, 1] *= prop_scale
                 title = _make_title(age=self.options_age,
                                     sex=self.options_sex)
                 csmf_df.rename(columns={"index": "Cause",
@@ -453,7 +468,8 @@ class Results(QWidget):
                             age=self.options_age,
                             sex=self.options_sex,
                             interva_rule=self.interva_rule,
-                            remove_undetermined=self.interva_remove_undetermined)
+                            remove_undetermined=self.interva_remove_undetermined,
+                            use_prop=self.results_use_prop)
                         if os.path.isfile(path[0]):
                             alert = QMessageBox()
                             alert.setWindowTitle("openVA App")
@@ -566,7 +582,8 @@ class Results(QWidget):
                     top=self.n_top_causes,
                     colors=self.plot_color,
                     age=self.options_age,
-                    sex=self.options_sex)
+                    sex=self.options_sex,
+                    use_prop=self.results_use_prop)
                 self.insilicova_plot_dialog.exec()
 
     def insilicova_table(self):
@@ -590,13 +607,17 @@ class Results(QWidget):
                                                     self,
                                                     top=self.n_top_causes,
                                                     age=self.options_age,
-                                                    sex=self.options_sex)
+                                                    sex=self.options_sex,
+                                                    use_prop=self.results_use_prop)
                 self.insilicova_table.resize(
                     self.insilicova_table.table.width(),
                     self.insilicova_table.table.height())
                 self.insilicova_table.exec()
 
     def save_insilicova_table(self):
+        prop_scale = 100
+        if self.results_use_prop:
+            prop_scale = 1
         no_subpop = (self.options_age == "all deaths" and
                      self.options_sex == "all deaths")
         if self.insilicova_results is None:
@@ -641,6 +662,7 @@ class Results(QWidget):
                     csmf_df.rename(columns={"index": "Cause",
                                             "Mean": "CSMF (Mean)"},
                                    inplace=True)
+                    csmf_df.iloc[:, 1:] *= prop_scale
                     csmf_df.round(4).to_csv(path[0], index=False)
                     if os.path.isfile(path[0]):
                         alert = QMessageBox()
@@ -693,7 +715,8 @@ class Results(QWidget):
                           file_name=path[0],
                           plot_colors=self.plot_color,
                           age=self.options_age,
-                          sex=self.options_sex)
+                          sex=self.options_sex,
+                          use_prop=self.results_use_prop)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
                     alert.setWindowTitle("openVA App")
@@ -1006,6 +1029,12 @@ class Results(QWidget):
 
     def set_n_top_causes(self, n):
         self.n_top_causes = n
+
+    def set_results_use_prop(self, checked):
+        if checked:
+            self.results_use_prop = True
+        else:
+            self.results_use_prop = False
 
     def set_options_sex(self, sex):
         self.options_sex = sex

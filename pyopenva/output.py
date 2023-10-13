@@ -24,7 +24,8 @@ class PlotDialog(QDialog):
     def __init__(self, results, algorithm, parent=None, top=5, save=False,
                  file_name=None, colors="Greys", age="all deaths",
                  sex="all deaths", interva_rule=True,
-                 remove_undetermined=False):
+                 remove_undetermined=False,
+                 use_prop=False):
         super(PlotDialog, self).__init__(parent=parent)
         self.setWindowTitle("Cause-Specific Mortality Fraction")
         self.results = results
@@ -39,6 +40,9 @@ class PlotDialog(QDialog):
         self.sex = sex
         self.interva_rule = interva_rule
         self.remove_undetermined = remove_undetermined
+        self.prop_scale = 100  # show results as %
+        if use_prop:
+            self.prop_scale = 1
 
         vbox_csmf = QVBoxLayout()
         vbox_csmf.addWidget(self.toolbar)
@@ -95,6 +99,7 @@ class PlotDialog(QDialog):
             plt_series = plt_series.drop("Undetermined")
             plt_series = plt_series/sum(plt_series)
         plt_series.sort_values(ascending=True, inplace=True)
+        plt_series = self.prop_scale * plt_series
         cm_colors = get_cmap(self.colors)
         linspace_colors = linspace(0.5, 0.9, self.n_top_causes)
         colors = cm_colors(linspace_colors)
@@ -110,6 +115,7 @@ class PlotDialog(QDialog):
                                         self.age,
                                         self.sex,
                                         self.n_top_causes)
+        plt_series = self.prop_scale * plt_series
         n_max = len(plt_series)
         cm_colors = get_cmap(self.colors)
         linspace_colors = linspace(0.5, 0.9, n_max)
@@ -130,9 +136,10 @@ class PlotDialog(QDialog):
         colors = cm_colors(linspace_colors)
         for i in range(self.n_top_causes):
             clr = colors[i].tolist()
-            self.ax.errorbar(x=plt_df["Median"].to_list()[i],
+            self.ax.errorbar(x=self.prop_scale * plt_df["Median"].to_list()[i],
                              y=plt_df.index.to_list()[i],
-                             xerr=[[errors[0][i]], [errors[1][i]]],
+                             xerr=[[self.prop_scale * errors[0][i]],
+                                   [self.prop_scale * errors[1][i]]],
                              ecolor=clr,
                              markerfacecolor=clr, markeredgecolor=clr,
                              fmt="o",
@@ -147,13 +154,17 @@ class TableDialog(QDialog):
 
     def __init__(self, results, parent=None, top=5, age="all deaths",
                  sex="all deaths", interva_rule=True,
-                 remove_undetermined=False):
+                 remove_undetermined=False,
+                 use_prop=False):
         super(TableDialog, self).__init__(parent=parent)
         self.setWindowTitle("Cause-Specific Mortality Fraction")
         self.results = results
         self.n_top_causes = top
         self.interva_rule = interva_rule
         self.remove_undetermined = remove_undetermined
+        self.prop_scale = 100  # show results as %
+        if use_prop:
+            self.prop_scale = 1
         self.age = age
         self.sex = sex
         age = self.age
@@ -198,6 +209,7 @@ class TableDialog(QDialog):
             title = _make_title(age=self.age, sex=self.sex)
             csmf_df.rename(columns={"index": "Cause", 0: title},
                            inplace=True)
+        csmf_df.iloc[:, 1:] *= self.prop_scale  # ok for std error (sqrt (a * var[x]))
         self.model = TableModel(csmf_df.round(4))
         self.table.setModel(self.model)
         column_width_0 = self.table.sizeHintForColumn(0) + 100
@@ -238,7 +250,7 @@ class DemTableDialog(QDialog):
         self.view.setColumnWidth(0, column_width_0)
         self.view.setColumnWidth(1, column_width_1)
 
-        options_type = ["counts", "% row", "% col", "% cell"]
+        options_type = ["counts", "% row", "% col", "% grand total"]
         label_table_type = QLabel("Type of table:")
         self.table_type_combo = QComboBox()
         self.table_type_combo.addItems(options_type)
@@ -283,7 +295,7 @@ class DemTableDialog(QDialog):
         if self.proportions or self.table_type == "counts":
             pct = 1
         normalize_dict = {"counts": False, "% row": "index",
-                          "% col": "columns", "% cell": "all"}
+                          "% col": "columns", "% grand total": "all"}
         normalize = normalize_dict[self.table_type]
         table = crosstab(self.results["sex"], self.results["age"],
                          normalize=normalize, margins=self.margins,
@@ -364,13 +376,17 @@ class TableModel(QAbstractTableModel):
 
 def save_plot(results, algorithm, top=5, file_name=None, plot_colors="Greys",
               age="all deaths", sex="all deaths", interva_rule=True,
-              remove_undetermined=False):
+              remove_undetermined=False,
+              use_prop=False):
     age_grp = age
     if age == "all deaths":
         age_grp = None
     sex_grp = sex
     if sex == "all deaths":
         sex_grp = None
+    prop_scale = 100  # show results as %
+    if use_prop:
+        prop_scale = 1
 
     style.use("ggplot")
     figure = Figure(figsize=(7, 5), dpi=100, constrained_layout=True)
@@ -386,9 +402,10 @@ def save_plot(results, algorithm, top=5, file_name=None, plot_colors="Greys",
             colors = cm_colors(linspace_colors)
             for i in range(top):
                 clr = colors[i].tolist()
-                ax.errorbar(x=plt_df["Median"].to_list()[i],
+                ax.errorbar(x=prop_scale * plt_df["Median"].to_list()[i],
                             y=plt_df.index.to_list()[i],
-                            xerr=[[errors[0][i]], [errors[1][i]]],
+                            xerr=[[prop_scale * errors[0][i]],
+                                  [prop_scale * errors[1][i]]],
                             ecolor=clr,
                             markerfacecolor=clr, markeredgecolor=clr,
                             fmt="o",
@@ -399,6 +416,7 @@ def save_plot(results, algorithm, top=5, file_name=None, plot_colors="Greys",
             ax.set_ylabel("Causes")
         else:
             plt_series = _insilicova_subpop(results, age, sex, top)
+            plt_series = prop_scale * plt_series
             n_max = len(plt_series)
             cm_colors = get_cmap(plot_colors)
             linspace_colors = linspace(0.5, 0.9, n_max)
@@ -422,6 +440,7 @@ def save_plot(results, algorithm, top=5, file_name=None, plot_colors="Greys",
             plt_series = plt_series.drop("Undetermined")
             plt_series = plt_series/sum(plt_series)
         plt_series.sort_values(ascending=True, inplace=True)
+        plt_series = prop_scale * plt_series
         cm_colors = get_cmap(plot_colors)
         linspace_colors = linspace(0.5, 0.9, top)
         colors = cm_colors(linspace_colors)
