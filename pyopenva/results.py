@@ -535,6 +535,8 @@ class Results(QWidget):
                         out["ID"] = out["ID"].astype("int64")
                     if self.interva_include_va_data:
                         tmp_data = self._add_id_to_input_data()
+                        tmp_data.columns = [col.split("-")[-1]
+                                            for col in tmp_data.columns]
                         out = out.merge(tmp_data, how=how_to_merge, on="ID")
                     try:
                         out.to_csv(path[0], index=False)
@@ -828,6 +830,7 @@ class Results(QWidget):
 
         if self.insilicova_include_va_data:
             tmp_data = self._add_id_to_input_data()
+            tmp_data.columns = [col.split("-")[-1] for col in tmp_data.columns]
             indiv_cod = indiv_cod.merge(tmp_data, how=how_to_merge, on="ID")
 
         if (self.options_age == "all deaths" and
@@ -927,6 +930,7 @@ class Results(QWidget):
 
         if self.insilicova_include_va_data:
             tmp_data = self._add_id_to_input_data()
+            tmp_data.columns = [col.split("-")[-1] for col in tmp_data.columns]
             indiv_cod = indiv_cod.merge(tmp_data, how=how_to_merge, on="ID")
 
         if (self.options_age == "all deaths" and
