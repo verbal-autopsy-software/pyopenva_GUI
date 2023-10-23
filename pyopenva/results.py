@@ -36,7 +36,6 @@ class Results(QWidget):
         self.interva_results = None
         self.interva_include_probs = True
         self.interva_rule = True
-        self.interva_remove_undetermined = False
         self.results_use_prop = False
         self.interva_tmp_dir = None
         self.options_sex = "all deaths"
@@ -61,7 +60,10 @@ class Results(QWidget):
         self.chbox_use_prop.setChecked(self.results_use_prop)
         self.chbox_use_prop.toggled.connect(self.set_results_use_prop)
         hbox_display_options.addWidget(self.spinbox_n_causes)
+        # hbox_display_options.insertSpacing(1, 150)
         hbox_display_options.addWidget(self.chbox_use_prop)
+        hbox_display_options.setAlignment(self.chbox_use_prop, Qt.AlignRight)
+
 
         # self.results_v_box.addWidget(self.spinbox_n_causes)
         self.results_v_box.addLayout(hbox_display_options)
@@ -158,12 +160,10 @@ class Results(QWidget):
 
     def create_interva_panel(self):
 
-        self.chbox_interva_remove_undetermined = QCheckBox(
-            "Remove 'Undetermined' as a COD")
-        self.chbox_interva_remove_undetermined.setChecked(
-            self.interva_remove_undetermined)
-        self.chbox_interva_remove_undetermined.toggled.connect(
-            self.set_interva_remove_undetermined)
+        self.chbox_interva_rule = QCheckBox(
+            "Count uncertain assignments as 'Undetermined'")
+        self.chbox_interva_rule.setChecked(self.interva_rule)
+        self.chbox_interva_rule.toggled.connect(self.set_interva_rule)
         gbox_dem = self.create_demographics_gbox()
         gbox_show = QGroupBox("Show Results")
         hbox_show = QHBoxLayout()
@@ -218,7 +218,7 @@ class Results(QWidget):
         gbox_save.setLayout(vbox_save)
 
         layout = QVBoxLayout()
-        layout.addWidget(self.chbox_interva_remove_undetermined)
+        layout.addWidget(self.chbox_interva_rule)
         layout.addWidget(gbox_dem)
         layout.addWidget(gbox_show)
         layout.addWidget(gbox_save)
@@ -291,12 +291,6 @@ class Results(QWidget):
         gbox_dem.setLayout(hbox_demographics)
         return gbox_dem
 
-    def set_interva_remove_undetermined(self, checked):
-        if checked:
-            self.interva_remove_undetermined = True
-        else:
-            self.interva_remove_undetermined = False
-
     def interva_plot(self):
         if self.interva_results is None:
             alert = QMessageBox()
@@ -322,7 +316,6 @@ class Results(QWidget):
                     age=self.options_age,
                     sex=self.options_sex,
                     interva_rule=self.interva_rule,
-                    remove_undetermined=self.interva_remove_undetermined,
                     use_prop=self.results_use_prop)
                 self.interva_plot_dialog.exec()
 
@@ -350,7 +343,6 @@ class Results(QWidget):
                     age=self.options_age,
                     sex=self.options_sex,
                     interva_rule=self.interva_rule,
-                    remove_undetermined=self.interva_remove_undetermined,
                     use_prop=self.results_use_prop)
                 self.interva_table.resize(self.interva_table.table.width(),
                                           self.interva_table.table.height())
@@ -387,10 +379,6 @@ class Results(QWidget):
                                   age=age,
                                   sex=sex,
                                   interva_rule=self.interva_rule)
-                if (self.interva_remove_undetermined and
-                        "Undetermined" in csmf.index):
-                    csmf = csmf.drop("Undetermined")
-                    csmf = csmf / sum(csmf)
                 csmf.sort_values(ascending=False, inplace=True)
                 csmf_df = csmf.reset_index()[0:self.n_top_causes]
                 csmf_df.iloc[:, 1] *= prop_scale
@@ -468,7 +456,6 @@ class Results(QWidget):
                             age=self.options_age,
                             sex=self.options_sex,
                             interva_rule=self.interva_rule,
-                            remove_undetermined=self.interva_remove_undetermined,
                             use_prop=self.results_use_prop)
                         if os.path.isfile(path[0]):
                             alert = QMessageBox()
@@ -605,12 +592,13 @@ class Results(QWidget):
                     f"age: {self.options_age},   sex: {self.options_sex}")
                 alert.exec()
             else:
-                self.insilicova_table = TableDialog(self.insilicova_results,
-                                                    self,
-                                                    top=self.n_top_causes,
-                                                    age=self.options_age,
-                                                    sex=self.options_sex,
-                                                    use_prop=self.results_use_prop)
+                self.insilicova_table = TableDialog(
+                    self.insilicova_results,
+                    self,
+                    top=self.n_top_causes,
+                    age=self.options_age,
+                    sex=self.options_sex,
+                    use_prop=self.results_use_prop)
                 self.insilicova_table.resize(
                     self.insilicova_table.table.width(),
                     self.insilicova_table.table.height())

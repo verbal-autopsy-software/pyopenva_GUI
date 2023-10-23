@@ -22,8 +22,8 @@ from pandas.errors import EmptyDataError, ParserError
 from pycrossva.transform import transform
 from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
                              QHBoxLayout, QMessageBox, QLabel, QProgressBar,
-                             QPushButton, QScrollArea, QSpinBox, QStackedLayout,
-                             QTextEdit, QVBoxLayout, QWidget)
+                             QPushButton, QScrollArea, QSpinBox,
+                             QStackedLayout, QTextEdit, QVBoxLayout, QWidget)
 from PyQt5.QtCore import Qt, QThread
 from pyopenva.output import (PlotDialog, TableDialog, DemTableDialog,
                              save_plot, _insilicova_subpop, _make_title)
@@ -68,7 +68,7 @@ class Efficient(QWidget):
         self.interva_pbar = QProgressBar()
         self.label_interva_progress = QLabel("(no results)")
         self.interva_ctrl = {"break": False}
-        self.interva_remove_undetermined = False
+        self.interva_rule = True
         self.interva_ui()
         # self.smartva_page = QWidget()
         # self.smartva_country = "Unknown"
@@ -438,20 +438,22 @@ class Efficient(QWidget):
         self.spinbox_n_causes.setValue(self.n_top_causes)
         self.spinbox_n_causes.valueChanged.connect(self.set_n_top_causes)
         self.spinbox_n_causes.setMaximumWidth(250)
-        self.chbox_interva_remove_undetermined = QCheckBox(
-            "Remove 'Undetermined' as a COD")
-        self.chbox_interva_remove_undetermined.setChecked(
-            self.interva_remove_undetermined)
-        self.chbox_interva_remove_undetermined.toggled.connect(
-            self.set_interva_remove_undetermined)
+        # Leaving this in case we want to turn of interva rule in
+        # efficient mode -- if so, just need to add checkbox to this ui
+        self.chbox_interva_rule = QCheckBox(
+            "Count uncertain assignments as 'Undetermined'")
+        self.chbox_interva_rule.setChecked(self.interva_rule)
+        self.chbox_interva_rule.toggled.connect(self.set_interva_rule)
         self.chbox_use_prop = QCheckBox("show CSMF as proportions")
         self.chbox_use_prop.setChecked(self.results_use_prop)
         self.chbox_use_prop.toggled.connect(self.set_results_use_prop)
         hbox_options.addWidget(self.spinbox_n_causes)
-        hbox_options.addWidget(self.chbox_interva_remove_undetermined)
-        hbox_options.insertSpacing(1, 50)
+        # hbox_options.addWidget(self.chbox_interva_rule)
+        # hbox_options.setAlignment(self.chbox_interva_rule, Qt.AlignRight)
+        hbox_options.addWidget(self.chbox_use_prop)
+        hbox_options.setAlignment(self.chbox_use_prop, Qt.AlignRight)
         vbox_options.addLayout(hbox_options)
-        vbox_options.addWidget(self.chbox_use_prop)
+        # vbox_options.addWidget(self.chbox_use_prop)
         self.label_dem_results = QLabel("Select demographic groups")
         self.label_dem_results.setAlignment(Qt.AlignCenter)
         vbox_options.addWidget(self.label_dem_results)
@@ -467,8 +469,7 @@ class Efficient(QWidget):
         self.options_combo_age.addItems(age_option_set)
         self.options_combo_age.setCurrentIndex(
             age_option_set.index(self.options_age))
-        self.options_combo_age.currentTextChanged.connect(
-            self.set_options_age)
+        self.options_combo_age.currentTextChanged.connect(self.set_options_age)
         sex_option_set = ["all deaths",
                           "female",
                           "male"]
@@ -593,7 +594,8 @@ class Efficient(QWidget):
                 # self.interva_pbar.setValue(0)
                 # self.pycrossva_data = None
                 # self.interva_pycva_tedit.setText("(pyCrossVA messages...)")
-                # self.insilicova_pycva_tedit.setText("(pyCrossVA messages...)")
+                # self.insilicova_pycva_tedit.setText(
+                # "(pyCrossVA messages...)")
             except UnicodeDecodeError as exc:
                 alert = QMessageBox()
                 alert.setWindowTitle("openVA App")
@@ -774,18 +776,18 @@ class Efficient(QWidget):
     def set_chosen_algorithm(self, updated_choice):
         self.chosen_algorithm = updated_choice
         if self.chosen_algorithm == "interva":
-            self.chbox_interva_remove_undetermined.setEnabled(True)
+            self.chbox_interva_rule.setEnabled(True)
         else:
-            self.chbox_interva_remove_undetermined.setEnabled(False)
+            self.chbox_interva_rule.setEnabled(False)
 
     def set_n_top_causes(self, n):
         self.n_top_causes = n
 
-    def set_interva_remove_undetermined(self, checked):
+    def set_interva_rule(self, checked):
         if checked:
-            self.interva_remove_undetermined = True
+            self.interva_rule = True
         else:
-            self.interva_remove_undetermined = False
+            self.interva_rule = False
 
     def set_options_sex(self, sex):
         self.options_sex = sex
@@ -875,19 +877,15 @@ class Efficient(QWidget):
             if self.pycrossva_data["ID"].is_unique:
                 index_removed = (~self.pycrossva_data.ID.isin(tmp_ins.data.ID))
                 id_removed = self.pycrossva_data.ID[index_removed].astype("str")
-                id_removed_str = "\n".join(id_removed)
             del tmp_ins
             if n_valid < self.insilicova_limit:
                 msg = ("InSilicoVA is unavailable.  At least "
                        f"{self.insilicova_limit} deaths are needed for "
-                       "reliable results.\n\nData check has removed"
+                       "reliable results.\n\nData check removed"
                        f" {n_removed} deaths because of missing data.")
                 if self.pycrossva_data["ID"].is_unique:
-                       # msg += f"  IDs are:\n\n{id_removed_str}"
-                       msg += "  IDs are listed below."
+                    msg += "  IDs are listed below."
                 msg += "\n(InterVA is available.)\n\n"
-                # alert = QMessageBox()
-                # alert.setText(msg)
                 alert = ScrollMessageBox(msg, id_removed)
                 alert.exec()
                 self.btn_insilicova_run.setEnabled(True)
@@ -903,14 +901,14 @@ class Efficient(QWidget):
                 self.insilicova_worker = InSilicoVAWorker(
                     data=self.pycrossva_data,
                     data_type="WHO2016",
-                    # n_sim=self.insilicova_n_sim,
-                    # thin=thin,
-                    # burnin=burnin,
-                    # auto_length=auto_extend,
-                    n_sim=200,
-                    thin=20,
-                    burnin=5,
-                    auto_length=False,
+                    n_sim=self.insilicova_n_sim,
+                    thin=thin,
+                    burnin=burnin,
+                    auto_length=auto_extend,
+                    # n_sim=200,
+                    # thin=20,
+                    # burnin=5,
+                    # auto_length=False,
                     seed=self.insilicova_seed,
                     gui_ctrl=self.insilicova_ctrl)
                 self.insilicova_worker.moveToThread(self.insilicova_thread)
@@ -1003,6 +1001,25 @@ class Efficient(QWidget):
             # TODO: clear old error log if it exists?
             self.interva_tmp_dir = tempfile.TemporaryDirectory()
             self.run_pycrossva()
+            tmp_ins = InSilicoVA(self.pycrossva_data, run=False)
+            tmp_ins._remove_bad(is_numeric=False)
+            n_valid = tmp_ins.data.shape[0]
+            n_removed = self.pycrossva_data.shape[0] - n_valid
+            if self.pycrossva_data["ID"].is_unique:
+                index_removed = (~self.pycrossva_data.ID.isin(tmp_ins.data.ID))
+                id_removed = self.pycrossva_data.ID[index_removed].astype(
+                    "str")
+            del tmp_ins
+            msg = (f"Data check removed {n_removed} deaths "
+                   "because of missing data.")
+            if self.pycrossva_data["ID"].is_unique:
+                msg += "  IDs are listed below."
+            alert = ScrollMessageBox(msg, id_removed)
+            alert.exec()
+            self.btn_insilicova_run.setEnabled(True)
+            self.btn_load_data.setEnabled(True)
+            self.btn_save_insilicova_log.setEnabled(True)
+            self.btn_check_convergence.setEnabled(True)
             self.interva_thread = QThread()
             self.interva_worker = InterVAWorker(
                 self.pycrossva_data,
@@ -1088,8 +1105,7 @@ class Efficient(QWidget):
                     colors=self.plot_color,
                     age=self.options_age,
                     sex=self.options_sex,
-                    interva_rule=True,
-                    remove_undetermined=self.interva_remove_undetermined,
+                    interva_rule=self.interva_rule,
                     use_prop=self.results_use_prop)
                 self.plot_dialog.exec()
 
@@ -1121,8 +1137,7 @@ class Efficient(QWidget):
                     top=self.n_top_causes,
                     age=self.options_age,
                     sex=self.options_sex,
-                    interva_rule=True,
-                    remove_undetermined=self.interva_remove_undetermined,
+                    interva_rule=self.interva_rule,
                     use_prop=self.results_use_prop)
                 self.table_dialog.resize(self.table_dialog.table.width(),
                                          self.table_dialog.table.height())
@@ -1221,13 +1236,9 @@ class Efficient(QWidget):
                         sex = None
                     csmf = utils.csmf(results,
                                       top=n_top_causes,
-                                      interva_rule=True,
+                                      interva_rule=self.interva_rule,
                                       age=age,
                                       sex=sex)
-                    if (self.interva_remove_undetermined and
-                            "Undetermined" in csmf.index):
-                        csmf = csmf.drop("Undetermined")
-                        csmf = csmf / sum(csmf)
                     csmf.sort_values(ascending=False, inplace=True)
                     csmf_df = csmf.reset_index()[0:n_top_causes]
                     title = _make_title(age=self.options_age,
@@ -1294,8 +1305,7 @@ class Efficient(QWidget):
                           plot_colors=self.plot_color,
                           age=self.options_age,
                           sex=self.options_sex,
-                          interva_rule=True,
-                          remove_undetermined=self.interva_remove_undetermined,
+                          interva_rule=self.interva_rule,
                           use_prop=self.results_use_prop)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
@@ -1577,8 +1587,8 @@ class Efficient(QWidget):
             alert.setText(
                 "The following causes with CSMF > 0.02 did not converge:\n\n"
                 f"{', '.join(failed_conv.to_list())}"
-                "\n\n (convergence can be achieved by increasing the number of "
-                "simulations)")
+                "\n\n (convergence can be achieved by increasing the "
+                "number of simulations)")
         alert.exec()
 
     def _check_empty_results(self):
@@ -1644,7 +1654,7 @@ class Efficient(QWidget):
 
 class ScrollMessageBox(QMessageBox):
 
-    def __init__(self, msg, l, *args, **kwargs):
+    def __init__(self, msg, msg_list, *args, **kwargs):
         QMessageBox.__init__(self, *args, **kwargs)
         self.setWindowTitle("openVA App: InSilicoVA message")
         scroll = QScrollArea(self)
@@ -1653,7 +1663,7 @@ class ScrollMessageBox(QMessageBox):
         scroll.setWidget(self.content)
         lay = QVBoxLayout(self.content)
         lay.addWidget(QLabel(msg, self))
-        for item in l:
+        for item in msg_list:
             lay.addWidget(QLabel(item, self))
-        self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount())
+        self.layout().addWidget(scroll)
         self.setStyleSheet("QScrollArea{min-width:500 px; min-height: 400px}")

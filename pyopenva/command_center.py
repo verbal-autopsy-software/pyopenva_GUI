@@ -901,9 +901,9 @@ class CommandCenter(QWidget):
             if n_valid < self.insilicova_limit:
                 msg = ("InSilicoVA is unavailable.  At least "
                        f"{self.insilicova_limit} deaths are needed for "
-                       "results.")
+                       "reliable results.")
                 if n_removed > 0:
-                    msg += (f"\n\nData check has removed {n_removed} deaths "
+                    msg += (f"\n\nData check removed {n_removed} deaths "
                             "because of missing data.")
                     if self.pycrossva_data["ID"].is_unique:
                         # msg += f"  IDs are:\n\n{id_removed_str}"
@@ -1063,6 +1063,21 @@ class CommandCenter(QWidget):
             self.btn_save_interva_log.setEnabled(True)
             self.btn_interva_options.setEnabled(True)
         else:
+            tmp_ins = InSilicoVA(self.pycrossva_data, run=False)
+            tmp_ins._remove_bad(is_numeric=False)
+            n_valid = tmp_ins.data.shape[0]
+            n_removed = self.pycrossva_data.shape[0] - n_valid
+            if self.pycrossva_data["ID"].is_unique:
+                index_removed = (~self.pycrossva_data.ID.isin(tmp_ins.data.ID))
+                id_removed = self.pycrossva_data.ID[index_removed].astype(
+                    "str")
+            del tmp_ins
+            msg = (f"Data check removed {n_removed} deaths "
+                   "because of missing data.")
+            if self.pycrossva_data["ID"].is_unique:
+                msg += "  IDs are listed below."
+            alert = ScrollMessageBox(msg, id_removed)
+            alert.exec()
             self.interva_log = None
             self.interva_results = None
             self.interva_tmp_dir = tempfile.TemporaryDirectory()
