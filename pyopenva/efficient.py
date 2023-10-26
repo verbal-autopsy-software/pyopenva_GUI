@@ -886,7 +886,8 @@ class Efficient(QWidget):
                 if self.pycrossva_data["ID"].is_unique:
                     msg += "  IDs are listed below."
                 msg += "\n(InterVA is available.)\n\n"
-                alert = ScrollMessageBox(msg, id_removed)
+                alert = ScrollMessageBox("openVA App: InSilicoVA message",
+                                         msg, id_removed)
                 alert.exec()
                 self.btn_insilicova_run.setEnabled(True)
                 self.btn_load_data.setEnabled(True)
@@ -1014,7 +1015,8 @@ class Efficient(QWidget):
                    "because of missing data.")
             if self.pycrossva_data["ID"].is_unique:
                 msg += "  IDs are listed below."
-            alert = ScrollMessageBox(msg, id_removed)
+            alert = ScrollMessageBox("openVA App: InterVA message",
+                                     msg, id_removed)
             alert.exec()
             self.btn_insilicova_run.setEnabled(True)
             self.btn_load_data.setEnabled(True)
@@ -1654,9 +1656,9 @@ class Efficient(QWidget):
 
 class ScrollMessageBox(QMessageBox):
 
-    def __init__(self, msg, msg_list, *args, **kwargs):
+    def __init__(self, title, msg, msg_list, *args, **kwargs):
         QMessageBox.__init__(self, *args, **kwargs)
-        self.setWindowTitle("openVA App: InSilicoVA message")
+        self.setWindowTitle(title)
         scroll = QScrollArea(self)
         scroll.setWidgetResizable(True)
         self.content = QWidget()

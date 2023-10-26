@@ -57,8 +57,14 @@ to assign causes of death to the example data set included with the openVA App.
    box below the start button.  If the original VA data file is in the expected format, then pyCrossVA will have no
    problems and report that "pyCrossVA finished.  All good!"; otherwise, pyCrossVA will produce a message that typically
    lists columns that are missing in your data that are needed to create the input file for InterVA (or InSilicoVA).
-   Next, the openVA App will perform the data consistency checks and the progress bar will begin marching forward as
-   InterVA assigns causes to the VA data (this should take a minute or two).
+   Next, the openVA App will perform the data consistency checks and if any VA records are removed from the data set
+   (due to missing data), then a new window will appear with a list of IDs for the records that have been removed.
+   (If no deaths are removed, then this window will not appear.)
+
+   .. image:: img/vignette_run_interva_data_check_msg.png
+
+   Once you click the "OK" button on the pop-up window the message will close and the progress bar will begin marching
+   forward as InterVA assigns causes to the VA data (this should take a minute or two).
 
    .. image:: img/vignette_running_interva.png
 
@@ -86,12 +92,13 @@ to assign causes of death to the example data set included with the openVA App.
 
 #. **Results window**: The "Results" window has three different panels: "Options", "Show Results", and "Save Results".
    The "Options" panel (at the top of the window) includes controls for choosing the number of CODs to include in
-   summaries of the cause-specific mortality fractions (or CSMFs).  Here, you can also remove `Undetermined` as from
-   the CSMF summaries and examine your results for different age groups (adults, children, and neonates), for females
-   or males, or a combination of the two demographic variables.  In the "Show Results" panel located in the middle of
-   the window, includes buttons for viewing the CSMF distribution as a table or a plot.  There is also a
-   "Show demographics" button which will display a table with the number of deaths by age and sex.  These results,
-   as well as the individual cause assignments, can be saved using the buttons in the bottom panel (under the label
+   summaries of the cause-specific mortality fractions (or CSMFs).  Here, you can also choose to display the CSMF
+   results as proportions (the default is to use percentages ranging from 0 to 100), and to examine your results for
+   different age groups (adults, children, and neonates), for females or males, or a combination of the two demographic
+   variables.  In the "Show Results" panel located in the middle of the window, includes buttons for viewing the CSMF
+   distribution as a table or a plot.  There is also a "Show demographics" button which will display a table with the
+   number of deaths by age and sex.  These results, as well as the individual cause assignments, can be saved using the
+   buttons in the bottom panel (under the label
    "Save Results").
 
    .. image:: img/vignette_interva_results.png
@@ -138,28 +145,13 @@ to assign causes of death to the example data set included with the openVA App.
 
    .. image:: img/vignette_interva_ntop_12.png
 
-   Next, note how the box next to the label "Remove 'Undetermined' as a COD" is NOT checked.  Thus, when we look at the
-   CSMF table, it is possible to have `Undetermined` included as a cause.  To see this, click on the "Show CSMF table"
-   button in the middle panel of the window.
+   Next, click on the "Show CSMF table" button in the middle panel of the window.
 
    .. image:: img/vignette_interva_show_tab.png
 
-   Note that the tenth row of the table is `Undetermined` which applies to about 3% of adult deaths.  Again, to close
-   this window, simply click on the "X" in the top right corner of the window with the CSMF table.
+   Again, to close this window, simply click on the "X" in the top right corner of the window with the CSMF table.
 
-   .. image:: img/vignette_interva_tab_with_undet.png
-
-#. **Remove Undetermined as a cause**:  Now, let's see another version of the results by clicking in the checkbox next
-   to the label "Remove 'Undetermined' as a COD".  Next, repeat the previous step to display the CSMF summary by
-   clicking on the "Show CSMF table" button in the "Show Results" panel.
-
-   .. image:: img/vignette_interva_check_no_undet.png
-
-   In the new window displaying the CSMF table, we now see a new cause, Assault, that is now included in the top 12
-   causes of the CSMF because `Undetermined` has been removed.  To close this window, simply click on the "X" in the
-   top right corner of the window with the CSMF table.
-
-   .. image:: img/vignette_interva_tab_no_undet.png
+   .. image:: img/vignette_interva_tab.png
 
 #. **Save the individual cause assignments with VA data**: In the final steps, we will merge the original VA data to
    the individual causes assigned by InterVA, and then save the results as a CSV file.  To do this, first click in the
@@ -176,7 +168,8 @@ to assign causes of death to the example data set included with the openVA App.
 
    .. image:: img/vignette_interva_indiv.png
 
-Congratulations!  You have finished the tour of the openVA App and are hopefully ready to begin analyzing your own
+
+|:tada:| Congratulations |:tada:|  You have finished the tour of the openVA App and are hopefully ready to begin analyzing your own
 data.
 
 ===================  ==================================  =================================  ================

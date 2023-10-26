@@ -12,14 +12,9 @@ Graphical User Interface for the openVA tool implemented in Python.
   + Mac: `python setup.py bdist_dmg`
 
 * Build docs with: `sphinx-build -b html docs/source/ pyopenva/docs -a`
+  + this is included in setup.py
 
-## To Do
+## Known Bugs
 
-* Set up splash screen?
-
-* Can we set up continuous integration service that builds executables/apps and
-adds them (for different OS's) to this site as releases?  Something like [https://github.com/ncipollo/release-action](https://github.com/ncipollo/release-action)
-
-* Unit tests for Qt: [pytest-qt](https://pytest-qt.readthedocs.io/en/latest/intro.html)
-
-
+* GUI crashes on Mac when trying to view help documentation
+  + cx_Freeze [Issue 933](https://github.com/marcelotduarte/cx_Freeze/issues/933)

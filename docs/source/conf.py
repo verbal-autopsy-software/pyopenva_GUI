@@ -9,12 +9,12 @@
 project = 'openVA App'
 copyright = '2023, openVA Team'
 author = 'openVA Team (Jason Thomas, Sherry Zhao, & Peter Choi)'
-release = '0.0.1'
+release = '1.1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+extensions = ['sphinxemoji.sphinxemoji',]
 
 templates_path = ['_templates']
 exclude_patterns = []

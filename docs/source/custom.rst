@@ -132,8 +132,8 @@ button will produce a message stating that "InSilicoVA is unavailable.  At least
 
 Controls for the InSilicoVA algorithm are located at the top of the "Algorithms" panel on the right side of the
 "Command Center" window.  There are four options which are accessible by clicking on the "Set Options" button.  Doing so
-will produce a new window (entitled "InSilicoVA Options") with the following controls: (1) Number of Iterations, (2) Automatically
-increase chain length until convergence, (3) Jump Scale, and (4) Set Seed.  
+will produce a new window (entitled "InSilicoVA Options") with the following controls: (1) Number of Iterations,
+(2) Automatically increase chain length until convergence, (3) Jump Scale, and (4) Set Seed.
 
 
 .. image:: img/cust_cc_insilicova_options.png
@@ -225,8 +225,8 @@ the beginning.  Once the results are ready, the message below the progress bar w
 and you will be able to save the log file from the data checks by clicking on the "Save log from data checks" button.
 
 Clicking on the "Results" button, which will take you to a new window where you will be able to access the cause
-of death results produced.  Clicking the "Go Back to User Mode Selection" button will return to the window where you can select the
-mode, and you can click the "Exit" button to close the openVA App.
+of death results produced.  Clicking the "Go Back to User Mode Selection" button will return to the window where you can
+select the mode, and you can click the "Exit" button to close the openVA App.
 
 
 .. _cust_step4:
@@ -235,26 +235,29 @@ Step 4: View and Save Results
 =============================
 
 In the "Results" window, there are several options for tailoring the COD results for both algorithms.  There is an
-"InSilicoVA" tab and an "InterVA" tab near the top of the window.  On either tab, you are also able to view the CSMF (cause-specific mortality fractions)
-results as a table or plot, as well as saving these results as a CSV or PDF file.  The age and sex distribution of the
-deaths can also be viewed as a table, and the individual cause assignments can be saved as a CSV file.
+"InSilicoVA" tab and an "InterVA" tab near the top of the window.  On either tab, you are also able to view the CSMF
+(cause-specific mortality fractions) results as a table or plot, as well as saving these results as a CSV or PDF file.
+The age and sex distribution of the deaths can also be viewed as a table, and the individual cause assignments can be
+saved as a CSV file.
 
 
 .. image:: img/cust_results.png
 
 
-Just above the algorithm tabs at the top of the "Results" window is a box where you can choose the number of causes to include
-when viewing or saving the COD results.  The default is "Include 5 causes in the results", but clicking the up arrow
-at the side of the box will add more causes to the summaries, while clicking the down arrow includes fewer causes.
+Just above the algorithm tabs at the top of the "Results" window is a box where you can choose the number of causes to
+include when viewing or saving the COD results.  The default is "Include 5 causes in the results", but clicking the up
+arrow at the side of the box will add more causes to the summaries, while clicking the down arrow includes fewer causes.
 
 When exploring results from the InterVA algorithm, it is also possible to exclude "Undetermined" as a cause of death
-by clicking the box next to the label "Remove 'Undetermined' as a COD".  Since InSilicoVA does not assign "Undetermined"
-as a COD, this option is not available when exploring InSilicoVA results.
+by unchecking the box next to the label "Count uncertain assignments as 'Undetermined'" -- simply check or uncheck this
+option by clicking on the box.  Since InSilicoVA does not assign "Undetermined" as a COD, this option is not available
+when exploring InSilicoVA results.
 
-Near the top of the window is a panel labeled "Select demographic groups", with options for limiting the results to a specific age or sex group.
-The default for both demographic indicators is to include "all deaths".  However, clicking on the arrows at the side
-of each box will present options to restrict the results to adults, children or neonates.  Similarly, the results
-can also be set to only include either females or males.  Combinations are also possible (e.g., female children).
+Near the top of the window is a panel labeled "Select demographic groups", with options for limiting the results to a
+specific age or sex group.  The default for both demographic indicators is to include "all deaths".  However, clicking
+on the arrows at the side of each box will present options to restrict the results to adults, children or neonates.
+Similarly, the results can also be set to only include either females or males.  Combinations are also possible (e.g.,
+female children).
 
 The middle panel of the Results window contains three buttons for viewing either the CSMF or a cross tabulation of
 the deaths by the sex and age categories (described just above).  Clicking on any of these three buttons will produce
@@ -274,16 +277,16 @@ label CSMF, the standard error is listed in the next column, and the final three
 plot for InSilicoVA.  On the other hand, InterVA does not include uncertainty, so there is only a single value for
 the CSMF for each cause of death.
 
-The bottom panel on the "InterVA" tab, labeled "Save Results", contains three buttons for saving the CSMF results as either a table (in CSV
-file) or a plot (in a PDF file), as well as a button for saving the individual cause assignments as a CSV file.  Again,
-the options for selecting a demographic group are reflected in the saved results.  For example, if the "male" and
-"neonate" options are selected, then the saved files will contain the CSMF for male neonates, or the individual causes
-assigned only to members of this group.  When saving the individual cause assignments, you can merge the original VA
-data (loaded into the app in a Step 2) with the CSV file by first checking the box labeled
-"Include VA data (with individual CODs)" and then clicking the "Save Individual Cause Assignments" button.  It is also possible
+The bottom panel on the "InterVA" tab, labeled "Save Results", contains three buttons for saving the CSMF results as
+either a table (in CSV file) or a plot (in a PDF file), as well as a button for saving the individual cause assignments
+as a CSV file.  Again, the options for selecting a demographic group are reflected in the saved results.  For example,
+if the "male" and "neonate" options are selected, then the saved files will contain the CSMF for male neonates, or the
+individual causes assigned only to members of this group.  When saving the individual cause assignments, you can merge
+the original VA data (loaded into the app in a Step 2) with the CSV file by first checking the box labeled "Include VA
+data (with individual CODs)" and then clicking the "Save Individual Cause Assignments" button.  It is also possible
 to include either the propensities (with InterVA) or the probabilities (with InSilicoVA) of each cause of death in the
-saved CSV file by checking the box next to the label "Include probability of top cause (with individual CODs)".  With InterVA,
-only the top 3 causes can be included.
+saved CSV file by checking the box next to the label "Include probability of top cause (with individual CODs)".  With
+InterVA, only the top 3 causes can be included.
 
 The bottom panel of the "InSilicoVA" tab includes a fourth button, "Save All Cause Assignments", which allows you to
 save the probability of each cause of death for all valid VA records.

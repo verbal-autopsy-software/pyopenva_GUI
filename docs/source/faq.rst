@@ -57,10 +57,22 @@ Frequently Asked Questions
     pyCrossVA also allows users to specify the ID column.
 
 **The openVA App tells me that some deaths have failed the data checks.  How do I know which deaths failed?**
-    The log file from the data checks includes the ID (or row number) of the VA records that fail the data
-    checks.  These can be saved by clicking the "Save log file from data checks" button located in the
-    "openVA App: InterVA" or "openVA App: InSilicoVA" in the One-Click Wizard mode, or in the "the "Command Center"
-    window in the Customizable mode.
+    After you click one of the buttons to run an algorithm, a window will appear with the IDs of the records
+    that failed the data checks.  Also, the log file from the data checks includes the ID (or row number) of the VA
+    records that fail the data checks.  These can be saved by clicking the "Save log file from data checks" button
+    located in the "openVA App: InterVA" or "openVA App: InSilicoVA" in the One-Click Wizard mode, or in the "the
+    "Command Center" window in the Customizable mode.
+
+.. _faq_undetermined:
+
+**What does the option "Count uncertain assignments as 'Undetermined'" actually do?**
+    InterVA calculates propensity values that indicate how likely each cause of death is for each VA record.  If
+    the largest propensity value does not exceed a threshold, then InterVA will assign "indeterminate" (or
+    "undetermined") as the cause of death.  There are similar steps for determining if a second and third most likely
+    cause should be assigned (or if the remaining propensity should be assigned to "indeterminate").  The openVA App
+    follows these steps when the "Count uncertain assignments as'Undetermined'" option is selected, it the CSMF results
+    can include the fraction of deaths that have an "Undetermined" cause.  When this option is not chosen, the openVA
+    App will not use the InterVA thresholds, and the CSMF results **will not** include the "Undetermined" category.
 
 
 ===================  =======================================  =================================  ==========================

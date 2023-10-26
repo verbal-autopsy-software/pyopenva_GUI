@@ -237,9 +237,6 @@ Just below is a label "Select demographic groups", with options for limiting the
 The default for both demographic indicators is to include "all deaths".  However, clicking on the arrows at the side
 of each box will present options to restrict the results to adults, children or neonates.  Similarly, the results
 can also be set to only include either females or males.  Combinations are also possible (e.g., female children).
-When exploring results from the InterVA algorithm, it is also possible to exclude "Undetermined" as a cause of death
-by clicking the box next to the label "Remove 'Undetermined' as a COD".  Since InSilicoVA does not assign "Undetermined"
-as a COD, this option is not available when exploring InSilicoVA results.
 
 The middle panel of the Results window contains three buttons for viewing either the CSMF or a cross tabulation of
 the deaths by the sex and age categories (described just above).  Clicking on any of these three buttons will produce

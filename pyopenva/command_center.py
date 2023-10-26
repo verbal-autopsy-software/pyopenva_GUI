@@ -911,7 +911,8 @@ class CommandCenter(QWidget):
                 msg += "\n(InterVA is available.)\n\n"
                 # alert = QMessageBox()
                 # alert.setText(msg)
-                alert = ScrollMessageBox(msg, id_removed)
+                alert = ScrollMessageBox("openVA App: InSilicoVA message",
+                                         msg, id_removed)
                 alert.exec()
                 self.btn_insilicova_options.setEnabled(True)
                 self.btn_insilicova_run.setEnabled(True)
@@ -1076,7 +1077,8 @@ class CommandCenter(QWidget):
                    "because of missing data.")
             if self.pycrossva_data["ID"].is_unique:
                 msg += "  IDs are listed below."
-            alert = ScrollMessageBox(msg, id_removed)
+            alert = ScrollMessageBox("openVA App: InterVA message",
+                                     msg, id_removed)
             alert.exec()
             self.interva_log = None
             self.interva_results = None
@@ -1412,16 +1414,16 @@ class PyCrossVADialog(QDialog):
 
 class ScrollMessageBox(QMessageBox):
 
-    def __init__(self, msg, l, *args, **kwargs):
+    def __init__(self, title, msg, msg_list, *args, **kwargs):
         QMessageBox.__init__(self, *args, **kwargs)
-        self.setWindowTitle("openVA App: InSilicoVA message")
+        self.setWindowTitle(title)
         scroll = QScrollArea(self)
         scroll.setWidgetResizable(True)
         self.content = QWidget()
         scroll.setWidget(self.content)
         lay = QVBoxLayout(self.content)
         lay.addWidget(QLabel(msg, self))
-        for item in l:
+        for item in msg_list:
             lay.addWidget(QLabel(item, self))
-        self.layout().addWidget(scroll, 0, 0, 1, self.layout().columnCount())
+        self.layout().addWidget(scroll)
         self.setStyleSheet("QScrollArea{min-width:500 px; min-height: 400px}")
