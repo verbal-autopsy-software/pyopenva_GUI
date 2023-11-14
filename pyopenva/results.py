@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QGroupBox,
                              QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 from pyopenva.output import (DemTableDialog, PlotDialog, TableDialog,
                              save_plot, _insilicova_subpop, _make_title)
+from pyopenva.make_variable import MakeVariable
 import os
 import shutil
 from pandas import DataFrame
@@ -259,7 +260,7 @@ class Results(QWidget):
     #     self.smartva_panel.setLayout(layout)
 
     def create_demographics_gbox(self):
-        gbox_dem = QGroupBox("Select demographic groups")
+        gbox_dem = QGroupBox("Select groups")
         hbox_demographics = QHBoxLayout()
         age_option_set = ["all deaths",
                           "adult",
@@ -288,8 +289,27 @@ class Results(QWidget):
         hbox_demographics.addWidget(self.options_combo_age)
         hbox_demographics.addWidget(label_sex)
         hbox_demographics.addWidget(self.options_combo_sex)
-        gbox_dem.setLayout(hbox_demographics)
+
+        hbox_strat_var = QHBoxLayout()
+        label_select_var = QLabel("Stratify by\nvariable:")
+        label_select_var.setMaximumWidth(75)
+        combo_select_var = QComboBox()
+        combo_select_var.addItems(["none", "region", "year"])
+        btn_make_var = QPushButton("Make New Variable")
+        btn_make_var.clicked.connect(self.show_make_var_dialog)
+        hbox_strat_var.addWidget(label_select_var)
+        hbox_strat_var.addWidget(combo_select_var)
+        hbox_strat_var.addWidget(btn_make_var)
+
+        vbox_groups = QVBoxLayout()
+        vbox_groups.addLayout(hbox_demographics)
+        vbox_groups.addLayout(hbox_strat_var)
+        gbox_dem.setLayout(vbox_groups)
         return gbox_dem
+
+    def show_make_var_dialog(self):
+        make_var_dialog = MakeVariable()
+        make_var_dialog.exec()
 
     def interva_plot(self):
         if self.interva_results is None:
