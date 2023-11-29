@@ -311,7 +311,7 @@ class WindowManager(QMainWindow):
 
     # def update_smartva_results(self, new_results):
     #     self.results.update_smartva(new_results)
-    
+
     def load_example_data_efficient(self):
         path = self.find_data_file("data/who151_odk_export.csv")
         self.efficient.data = read_csv(path)
@@ -346,7 +346,7 @@ class WindowManager(QMainWindow):
         self.efficient.interva_pbar.setValue(0)
         self.efficient.pycrossva_data = None
         self.show_efficient()
-    
+
     def load_example_data_command_center(self):
         path = self.find_data_file("data/who151_odk_export.csv")
         self.command_center.load_window = LoadData(input_fname=path)
@@ -392,11 +392,13 @@ class WindowManager(QMainWindow):
     @staticmethod
     def find_data_file(file_name):
         if getattr(sys, "frozen", False):
-            # The application is frozen
-            datadir = os.path.dirname(sys.executable)
+            if sys.platform == "darwin":
+                datadir = os.path.join(
+                    os.path.dirname(sys.executable),
+                    "lib", "pyopenva")
+            else:
+                datadir = os.path.dirname(sys.executable)
         else:
-            # The application is not frozen
-            # Change this bit to match where you store your data files:
             datadir = os.path.dirname(__file__)
         return os.path.join(datadir, file_name)
 
@@ -422,14 +424,6 @@ class WindowManager(QMainWindow):
                      f"License: {__license__}\n" +
                      f"Website: {__url__}")
         info.exec()
-
-    @staticmethod
-    def find_data_file(filename):
-        if getattr(sys, "frozen", False):
-            datadir = os.path.dirname(sys.executable)
-        else:
-            datadir = os.path.dirname(__file__)
-        return os.path.join(datadir, filename)
 
     def show_help(self):
         # help_path = os.path.join(os.path.dirname(__file__),
