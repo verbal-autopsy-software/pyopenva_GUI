@@ -16,5 +16,7 @@ Graphical User Interface for the openVA tool implemented in Python.
 
 ## Known Bugs
 
-* GUI crashes on Mac when trying to view help documentation
-  + cx_Freeze [Issue 933](https://github.com/marcelotduarte/cx_Freeze/issues/933)
+* Fixed:
+  + GUI crashes on Mac when trying to view help documentation
+    - cx_Freeze [Issue 933](https://github.com/marcelotduarte/cx_Freeze/issues/933)
+    - fixed with cx_Freeze version 6.15.11

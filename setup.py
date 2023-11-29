@@ -37,6 +37,7 @@ base = "Win32GUI" if sys.platform == "win32" else None
 build_exe_options = {
     "excludes": ["tkinter"],
     "include_files": include_files,
+    "bin_excludes": ["libpq.5.dylib"],
     # "zip_include_packages": ["PyQt5"],
 }
 
