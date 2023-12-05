@@ -8,6 +8,7 @@ This module creates user interface for the app.
 
 import os
 import sys
+import re
 from PyQt5.QtWidgets import (QAction, QApplication, QFileDialog,
                              QMainWindow, QMessageBox, QStackedLayout, QWidget)
 from PyQt5.QtCore import Qt, QUrl
@@ -315,6 +316,8 @@ class WindowManager(QMainWindow):
     def load_example_data_efficient(self):
         path = self.find_data_file("data/who151_odk_export.csv")
         self.efficient.data = read_csv(path)
+        self.efficient.data.rename(lambda x: re.split("\.|-", x)[-1],
+                         axis="columns", inplace=True)
         f_name = "example data set"
         n_records = self.efficient.data.shape[0]
         self.efficient.label_data.setAlignment(Qt.AlignLeft)

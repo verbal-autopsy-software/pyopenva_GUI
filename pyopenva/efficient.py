@@ -10,6 +10,7 @@ import os
 import sys
 from contextlib import contextmanager
 from io import StringIO
+import re
 import shutil
 import tempfile
 from interva import utils
@@ -561,6 +562,8 @@ class Efficient(QWidget):
         if path != ("", ""):
             try:
                 self.data = read_csv(path[0])
+                self.data.rename(lambda x: re.split("\.|-", x)[-1],
+                                 axis="columns", inplace=True)
                 f_name = path[0].split("/")[-1]
                 n_records = self.data.shape[0]
                 self.label_data.setAlignment(Qt.AlignLeft)

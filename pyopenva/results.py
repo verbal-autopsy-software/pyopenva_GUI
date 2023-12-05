@@ -308,8 +308,15 @@ class Results(QWidget):
         return gbox_dem
 
     def show_make_var_dialog(self):
-        make_var_dialog = MakeVariable()
-        make_var_dialog.exec()
+        if self.original_data is None:
+            alert = QMessageBox()
+            alert.setWindowTitle("openVA App")
+            alert.setIcon(QMessageBox.Warning)
+            alert.setText("No data have been loaded\n(cannot select variable)")
+            alert.exec()
+        else:
+            make_var_dialog = MakeVariable(self)
+            make_var_dialog.exec()
 
     def interva_plot(self):
         if self.interva_results is None:

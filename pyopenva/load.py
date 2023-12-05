@@ -9,6 +9,7 @@ This module creates a window for loading a csv file.
 from PyQt5.QtWidgets import (QFileDialog, QMessageBox, QWidget)
 import csv
 from pandas import read_csv
+import re
 
 
 class LoadData(QWidget):
@@ -35,6 +36,7 @@ class LoadData(QWidget):
                     for row in csvreader:
                         rows.append(row)
                     data += header + rows
+                header = [[re.split("\.|-", i)[-1] for i in header[0]]]
                 self.header = header
                 self.data = data
             except UnicodeDecodeError as exc:
