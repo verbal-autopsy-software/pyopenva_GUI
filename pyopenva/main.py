@@ -392,12 +392,7 @@ class WindowManager(QMainWindow):
     @staticmethod
     def find_data_file(file_name):
         if getattr(sys, "frozen", False):
-            if sys.platform == "darwin":
-                datadir = os.path.join(
-                    os.path.dirname(sys.executable),
-                    "lib", "pyopenva")
-            else:
-                datadir = os.path.dirname(sys.executable)
+            datadir = os.path.dirname(sys.executable)
         else:
             datadir = os.path.dirname(__file__)
         return os.path.join(datadir, file_name)
