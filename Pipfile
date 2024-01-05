@@ -13,5 +13,5 @@ insilicova = {git = "https://github.com/verbal-autopsy-software/pyinsilicova"}
 matplotlib = "==3.6.3"
 sphinx  = "*"
 pandas = "==2.0.3"
-sphinxemoji = "*"
+sphinxemoji = ">=6.15.12"
 cx-freeze = "*"
