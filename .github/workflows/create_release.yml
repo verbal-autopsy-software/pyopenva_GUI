@@ -1,0 +1,63 @@
+# This workflow will install Python dependencies, run cx-Freeze to create an installer file, then add it as a release.
+name: Create release
+permissions:
+  contents: write
+
+on: [workflow_dispatch]
+#  push:
+#    branches: [ "main" ]
+#  pull_request:
+#    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        python-version: ["3.11"]
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -r requirements.txt
+    - name: Build Windows installer
+      if: runner.os == 'Windows'
+      run: python setup.py bdist_msi
+#    - name: Build Mac installer
+#      if: runner.os != 'Windows'
+#      run: python setup.py bdist_dmg
+    - name: Upload Windows msi
+      uses: actions/upload-artifact@v4
+      if: runner.os == 'Windows'
+      with:
+          name: openva-gui-windows.msi
+          path: ./build/*.msi
+#    - name: Upload MacOS dmg
+#      uses: actions/upload-artifact@v4
+#      if: runner.os != 'Windows'
+#      with:
+#          name: openva-gui-macos.dmg
+#          path: ./build/*.dmg
+  release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        python-version: ["3.11"]
+    steps:
+      - run: |
+          gh release create v1.1 openva-gui-windows.msi
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+        shell: bash
+        name: Creates a release in GitHub and uploads attachments
