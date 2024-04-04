@@ -7,11 +7,14 @@ name = "pypi"
 pyqt5 = "*"
 pyqtwebengine = "*"
 pycrossva = ">=0.97"
-interva = "*"
-vacheck = "==0.0.2"
-insilicova = {git = "https://github.com/verbal-autopsy-software/pyinsilicova"}
+interva = ">=0.0.7"
+vacheck = ">=0.0.3"
+insilicova = "*"
 matplotlib = "==3.6.3"
 sphinx  = "*"
 pandas = "==2.0.3"
 sphinxemoji = "*"
-cx-freeze = "*"
+cx-freeze = ">=6.5.12"
+
+[requires]
+python_version = "3.11"
