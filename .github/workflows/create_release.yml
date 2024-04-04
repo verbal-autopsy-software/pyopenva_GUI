@@ -40,7 +40,7 @@ jobs:
       if: runner.os == 'Windows'
       with:
           name: openva-gui-windows.msi
-          path: ./build/*.msi
+          path: ./dist/*.msi
 #    - name: Upload MacOS dmg
 #      uses: actions/upload-artifact@v4
 #      if: runner.os != 'Windows'
