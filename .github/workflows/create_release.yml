@@ -49,17 +49,10 @@ jobs:
 #      with:
 #          name: openva-gui-macos.dmg
 #          path: ./build/*.dmg
-  release:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest]
-        python-version: ["3.11"]
-    steps:
-      - run: |
+    - name: Creates a release in GitHub and uploads attachments
+      run: |
+          dir
           gh release create v1.1 pyopenva-1.1-win64.msi.zip
-        env:
+      env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        shell: bash
-        name: Creates a release in GitHub and uploads attachments
+      shell: bash
