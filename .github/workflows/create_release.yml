@@ -52,7 +52,7 @@ jobs:
     - name: Creates a release in GitHub and uploads attachments
       run: |
           dir
-          gh release create v1.1 pyopenva-1.1-win64.msi.zip
+          gh release create v1.1 ./dist/pyopenva-1.1-win64.msi
       env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
       shell: bash
