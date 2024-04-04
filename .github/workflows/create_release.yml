@@ -31,7 +31,9 @@ jobs:
         python -m pip install -r requirements.txt
     - name: Build Windows installer
       if: runner.os == 'Windows'
-      run: python setup.py bdist_msi
+      run: |
+        python setup.py bdist_msi
+        dir dist/
 #    - name: Build Mac installer
 #      if: runner.os != 'Windows'
 #      run: python setup.py bdist_dmg
@@ -39,7 +41,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: runner.os == 'Windows'
       with:
-          name: openva-gui-windows.msi
+          name: pyopenva-1.1-win64.msi
           path: ./dist/*.msi
 #    - name: Upload MacOS dmg
 #      uses: actions/upload-artifact@v4
@@ -56,7 +58,7 @@ jobs:
         python-version: ["3.11"]
     steps:
       - run: |
-          gh release create v1.1 openva-gui-windows.msi
+          gh release create v1.1 pyopenva-1.1-win64.msi
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
         shell: bash
