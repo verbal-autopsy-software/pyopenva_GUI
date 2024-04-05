@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-latest, macos-latest]
         python-version: ["3.11"]
 
     steps:
@@ -31,28 +31,36 @@ jobs:
         python -m pip install -r requirements.txt
     - name: Build Windows installer
       if: runner.os == 'Windows'
-      run: |
-        python setup.py bdist_msi
-        dir dist/
-#    - name: Build Mac installer
-#      if: runner.os != 'Windows'
-#      run: python setup.py bdist_dmg
+      run: python setup.py bdist_msi
+    - name: Build Mac installer
+      if: runner.os == 'macOS'
+      run: python setup.py bdist_dmg
     - name: Upload Windows msi
       uses: actions/upload-artifact@v4
       if: runner.os == 'Windows'
       with:
           name: pyopenva-1.1-win64.msi
           path: ./dist/*.msi
-#    - name: Upload MacOS dmg
-#      uses: actions/upload-artifact@v4
-#      if: runner.os != 'Windows'
-#      with:
-#          name: openva-gui-macos.dmg
-#          path: ./build/*.dmg
-    - name: Creates a release in GitHub and uploads attachments
-      run: |
-          dir
-          gh release create v1.1 ./dist/pyopenva-1.1-win64.msi
-      env:
-          GITHUB_TOKEN: ${{ github.TOKEN }}
-      shell: bash
+    - name: Upload MacOS dmg
+      uses: actions/upload-artifact@v4
+      if: runner.os == 'macOS'
+      with:
+          name: pyopenVA.dmg
+          path: ./build/*.dmg
+  create_release:
+    needs: [build]
+    environment: pypi
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pyopenva*
+          path: dist
+          merge-multiple: true
+      - name: Create release in GitHub and uploads attachments
+        run: gh release create v1.1 ./dist/pyopenva-1.1-win64.msi ./dist/pyopenVA.dmg
+        env:
+            GITHUB_TOKEN: ${{ github.TOKEN }}
+        shell: bash
