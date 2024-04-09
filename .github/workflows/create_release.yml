@@ -30,6 +30,11 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install pipenv
         python -m pipenv install --ignore-pipfile
+    - name: Install dependencies of macOS
+      if: runner.os == 'macOS'
+      run: |
+        brew update
+        brew install libiodbc libpq
     - name: Build Windows installer
       if: runner.os == 'Windows'
       run: pipenv run python setup.py bdist_msi
