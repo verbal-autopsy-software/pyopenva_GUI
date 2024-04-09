@@ -28,13 +28,14 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install -r requirements.txt
+        python -m pip install pipenv
+        python -m pipenv install --ignore-pipfile
     - name: Build Windows installer
       if: runner.os == 'Windows'
-      run: python setup.py bdist_msi
+      run: pipenv run python setup.py bdist_msi
     - name: Build Mac installer
       if: runner.os == 'macOS'
-      run: python setup.py bdist_dmg
+      run: pipenv run python setup.py bdist_dmg
     - name: Upload Windows msi
       uses: actions/upload-artifact@v4
       if: runner.os == 'Windows'
