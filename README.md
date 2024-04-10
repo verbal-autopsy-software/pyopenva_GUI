@@ -1,4 +1,4 @@
-# pyopenVA_GUI
+# pyopenVA GUI
 
 Graphical User Interface for the openVA tool implemented in Python.  
 
@@ -9,14 +9,14 @@ Graphical User Interface for the openVA tool implemented in Python.
 
 # Downloading and Installing the GUI
 
-Installer files are available for Windows (msi) and macOS (dmg) on the [Releases](ttps://github.com/verbal-autopsy-software/pyopenva_GUI/releases) page.
+Installer files are available for Windows (msi) and macOS (dmg) on the [Releases](https://github.com/verbal-autopsy-software/pyopenva_GUI/releases) page.
 
-###### Additonal steps for macOS
+#### Additonal steps for macOS
 
-Since we are not official Apple developers (and the GUI is not available in the App store), macOS users need need the following steps
-to run the GUI (from the dmg installer file)
+Since we are not official Apple developers (and the GUI is not available in the App store), macOS users need the following steps
+to run the GUI (from the downloaded dmg installer file)
 
-* In a Finder window, double-click the pyopenVA.dmg file, which should mount the image and show the pyopeVA.app icon (do NOT double click the pyopenVA.app icon)
+* In a Finder window, double-click the pyopenVA.dmg file, which should mount the image and show the pyopeVA.app icon -- do NOT double click the pyopenVA.app icon
 
 * Open a Terminal: Applications &rarr; Utilities &rarr; Terminal.app
 
@@ -31,7 +31,7 @@ to run the GUI (from the dmg installer file)
   `xattr -cr /path/to/pyopenVA.app`
 
 
-## Build Details
+# Build Details
 
 * Developing with PyQt5, building with [cx_Freeze](https://cx-freeze.readthedocs.io/en/latest/index.html)
 
@@ -43,7 +43,7 @@ to run the GUI (from the dmg installer file)
 * Build docs with: `sphinx-build -b html docs/source/ pyopenva/docs -a`
   + this is included in setup.py
 
-## Known Bugs
+# Known Bugs
 
 * Fixed:
   + GUI crashes on Mac when trying to view help documentation
