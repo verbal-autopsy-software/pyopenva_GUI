@@ -28,7 +28,7 @@ to run the GUI (from the downloaded dmg installer file)
 
 * Run the following command in the terminal:
 
-  `xattr -cr /path/to/pyopenVA.app`
+  `open /path/to/pyopenVA.app`
 
 
 # Build Details
