@@ -1,8 +1,37 @@
 # pyopenVA_GUI
 
-Graphical User Interface for the openVA tool implemented in Python.
+Graphical User Interface for the openVA tool implemented in Python.  
 
-## Details
+* assigns causes of death to data collected with the 2016 WHO VA instrument
+
+* algorithm options: InSilicoVA & InterVA5
+
+
+# Downloading and Installing the GUI
+
+Installer files are available for Windows (msi) and macOS (dmg) on the [Releases](ttps://github.com/verbal-autopsy-software/pyopenva_GUI/releases) page.
+
+###### Additonal steps for macOS
+
+Since we are not official Apple developers (and the GUI is not available in the App store), macOS users need need the following steps
+to run the GUI (from the dmg installer file)
+
+* In a Finder window, double-click the pyopenVA.dmg file, which should mount the image and show the pyopeVA.app icon (do NOT double click the pyopenVA.app icon)
+
+* Open a Terminal: Applications &rarr; Utilities &rarr; Terminal.app
+
+* Run the following command in the terminal:
+  
+  `xattr -cr /path/to/pyopenVA.app`
+  
+  (the path is probably /Volumes/pyopenVA/pyopenVA.app)
+
+* Run the following command in the terminal:
+
+  `xattr -cr /path/to/pyopenVA.app`
+
+
+## Build Details
 
 * Developing with PyQt5, building with [cx_Freeze](https://cx-freeze.readthedocs.io/en/latest/index.html)
 
