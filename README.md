@@ -1,4 +1,4 @@
-# pyopenVA GUI
+# pyOpenVA GUI
 
 Graphical User Interface for the openVA tool implemented in Python.  
 
@@ -42,6 +42,16 @@ to run the GUI (from the downloaded dmg installer file)
 
 * Build docs with: `sphinx-build -b html docs/source/ pyopenva/docs -a`
   + this is included in setup.py
+
+
+# Acknowledgements & Notes
+
+* This application is a reimplementation of the **R** package [**openVA: Automated Method for Verbal Autopsy**](https://cran.r-project.org/package=openVA) by Zehang Richard Li, Jason Thomas, Tyler H. McCormick, and Samuel J. Clark.
+
+* The purpose of this reimplementation is to make the openVA tools: 1) easy to install, 2) much faster, and 3) much easier to operate using a point-and-click graphical user interface.
+
+* [Jason Thomas](https://ipr.osu.edu/people/thomas.3912) is mostly responsible for the code in this package, with help from Sherry Zhao and Eungang Choi. Samual J. Clark, with input from Robert Mswia and Martin Bratchi, created the idea for this application and oversaw its creation. The CRVS Improvemenet program at [Vital Strategies](https://www.vitalstrategies.org) supported the creation of this application.
+
 
 # Known Bugs
 
