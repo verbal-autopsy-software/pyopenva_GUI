@@ -45,7 +45,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: runner.os == 'Windows'
       with:
-          name: pyopenva-1.1-win64.msi
+          name: pyopenva-1.2-win64.msi
           path: ./dist/*.msi
     - name: Upload MacOS dmg
       uses: actions/upload-artifact@v4
@@ -68,4 +68,4 @@ jobs:
       - name: Create release in GitHub and uploads attachments
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create v1.1 ./dist/pyopenva-1.1-win64.msi ./dist/pyopenVA.dmg
+        run: gh release create v1.2 ./dist/pyopenva-1.2-win64.msi ./dist/pyopenVA.dmg

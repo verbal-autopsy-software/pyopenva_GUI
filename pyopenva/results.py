@@ -32,14 +32,17 @@ class Results(QWidget):
         self.insilicova_include_va_data = False
         self.insilicova_results = None
         self.insilicova_include_probs = True
+        self.insilicova_options_sex = "all deaths"
+        self.insilicova_options_age = "all deaths"
+
         self.interva_include_va_data = False
         self.interva_results = None
         self.interva_include_probs = True
         self.interva_rule = True
         self.results_use_prop = False
         self.interva_tmp_dir = None
-        self.options_sex = "all deaths"
-        self.options_age = "all deaths"
+        self.interva_options_sex = "all deaths"
+        self.interva_options_age = "all deaths"
         # self.smartva_results = None
         self.n_top_causes = 5
         self.plot_color = "Greys"
@@ -88,7 +91,7 @@ class Results(QWidget):
     # TODO: add option to group causes into aggregated categories?
     def create_insilicova_panel(self):
 
-        gbox_dem = self.create_demographics_gbox()
+        gbox_dem = self.create_insilicova_demographics_gbox()
 
         gbox_show = QGroupBox("Show Results")
         hbox_show = QHBoxLayout()
@@ -164,7 +167,7 @@ class Results(QWidget):
             "Count uncertain assignments as 'Undetermined'")
         self.chbox_interva_rule.setChecked(self.interva_rule)
         self.chbox_interva_rule.toggled.connect(self.set_interva_rule)
-        gbox_dem = self.create_demographics_gbox()
+        gbox_dem = self.create_interva_demographics_gbox()
         gbox_show = QGroupBox("Show Results")
         hbox_show = QHBoxLayout()
         self.btn_interva_table = QPushButton("Show \n CSMF Table")
@@ -258,7 +261,7 @@ class Results(QWidget):
     #     self.smartva_panel = QWidget()
     #     self.smartva_panel.setLayout(layout)
 
-    def create_demographics_gbox(self):
+    def create_insilicova_demographics_gbox(self):
         gbox_dem = QGroupBox("Select demographic groups")
         hbox_demographics = QHBoxLayout()
         age_option_set = ["all deaths",
@@ -267,27 +270,60 @@ class Results(QWidget):
                           "neonate"]
         label_age = QLabel("age:")
         label_age.setMaximumWidth(30)
-        self.options_combo_age = QComboBox()
-        self.options_combo_age.addItems(age_option_set)
-        self.options_combo_age.setCurrentIndex(
-            age_option_set.index(self.options_age))
-        self.options_combo_age.currentTextChanged.connect(
-            self.set_options_age)
+        self.insilicova_options_combo_age = QComboBox()
+        self.insilicova_options_combo_age.addItems(age_option_set)
+        self.insilicova_options_combo_age.setCurrentIndex(
+            age_option_set.index(self.insilicova_options_age))
+        self.insilicova_options_combo_age.currentTextChanged.connect(
+            self.set_insilicova_options_age)
         sex_option_set = ["all deaths",
                           "female",
                           "male"]
         label_sex = QLabel("sex:")
         label_sex.setMaximumWidth(30)
-        self.options_combo_sex = QComboBox()
-        self.options_combo_sex.addItems(sex_option_set)
-        self.options_combo_sex.setCurrentIndex(
-            sex_option_set.index(self.options_sex))
-        self.options_combo_sex.currentTextChanged.connect(
-            self.set_options_sex)
+        self.insilicova_options_combo_sex = QComboBox()
+        self.insilicova_options_combo_sex.addItems(sex_option_set)
+        self.insilicova_options_combo_sex.setCurrentIndex(
+            sex_option_set.index(self.insilicova_options_sex))
+        self.insilicova_options_combo_sex.currentTextChanged.connect(
+            self.set_insilicova_options_sex)
         hbox_demographics.addWidget(label_age)
-        hbox_demographics.addWidget(self.options_combo_age)
+        hbox_demographics.addWidget(self.insilicova_options_combo_age)
         hbox_demographics.addWidget(label_sex)
-        hbox_demographics.addWidget(self.options_combo_sex)
+        hbox_demographics.addWidget(self.insilicova_options_combo_sex)
+        gbox_dem.setLayout(hbox_demographics)
+        return gbox_dem
+
+    def create_interva_demographics_gbox(self):
+        gbox_dem = QGroupBox("Select demographic groups")
+        hbox_demographics = QHBoxLayout()
+        age_option_set = ["all deaths",
+                          "adult",
+                          "child",
+                          "neonate"]
+        label_age = QLabel("age:")
+        label_age.setMaximumWidth(30)
+        self.interva_options_combo_age = QComboBox()
+        self.interva_options_combo_age.addItems(age_option_set)
+        self.interva_options_combo_age.setCurrentIndex(
+            age_option_set.index(self.interva_options_age))
+        self.interva_options_combo_age.currentTextChanged.connect(
+            self.set_interva_options_age)
+        sex_option_set = ["all deaths",
+                          "female",
+                          "male"]
+        label_sex = QLabel("sex:")
+        label_sex.setMaximumWidth(30)
+        self.interva_options_combo_sex = QComboBox()
+        self.interva_options_combo_sex.addItems(sex_option_set)
+        self.interva_options_combo_sex.setCurrentIndex(
+            sex_option_set.index(self.interva_options_sex))
+        self.interva_options_combo_sex.currentTextChanged.connect(
+            self.set_interva_options_sex)
+        hbox_demographics.addWidget(label_age)
+        hbox_demographics.addWidget(self.interva_options_combo_age)
+        hbox_demographics.addWidget(label_sex)
+        hbox_demographics.addWidget(self.interva_options_combo_sex)
         gbox_dem.setLayout(hbox_demographics)
         return gbox_dem
 
@@ -305,7 +341,7 @@ class Results(QWidget):
                 alert.setWindowTitle("openVA App")
                 alert.setText(
                     "There are no VA records for the selected group:\n"
-                    f"age: {self.options_age},   sex: {self.options_sex}")
+                    f"age: {self.interva_options_age},   sex: {self.interva_options_sex}")
                 alert.exec()
             else:
                 self.interva_plot_dialog = PlotDialog(
@@ -313,8 +349,8 @@ class Results(QWidget):
                     algorithm="interva",
                     top=self.n_top_causes,
                     colors=self.plot_color,
-                    age=self.options_age,
-                    sex=self.options_sex,
+                    age=self.interva_options_age,
+                    sex=self.interva_options_sex,
                     interva_rule=self.interva_rule,
                     use_prop=self.results_use_prop)
                 self.interva_plot_dialog.exec()
@@ -333,15 +369,15 @@ class Results(QWidget):
                 alert.setWindowTitle("openVA App")
                 alert.setText(
                     "There are no VA records for the selected group:\n"
-                    f"age: {self.options_age},   sex: {self.options_sex}")
+                    f"age: {self.interva_options_age},   sex: {self.interva_options_sex}")
                 alert.exec()
             else:
                 self.interva_table = TableDialog(
                     results=self.interva_results,
                     parent=self,
                     top=self.n_top_causes,
-                    age=self.options_age,
-                    sex=self.options_sex,
+                    age=self.interva_options_age,
+                    sex=self.interva_options_sex,
                     interva_rule=self.interva_rule,
                     use_prop=self.results_use_prop)
                 self.interva_table.resize(self.interva_table.table.width(),
@@ -365,14 +401,14 @@ class Results(QWidget):
                 alert.setWindowTitle("openVA App")
                 alert.setText(
                     "There are no VA records for the selected group:\n"
-                    f"age: {self.options_age},   sex: {self.options_sex}")
+                    f"age: {self.interva_options_age},   sex: {self.interva_options_sex}")
                 alert.exec()
             else:
-                age = self.options_age
-                if self.options_age == "all deaths":
+                age = self.interva_options_age
+                if self.interva_options_age == "all deaths":
                     age = None
-                sex = self.options_sex
-                if self.options_sex == "all deaths":
+                sex = self.interva_options_sex
+                if self.interva_options_sex == "all deaths":
                     sex = None
                 csmf = utils.csmf(self.interva_results,
                                   top=self.n_top_causes,
@@ -382,8 +418,8 @@ class Results(QWidget):
                 csmf.sort_values(ascending=False, inplace=True)
                 csmf_df = csmf.reset_index()[0:self.n_top_causes]
                 csmf_df.iloc[:, 1] *= prop_scale
-                title = _make_title(age=self.options_age,
-                                    sex=self.options_sex)
+                title = _make_title(age=self.interva_options_age,
+                                    sex=self.interva_options_sex)
                 csmf_df.rename(columns={"index": "Cause",
                                         0: title},
                                inplace=True)
@@ -434,7 +470,7 @@ class Results(QWidget):
                 alert.setWindowTitle("openVA App")
                 alert.setText(
                     "There are no VA records for the selected group:\n"
-                    f"age: {self.options_age},   sex: {self.options_sex}")
+                    f"age: {self.interva_options_age},   sex: {self.interva_options_sex}")
                 alert.exec()
             else:
                 # results_file_name = "interva5_csmf.pdf"
@@ -453,8 +489,8 @@ class Results(QWidget):
                             top=self.n_top_causes,
                             file_name=path[0],
                             plot_colors=self.plot_color,
-                            age=self.options_age,
-                            sex=self.options_sex,
+                            age=self.interva_options_age,
+                            sex=self.interva_options_sex,
                             interva_rule=self.interva_rule,
                             use_prop=self.results_use_prop)
                         if os.path.isfile(path[0]):
@@ -491,7 +527,7 @@ class Results(QWidget):
                 alert.setWindowTitle("openVA App")
                 alert.setText(
                     "There are no VA records for the selected group:\n"
-                    f"age: {self.options_age},   sex: {self.options_sex}")
+                    f"age: {self.interva_options_age},   sex: {self.interva_options_sex}")
                 alert.exec()
             else:
                 # results_file_name = "interva5_individual_cod.csv"
@@ -504,11 +540,11 @@ class Results(QWidget):
                 if path != ("", ""):
                     how_to_merge = "outer"
                     keep = utils._get_cod_with_dem(self.interva_results)
-                    if self.options_age != "all deaths":
-                        keep = keep[keep["age"] == self.options_age]
+                    if self.interva_options_age != "all deaths":
+                        keep = keep[keep["age"] == self.interva_options_age]
                         how_to_merge = "inner"
-                    if self.options_sex != "all deaths":
-                        keep = keep[keep["sex"] == self.options_sex]
+                    if self.interva_options_sex != "all deaths":
+                        keep = keep[keep["sex"] == self.interva_options_sex]
                         how_to_merge = "inner"
                     keep_id = keep["ID"]
                     out = self.interva_results.results["VA5"].copy()
@@ -561,7 +597,7 @@ class Results(QWidget):
                 alert.setWindowTitle("openVA App")
                 alert.setText(
                     "There are no VA records for the selected group:\n"
-                    f"age: {self.options_age},   sex: {self.options_sex}")
+                    f"age: {self.insilicova_options_age},   sex: {self.insilicova_options_sex}")
                 alert.exec()
             else:
                 self.insilicova_plot_dialog = PlotDialog(
@@ -570,8 +606,8 @@ class Results(QWidget):
                     parent=self,
                     top=self.n_top_causes,
                     colors=self.plot_color,
-                    age=self.options_age,
-                    sex=self.options_sex,
+                    age=self.insilicova_options_age,
+                    sex=self.insilicova_options_sex,
                     use_prop=self.results_use_prop)
                 self.insilicova_plot_dialog.exec()
 
@@ -589,15 +625,15 @@ class Results(QWidget):
                 alert.setWindowTitle("openVA App")
                 alert.setText(
                     "There are no VA records for the selected group:\n"
-                    f"age: {self.options_age},   sex: {self.options_sex}")
+                    f"age: {self.insilicova_options_age},   sex: {self.insilicova_options_sex}")
                 alert.exec()
             else:
                 self.insilicova_table = TableDialog(
                     self.insilicova_results,
                     self,
                     top=self.n_top_causes,
-                    age=self.options_age,
-                    sex=self.options_sex,
+                    age=self.insilicova_options_age,
+                    sex=self.insilicova_options_sex,
                     use_prop=self.results_use_prop)
                 self.insilicova_table.resize(
                     self.insilicova_table.table.width(),
@@ -608,8 +644,8 @@ class Results(QWidget):
         prop_scale = 100
         if self.results_use_prop:
             prop_scale = 1
-        no_subpop = (self.options_age == "all deaths" and
-                     self.options_sex == "all deaths")
+        no_subpop = (self.insilicova_options_age == "all deaths" and
+                     self.insilicova_options_sex == "all deaths")
         if self.insilicova_results is None:
             alert = QMessageBox()
             alert.setWindowTitle("openVA App")
@@ -621,8 +657,8 @@ class Results(QWidget):
             alert.setWindowTitle("openVA App")
             alert.setText(
                 "There are no VA records for the selected "
-                f"group:\n age: {self.options_age},   "
-                f"sex: {self.options_sex}")
+                f"group:\n age: {self.insilicova_options_age},   "
+                f"sex: {self.insilicova_options_sex}")
             alert.exec()
         else:
             # results_file_name = "insilicova_csmf.csv"
@@ -643,8 +679,8 @@ class Results(QWidget):
                                                    ascending=False).copy()
                     else:
                         csmf_df = _insilicova_subpop(self.insilicova_results,
-                                                     self.options_age,
-                                                     self.options_sex,
+                                                     self.insilicova_options_age,
+                                                     self.insilicova_options_sex,
                                                      self.n_top_causes)
                         csmf_df = csmf_df.sort_values(ascending=False)
                         csmf_df.name = "Mean"
@@ -686,8 +722,8 @@ class Results(QWidget):
             alert.setWindowTitle("openVA App")
             alert.setText(
                 "There are no VA records for the selected "
-                f"group:\n age: {self.options_age},   "
-                f"sex: {self.options_sex}")
+                f"group:\n age: {self.insilicova_options_age},   "
+                f"sex: {self.insilicova_options_sex}")
             alert.exec()
         else:
             # results_file_name = "insilicova_csmf.pdf"
@@ -704,8 +740,8 @@ class Results(QWidget):
                           top=self.n_top_causes,
                           file_name=path[0],
                           plot_colors=self.plot_color,
-                          age=self.options_age,
-                          sex=self.options_sex,
+                          age=self.insilicova_options_age,
+                          sex=self.insilicova_options_sex,
                           use_prop=self.results_use_prop)
                 if os.path.isfile(path[0]):
                     alert = QMessageBox()
@@ -731,8 +767,8 @@ class Results(QWidget):
             alert.setWindowTitle("openVA App")
             alert.setText(
                 "There are no VA records for the selected "
-                f"group:\n age: {self.options_age},   "
-                f"sex: {self.options_sex}")
+                f"group:\n age: {self.insilicova_options_age},   "
+                f"sex: {self.insilicova_options_sex}")
             alert.exec()
         else:
             # results_file_name = "insilicova_individual_cod.csv"
@@ -791,19 +827,19 @@ class Results(QWidget):
                               index=[row.name]))
         indiv_cod = pd_concat(all_results)
         indiv_cod = indiv_cod.reset_index(names="ID")
-        if (self.options_age != "all deaths" or
-                self.options_sex != "all deaths"):
+        if (self.insilicova_options_age != "all deaths" or
+                self.insilicova_options_sex != "all deaths"):
             how_to_merge = "inner"
             age_groups = []
             sex_groups = []
-            if self.options_age == "all deaths":
+            if self.insilicova_options_age == "all deaths":
                 age_groups = ["neonate", "child", "adult"]
             else:
-                age_groups.append(self.options_age)
-            if self.options_sex == "all deaths":
+                age_groups.append(self.insilicova_options_age)
+            if self.insilicova_options_sex == "all deaths":
                 sex_groups = ["female", "male"]
             else:
-                sex_groups.append(self.options_sex)
+                sex_groups.append(self.insilicova_options_sex)
 
             dem_groups = self.insilicova_results.data_checked.apply(
                 utils._get_dem_groups, axis=1)
@@ -821,8 +857,8 @@ class Results(QWidget):
             tmp_data.columns = [col.split("-")[-1] for col in tmp_data.columns]
             indiv_cod = indiv_cod.merge(tmp_data, how=how_to_merge, on="ID")
 
-        if (self.options_age == "all deaths" and
-                self.options_sex == "all deaths"):
+        if (self.insilicova_options_age == "all deaths" and
+                self.insilicova_options_sex == "all deaths"):
             if self.original_data_id in (None, "no ID column"):
                 indiv_cod = indiv_cod.sort_values(by="ID")
             else:
@@ -846,8 +882,8 @@ class Results(QWidget):
             alert.setWindowTitle("openVA App")
             alert.setText(
                 "There are no VA records for the selected "
-                f"group:\n age: {self.options_age},   "
-                f"sex: {self.options_sex}")
+                f"group:\n age: {self.insilicova_options_age},   "
+                f"sex: {self.insilicova_options_sex}")
             alert.exec()
         else:
             # results_file_name = "insilicova_individual_cod.csv"
@@ -891,19 +927,19 @@ class Results(QWidget):
     def prepare_insilicova_indiv_cod_all(self, results):
         how_to_merge = "outer"
         indiv_cod = results.reset_index(names="ID")
-        if (self.options_age != "all deaths" or
-                self.options_sex != "all deaths"):
+        if (self.insilicova_options_age != "all deaths" or
+                self.insilicova_options_sex != "all deaths"):
             how_to_merge = "inner"
             age_groups = []
             sex_groups = []
-            if self.options_age == "all deaths":
+            if self.insilicova_options_age == "all deaths":
                 age_groups = ["neonate", "child", "adult"]
             else:
-                age_groups.append(self.options_age)
-            if self.options_sex == "all deaths":
+                age_groups.append(self.insilicova_options_age)
+            if self.insilicova_options_sex == "all deaths":
                 sex_groups = ["female", "male"]
             else:
-                sex_groups.append(self.options_sex)
+                sex_groups.append(self.insilicova_options_sex)
 
             dem_groups = self.insilicova_results.data_checked.apply(
                 utils._get_dem_groups, axis=1)
@@ -921,8 +957,8 @@ class Results(QWidget):
             tmp_data.columns = [col.split("-")[-1] for col in tmp_data.columns]
             indiv_cod = indiv_cod.merge(tmp_data, how=how_to_merge, on="ID")
 
-        if (self.options_age == "all deaths" and
-                self.options_sex == "all deaths"):
+        if (self.insilicova_options_age == "all deaths" and
+                self.insilicova_options_sex == "all deaths"):
             if self.original_data_id in (None, "no ID column"):
                 indiv_cod = indiv_cod.sort_values(by="ID")
             else:
@@ -1028,11 +1064,17 @@ class Results(QWidget):
         else:
             self.results_use_prop = False
 
-    def set_options_sex(self, sex):
-        self.options_sex = sex
+    def set_insilicova_options_sex(self, sex):
+        self.insilicova_options_sex = sex
 
-    def set_options_age(self, age):
-        self.options_age = age
+    def set_interva_options_sex(self, sex):
+        self.interva_options_sex = sex
+
+    def set_insilicova_options_age(self, age):
+        self.insilicova_options_age = age
+
+    def set_interva_options_age(self, age):
+        self.interva_options_age = age
 
     def set_plot_color(self, color):
         self.plot_color = color
@@ -1075,22 +1117,32 @@ class Results(QWidget):
                     utils._get_dem_groups,
                     axis=1)
                 out = DataFrame(list(out))
+                options_age = self.insilicova_options_age
+                options_sex = self.insilicova_options_sex
         else:
             if self.interva_results is not None:
                 out = utils._get_cod_with_dem(self.interva_results)
-        if self.options_age != "all deaths":
-            out = out[out["age"] == self.options_age]
-        if self.options_sex != "all deaths":
-            out = out[out["sex"] == self.options_sex]
+                options_age = self.interva_options_age
+                options_sex = self.interva_options_sex
+        if options_age != "all deaths":
+            out = out[out["age"] == options_age]
+        if options_sex != "all deaths":
+            out = out[out["sex"] == options_sex]
         empty = out.shape[0] == 0
         return empty
 
     def _make_results_file_name(self, algorithm, fnc):
+        if algorithm == "insilicova":
+            options_age = self.insilicova_options_age
+            options_sex = self.insilicova_options_sex
+        else:
+            options_age = self.interva_options_age
+            options_sex = self.interva_options_sex
         results_file_name = f"{algorithm}"
-        if self.options_age != "all deaths":
-            results_file_name += f"_{self.options_age}"
-        if self.options_sex != "all deaths":
-            results_file_name += f"_{self.options_sex}"
+        if options_age != "all deaths":
+            results_file_name += f"_{options_age}"
+        if options_sex != "all deaths":
+            results_file_name += f"_{options_sex}"
         if fnc == "plot":
             results_file_name += "_csmf.pdf"
         elif fnc == "table":
