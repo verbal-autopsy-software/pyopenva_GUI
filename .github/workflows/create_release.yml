@@ -25,11 +25,12 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Set up poetry
+      run: |
+        pipx install poetry
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install pipenv
-        python -m pipenv install --ignore-pipfile
+        poetry install
     - name: Install dependencies of macOS
       if: runner.os == 'macOS'
       run: |
@@ -37,10 +38,10 @@ jobs:
         brew install libiodbc libpq
     - name: Build Windows installer
       if: runner.os == 'Windows'
-      run: pipenv run python setup.py bdist_msi
+      run: poetry run python setup.py bdist_msi
     - name: Build Mac installer
       if: runner.os == 'macOS'
-      run: pipenv run python setup.py bdist_dmg
+      run: poetry run python setup.py bdist_dmg
     - name: Upload Windows msi
       uses: actions/upload-artifact@v4
       if: runner.os == 'Windows'
