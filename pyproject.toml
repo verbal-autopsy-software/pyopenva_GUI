@@ -13,7 +13,10 @@ pyqt5-qt5 = [
     {version = "==5.15.2", platform = "win32"},
     {version = "==5.15.13", platform = "darwin"}
     ]
-pyqtwebengine-qt5 = "==5.15.2"
+pyqtwebengine-qt5 = [
+    {version = "==5.15.2", platform = "win32"},
+    {version = "==5.15.13", platform = "darwin"}
+    ]
 pyqt5 = "*"
 pyqtwebengine = "*"
 pycrossva = ">=0.98"
