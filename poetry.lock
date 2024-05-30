@@ -1094,6 +1094,27 @@ files = [
 ]
 
 [[package]]
+name = "pyqt5-qt5"
+version = "5.15.13"
+description = "The subset of a Qt installation needed by PyQt5."
+optional = false
+python-versions = "*"
+files = [
+    {file = "PyQt5_Qt5-5.15.13-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:92575a9e96a27c4ed67c56c7048ded7461a1655d5d21f0e05064664e6e9fcbdf"},
+    {file = "PyQt5_Qt5-5.15.13-py3-none-macosx_11_0_arm64.whl", hash = "sha256:141859f2ffe04cc6c5db970e2b6ad9f98897805d886a14c52614e3799daab6d6"},
+]
+
+[[package]]
+name = "pyqt5-qt5"
+version = "5.15.14"
+description = "The subset of a Qt installation needed by PyQt5."
+optional = false
+python-versions = "*"
+files = [
+    {file = "PyQt5_Qt5-5.15.14-py3-none-macosx_11_0_arm64.whl", hash = "sha256:730da7e6a97f6bad1b6df21082fe625647730418bc83e20cbc2ff6401ed0a8be"},
+]
+
+[[package]]
 name = "pyqt5-sip"
 version = "12.13.0"
 description = "The sip module support for PyQt5"
@@ -1154,6 +1175,28 @@ files = [
     {file = "PyQtWebEngine_Qt5-5.15.2-py3-none-manylinux2014_x86_64.whl", hash = "sha256:ec2acb1780c0124ef060c310e00ca701f388d8b6c35bba9127f7a6f0dc536f77"},
     {file = "PyQtWebEngine_Qt5-5.15.2-py3-none-win32.whl", hash = "sha256:9e80b408d8de09d4e708d5d84c3ceaf3603292ff8f5e566ae44bb0320fa59c33"},
     {file = "PyQtWebEngine_Qt5-5.15.2-py3-none-win_amd64.whl", hash = "sha256:24231f19e1595018779977de6722b5c69f3d03f34a5f7574ff21cd1e764ef76d"},
+]
+
+[[package]]
+name = "pyqtwebengine-qt5"
+version = "5.15.13"
+description = "The subset of a Qt installation needed by PyQtWebEngine."
+optional = false
+python-versions = "*"
+files = [
+    {file = "PyQtWebEngine_Qt5-5.15.13-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:c6a4425c1b024268620782a65d6f9b4040813cfc16fba883f84a4ea90436727f"},
+    {file = "PyQtWebEngine_Qt5-5.15.13-py3-none-macosx_11_0_arm64.whl", hash = "sha256:cc5fa744cd464582155e34abd5bd2f886c3217ce83d22cfa73acd9c459906fa8"},
+]
+
+[[package]]
+name = "pyqtwebengine-qt5"
+version = "5.15.14"
+description = "The subset of a Qt installation needed by PyQtWebEngine."
+optional = false
+python-versions = "*"
+files = [
+    {file = "PyQtWebEngine_Qt5-5.15.14-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:28f83cd41f0aa87605c33880d6051d83e8ca64218cfbddd302fa13965b4504a6"},
+    {file = "PyQtWebEngine_Qt5-5.15.14-py3-none-macosx_11_0_arm64.whl", hash = "sha256:763b11fff44f9af07b0ed7450cddf1c59fa6735820f86f42f6773ec48e4d18b6"},
 ]
 
 [[package]]
@@ -1545,4 +1588,4 @@ test = ["pytest", "pytest-cov"]
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "4ba10d274ea5c873276f775c7760a906646a5f6849bd46ed65e0c9320d7adb92"
+content-hash = "09be6df34bdea11c78c232adeb389a166c0e9da4d8ea63ce40e7d9420a79b205"
