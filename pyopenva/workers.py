@@ -58,6 +58,7 @@ class InSilicoVAWorker(QObject):
                 if n_failed > 0:
                     msg += f" ({n_failed} deaths failed data checks)"
                 self.state.emit(msg)
+                self.progress.emit(100)
                 self.finished.emit()
             except InSilicoVAException:
                 self.insilicova_errors.emit(insilicova_out._error_log)

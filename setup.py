@@ -27,9 +27,7 @@ with open(
         encoding="utf-8") as f:
     exec(f.read(), about)
 
-include_files = []
-include_files.append("pyopenva/data")
-include_files.append("pyopenva/docs")
+include_files = ["pyopenva/data", "pyopenva/docs"]
 
 # base="Win32GUI" should be used only for Windows GUI app
 base = "Win32GUI" if sys.platform == "win32" else None
@@ -38,7 +36,6 @@ build_exe_options = {
     "excludes": ["tkinter"],
     "include_files": include_files,
     "bin_excludes": ["libpq.5.dylib"],
-    # "zip_include_packages": ["PyQt5"],
 }
 
 bdist_mac_options = {

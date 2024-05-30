@@ -8,15 +8,8 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "~3.11"
-
-pyqt5-qt5 = [
-    {version = "==5.15.2", platform = "win32"},
-    {version = "==5.15.13", platform = "darwin"}
-    ]
-pyqtwebengine-qt5 = [
-    {version = "==5.15.2", platform = "win32"},
-    {version = "==5.15.13", platform = "darwin"}
-    ]
+pyqt5-qt5 = "==5.15.2"
+pyqtwebengine-qt5 = "==5.15.2"
 pyqt5 = "*"
 pyqtwebengine = "*"
 pycrossva = ">=0.98"
@@ -27,4 +20,4 @@ matplotlib = "==3.6.3"
 sphinx  = "*"
 pandas = "==2.0.3"
 sphinxemoji = "*"
-cx-freeze = ">=6.5.12"
+cx_Freeze = "==6.15.12"
