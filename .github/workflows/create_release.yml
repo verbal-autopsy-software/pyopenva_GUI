@@ -50,14 +50,14 @@ jobs:
       if: matrix.os == 'macos-latest'
       run: |
           poetry run python setup.py bdist_dmg
-	  ls ./dist/
-	  mv ./dist/pyopenva.dmg ./dist/pyopenva-1.2-macos-14.dmg
+          ls ./dist/
+          mv ./dist/pyopenva.dmg ./dist/pyopenva-1.2-macos-14.dmg
     - name: Build installer for macos-13
       if: matrix.os == 'macos-13'
       run: |
           poetry run python setup.py bdist_dmg
-	  ls ./dist/
-	  mv ./dist/pyopenva.dmg ./dist/pyopenva-1.2-macos-13.dmg
+          ls ./dist/
+          mv ./dist/pyopenva.dmg ./dist/pyopenva-1.2-macos-13.dmg
     - name: Upload Windows msi
       uses: actions/upload-artifact@v4
       if: runner.os == 'Windows'
