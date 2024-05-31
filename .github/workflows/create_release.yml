@@ -28,9 +28,15 @@ jobs:
     - name: Set up poetry
       run: |
         pipx install poetry
+    - name: Install boost for Mac
+      if: runner.os == 'macOS'
+      run: |
+          brew update
+          brew install boost
+          echo "LDFLAGS=-L/opt/homebrew/Cellar/lib" >> "$GITHUB_ENV"
+          echo "CPPFLAGS=-I/opt/homebrew/include" >> "$GITHUB_ENV"
     - name: Install dependencies
       run: |
-        poetry run pip install --upgrade pip
         poetry install
     - name: Install dependencies of macOS
       if: runner.os == 'macOS'
