@@ -30,6 +30,7 @@ jobs:
         pipx install poetry
     - name: Install dependencies
       run: |
+        poetry run pip install --upgrade pip
         poetry install
     - name: Install dependencies of macOS
       if: runner.os == 'macOS'
