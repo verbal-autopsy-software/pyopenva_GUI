@@ -41,14 +41,23 @@ jobs:
     - name: Install dependencies of macOS
       if: runner.os == 'macOS'
       run: |
-        brew update
-        brew install libiodbc libpq
+          brew update
+          brew install libiodbc libpq
     - name: Build Windows installer
       if: runner.os == 'Windows'
       run: poetry run python setup.py bdist_msi
-    - name: Build Mac installer
-      if: runner.os == 'macOS'
-      run: poetry run python setup.py bdist_dmg
+    - name: Build installer for macos-latest
+      if: matrix.os == 'macos-latest'
+      run: |
+          poetry run python setup.py bdist_dmg
+	  ls ./dist/
+	  mv ./dist/pyopenva.dmg ./dist/pyopenva-1.2-macos-14.dmg
+    - name: Build installer for macos-13
+      if: matrix.os == 'macos-13'
+      run: |
+          poetry run python setup.py bdist_dmg
+	  ls ./dist/
+	  mv ./dist/pyopenva.dmg ./dist/pyopenva-1.2-macos-13.dmg
     - name: Upload Windows msi
       uses: actions/upload-artifact@v4
       if: runner.os == 'Windows'
@@ -59,13 +68,13 @@ jobs:
       uses: actions/upload-artifact@v4
       if: matrix.os == 'macos-latest'
       with:
-          name: pyopenva-1.2-macosx-latest.dmg
+          name: pyopenva-1.2-macos-14.dmg
           path: ./build/*.dmg
     - name: Upload MacOS 13 dmg
       uses: actions/upload-artifact@v4
       if: matrix.os == 'macos-13'
       with:
-          name: pyopenva-1.2-macosx-13.dmg
+          name: pyopenva-1.2-macos-13.dmg
           path: ./build/*.dmg
   create_release:
     needs: [build]
@@ -82,4 +91,4 @@ jobs:
       - name: Create release in GitHub and uploads attachments
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create v1.2 ./dist/pyopenva-1.2-win64.msi ./dist/pyopenva-1.2-macosx-latest.dmg ./dist/pyopenva-1.2-macosx-13.dmg
+        run: gh release create v1.2 ./dist/pyopenva-1.2-win64.msi ./dist/pyopenva-1.2-macos-latest.dmg ./dist/pyopenva-1.2-macos-13.dmg
