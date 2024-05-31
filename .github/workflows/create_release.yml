@@ -55,11 +55,17 @@ jobs:
       with:
           name: pyopenva-1.2-win64.msi
           path: ./dist/*.msi
-    - name: Upload MacOS dmg
+    - name: Upload MacOS latest dmg
       uses: actions/upload-artifact@v4
-      if: runner.os == 'macOS'
+      if: matrix.os == 'macos-latest'
       with:
-          name: pyopenVA.dmg
+          name: pyopenva-1.2-macosx-latest.dmg
+          path: ./build/*.dmg
+    - name: Upload MacOS 13 dmg
+      uses: actions/upload-artifact@v4
+      if: matrix.os == 'macos-13'
+      with:
+          name: pyopenva-1.2-macosx-13.dmg
           path: ./build/*.dmg
   create_release:
     needs: [build]
@@ -76,4 +82,4 @@ jobs:
       - name: Create release in GitHub and uploads attachments
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create v1.2 ./dist/pyopenva-1.2-win64.msi ./dist/pyopenVA.dmg
+        run: gh release create v1.2 ./dist/pyopenva-1.2-win64.msi ./dist/pyopenva-1.2-macosx-latest.dmg ./dist/pyopenva-1.2-macosx-13.dmg
