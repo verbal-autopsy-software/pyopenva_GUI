@@ -93,4 +93,4 @@ jobs:
       - name: Create release in GitHub and uploads attachments
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create v1.2 ./dist/pyopenva-1.2-win64.msi ./dist/pyopenva-1.2-macos-latest.dmg ./dist/pyopenva-1.2-macos-13.dmg
+        run: gh release create v1.2 ./dist/pyopenva-1.2-win64.msi ./dist/pyopenva-1.2-macos-14.dmg ./dist/pyopenva-1.2-macos-13.dmg
