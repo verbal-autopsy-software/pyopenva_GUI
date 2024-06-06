@@ -25,19 +25,20 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Set up poetry
-      run: |
-        pipx install poetry
-    - name: Install boost for Mac
-      if: runner.os == 'macOS'
-      run: |
-          brew update
-          brew install boost
-          echo "LDFLAGS=-L/opt/homebrew/Cellar/lib" >> "$GITHUB_ENV"
-          echo "CPPFLAGS=-I/opt/homebrew/include" >> "$GITHUB_ENV"
+    # - name: Set up poetry
+    #   run: |
+    #     pipx install poetry
+    # - name: Install boost for Mac
+    #   if: runner.os == 'macOS'
+    #   run: |
+    #       brew update
+    #       brew install boost
+    #       echo "LDFLAGS=-L/opt/homebrew/Cellar/lib" >> "$GITHUB_ENV"
+    #       echo "CPPFLAGS=-I/opt/homebrew/include" >> "$GITHUB_ENV"
     - name: Install dependencies
       run: |
-        poetry install
+        # poetry install
+	python -m pip install -r requirements-mac.txt
     - name: Install dependencies of macOS
       if: runner.os == 'macOS'
       run: |
@@ -45,18 +46,21 @@ jobs:
           brew install libiodbc libpq
     - name: Build Windows installer
       if: runner.os == 'Windows'
-      run: poetry run python setup.py bdist_msi
+      # run: poetry run python setup.py bdist_msi
+      run: python -m pip install -r requirements.txt
     - name: Build installer for macos-latest
       if: matrix.os == 'macos-latest'
       run: |
-          poetry run python setup.py bdist_dmg
+          # poetry run python setup.py bdist_dmg
+          python setup.py bdist_dmg
           pwd
           ls ./build
           mv ./build/pyopenva.dmg ./build/pyopenva-1.2-macos-14.dmg
     - name: Build installer for macos-13
       if: matrix.os == 'macos-13'
       run: |
-          poetry run python setup.py bdist_dmg
+          # poetry run python setup.py bdist_dmg
+          python setup.py bdist_dmg
           pwd
           ls ./build/
           mv ./build/pyopenva.dmg ./build/pyopenva-1.2-macos-13.dmg
