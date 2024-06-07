@@ -15,7 +15,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, macos-13]
+        #os: [windows-latest, macos-latest, macos-13]
+        os: [windows-latest, macos-latest]
         python-version: ["3.11"]
 
     steps:
@@ -42,9 +43,9 @@ jobs:
       if: matrix.os == 'macos-latest'
       run: |
           python setup.py bdist_dmg
-          pwd
-          ls ./build
-          mv ./build/pyopenva.dmg ./build/pyopenva-1.2-macos-14.dmg
+#          pwd
+#          ls ./build
+#          mv ./build/pyopenva.dmg ./build/pyopenva-1.2-macos-14.dmg
     - name: Build installer for macos-13
       if: matrix.os == 'macos-13'
       run: |
@@ -62,7 +63,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: matrix.os == 'macos-latest'
       with:
-          name: pyopenva-1.2-macos-14.dmg
+          # name: pyopenva-1.2-macos-14.dmg
           path: ./build/*.dmg
     - name: Upload MacOS 13 dmg
       uses: actions/upload-artifact@v4
@@ -85,4 +86,5 @@ jobs:
       - name: Create release in GitHub and uploads attachments
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create v1.2 ./dist/pyopenva-1.2-win64.msi ./dist/pyopenva-1.2-macos-14.dmg ./dist/pyopenva-1.2-macos-13.dmg
+        run: gh release create v1.2 ./dist/pyopenva-1.2-win64.msi ./dist/pyopenva.dmg
+#        run: gh release create v1.2 ./dist/pyopenva-1.2-win64.msi ./dist/pyopenva-1.2-macos-14.dmg ./dist/pyopenva-1.2-macos-13.dmg
