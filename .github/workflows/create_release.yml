@@ -38,7 +38,7 @@ jobs:
     - name: Install dependencies
       run: |
         # poetry install
-	python -m pip install -r requirements-mac.txt
+        python -m pip install -r requirements-mac.txt
     - name: Install dependencies of macOS
       if: runner.os == 'macOS'
       run: |
