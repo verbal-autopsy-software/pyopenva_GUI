@@ -36,6 +36,7 @@ jobs:
     #       echo "LDFLAGS=-L/opt/homebrew/Cellar/lib" >> "$GITHUB_ENV"
     #       echo "CPPFLAGS=-I/opt/homebrew/include" >> "$GITHUB_ENV"
     - name: Install dependencies
+      if: runner.os == 'macOS'
       run: |
         # poetry install
         python -m pip install -r requirements-mac.txt
