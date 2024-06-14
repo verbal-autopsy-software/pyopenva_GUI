@@ -39,12 +39,12 @@ build_exe_options = {
 }
 
 bdist_mac_options = {
-    "bundle_name": "pyopenVA",
+    "bundle_name": "pyopenVA-v1.2",
     "iconfile": "pyopenva/icons/openva-logo.ico",
 }
 
 bdist_dmg_options = {
-    "volume_label": "pyopenVA",
+    "volume_label": "pyopenVA-v1.2",
 }
 
 directory_table = [
@@ -57,9 +57,9 @@ executables = [
             "pyopenva/main.py",
             base=base,
             icon="pyopenva/icons/openva-logo.ico",
-            shortcut_name="pyopenva",
+            shortcut_name="pyopenVA-v1.2",
             shortcut_dir="DesktopFolder",
-            target_name="pyopenva"
+            target_name="pyopenVA-v1.2"
         ),
     ]
 
