@@ -1,5 +1,5 @@
-__title__ = "pyopenVA App"
-__description__ = "Python openVA GUI for analyzing verbal autopsy data."
+__title__ = "openVA App"
+__description__ = "Python openVA App for analyzing verbal autopsy data."
 __url__ = "https://github.com/verbal-autopsy-software/pyopenva_GUI"
 __version__ = "1.2"
 __author__ = "Jason Thomas, Sherry Zhao, Peter Choi, & openVA Team"
