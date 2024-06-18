@@ -72,7 +72,7 @@ setup(
         "build_exe": build_exe_options,
         "bdist_mac": bdist_mac_options,
         "bdist_dmg": bdist_dmg_options,
-        "bdist_msi": {"target_name": "pyopenVA-" + version + ".msi"},
+        # "bdist_msi": {"target_name": "pyopenVA-" + version + ".msi"},
     },
     executables=executables,
 )
