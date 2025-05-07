@@ -1,4 +1,14 @@
-# pyOpenVA GUI
+# pyOpenVA GUI  -- NOT MAINTAINED
+
+**At this time we do not have the resources to actively maintain this software.** 
+
+*We are actively maintaining research-oriented software that supports
+our publications, but we are not able to support user-facing packages, modules,
+or applications.*
+
+<br><br><br><br>
+
+
 
 Graphical User Interface for the openVA tool implemented in Python.  
 
@@ -7,6 +17,7 @@ Graphical User Interface for the openVA tool implemented in Python.
 * algorithm options: InSilicoVA & InterVA5
 
 
+<!---
 # Downloading and Installing the GUI
 
 Installer files are available for Windows (msi) and macOS (dmg) on the [Releases](https://github.com/verbal-autopsy-software/pyopenva_GUI/releases) page.
@@ -59,3 +70,5 @@ to run the GUI (from the downloaded dmg installer file)
   + GUI crashes on Mac when trying to view help documentation
     - cx_Freeze [Issue 933](https://github.com/marcelotduarte/cx_Freeze/issues/933)
     - fixed with cx_Freeze version 6.15.12
+
+--->
